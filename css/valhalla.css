@@ -20,6 +20,8 @@
   --crimson-600: #dc2626;
   --crimson-500: #ef4444;
   --crimson-700: #b91c1c;
+  --emerald-400: #34d399;
+  --sky-400: #38bdf8;
   --glass-bg: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(148, 163, 184, 0.1);
   --glass-blur: 20px;
@@ -643,4 +645,223 @@ code[class*="language-"] {
 *:focus-visible {
   outline: 2px solid var(--gold-500);
   outline-offset: 2px;
+}
+
+/* ================================================================
+   Pomodoro Timer
+   ================================================================ */
+
+/* ---- Progress Ring ---- */
+.pomo-ring-bg {
+  stroke: var(--valhalla-700);
+  opacity: 0.3;
+}
+
+.pomo-ring {
+  transition: stroke-dashoffset 0.35s ease;
+  transform-origin: center;
+}
+
+.pomo-ring-focus  { stroke: var(--gold-500); }
+.pomo-ring-short  { stroke: var(--emerald-400); }
+.pomo-ring-long   { stroke: var(--sky-400); }
+
+/* ---- Timer Display ---- */
+.pomo-time {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* ---- Mode Buttons ---- */
+.pomo-mode-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--valhalla-400);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pomo-mode-btn:hover {
+  color: var(--valhalla-200);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.pomo-mode-btn.active-focus {
+  color: var(--gold-500);
+  border-color: var(--gold-500);
+  background: rgba(234, 179, 8, 0.1);
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.08);
+}
+
+.pomo-mode-btn.active-short {
+  color: var(--emerald-400);
+  border-color: var(--emerald-400);
+  background: rgba(52, 211, 153, 0.1);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.08);
+}
+
+.pomo-mode-btn.active-long {
+  color: var(--sky-400);
+  border-color: var(--sky-400);
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.08);
+}
+
+/* ---- Glow Effects ---- */
+.pomo-glow-focus {
+  box-shadow: 0 0 60px rgba(234, 179, 8, 0.12), 0 0 120px rgba(234, 179, 8, 0.04);
+}
+
+.pomo-glow-short {
+  box-shadow: 0 0 60px rgba(52, 211, 153, 0.12), 0 0 120px rgba(52, 211, 153, 0.04);
+}
+
+.pomo-glow-long {
+  box-shadow: 0 0 60px rgba(56, 189, 248, 0.12), 0 0 120px rgba(56, 189, 248, 0.04);
+}
+
+/* ---- Control Buttons ---- */
+.pomo-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pomo-ctrl-start {
+  background: linear-gradient(135deg, var(--gold-600), var(--gold-500));
+  color: #000;
+}
+.pomo-ctrl-start:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.pomo-ctrl-pause {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--valhalla-200);
+  border: 1px solid var(--glass-border);
+}
+.pomo-ctrl-pause:hover {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.pomo-ctrl-reset {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--valhalla-400);
+  border: 1px solid var(--glass-border);
+}
+.pomo-ctrl-reset:hover {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--valhalla-200);
+}
+
+/* ---- Session Counter ---- */
+.pomo-session-count {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Pulse animation for last 10 seconds ---- */
+@keyframes pomo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.pomo-pulse {
+  animation: pomo-pulse 1s ease-in-out infinite;
+}
+
+/* ================================================================
+   Pomodoro Session Log
+   ================================================================ */
+
+.pomo-session-input {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  color: var(--valhalla-200);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.pomo-session-input:focus {
+  border-color: var(--gold-500);
+}
+
+.pomo-session-input::placeholder {
+  color: var(--valhalla-600);
+}
+
+.pomo-session-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pomo-log-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--glass-border);
+  transition: all 0.2s ease;
+}
+
+.pomo-log-item:hover {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+@keyframes pomo-log-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pomo-log-enter {
+  animation: pomo-log-slide-in 0.2s ease-out;
+}
+
+/* Actual-prompt overlay */
+.pomo-actual-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.pomo-actual-modal {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--glass-border);
+  background: var(--valhalla-900);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }

@@ -1067,16 +1067,225 @@ Odin.ModelGen = {
 
 
 /* ================================================================
+   Odin.Pomodoro — Pomodoro Timer Engine
+   ================================================================ */
+Odin.Pomodoro = {
+  MODES: {
+    focus: { duration: 25 * 60, label: 'Focus',       color: 'focus' },
+    short: { duration:  5 * 60, label: 'Short Break',  color: 'short' },
+    long:  { duration: 15 * 60, label: 'Long Break',   color: 'long'  }
+  },
+
+  formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  },
+
+  /** Generate a pleasant "ting" sound using the Web Audio API */
+  playTing() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Primary tone — 830 Hz sine
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(830, ctx.currentTime);
+
+      // Harmonic overtone — 1245 Hz (1.5x) for brightness
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1245, ctx.currentTime);
+
+      // Gain envelopes
+      const gain1 = ctx.createGain();
+      gain1.gain.setValueAtTime(0.35, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+
+      const gain2 = ctx.createGain();
+      gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+      osc1.connect(gain1).connect(ctx.destination);
+      osc2.connect(gain2).connect(ctx.destination);
+
+      osc1.start(ctx.currentTime);
+      osc2.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.8);
+      osc2.stop(ctx.currentTime + 0.5);
+
+      // Play a second ting after a short pause for a "double-ting" effect
+      setTimeout(() => {
+        try {
+          const osc3 = ctx.createOscillator();
+          osc3.type = 'sine';
+          osc3.frequency.setValueAtTime(1046, ctx.currentTime); // C6
+          const gain3 = ctx.createGain();
+          gain3.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+          osc3.connect(gain3).connect(ctx.destination);
+          osc3.start(ctx.currentTime);
+          osc3.stop(ctx.currentTime + 0.6);
+        } catch (_) { /* ignore */ }
+      }, 300);
+
+      // Clean up context after playback
+      setTimeout(() => ctx.close(), 2000);
+    } catch (_) {
+      // Web Audio API not available — silent fallback
+    }
+  },
+
+  /** Request browser notification permission */
+  async requestNotificationPermission() {
+    if (!('Notification' in window)) return 'denied';
+    if (Notification.permission === 'granted') return 'granted';
+    return await Notification.requestPermission();
+  },
+
+  /** Fire a browser notification */
+  sendNotification(title, body) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      new Notification(title, { body, icon: 'icons/icon-odin.png' });
+    } catch (_) { /* ignore */ }
+  },
+
+  /** Get daily completed session count from localStorage */
+  getDailySessions() {
+    try {
+      const raw = localStorage.getItem('odin_pomo_sessions');
+      if (!raw) return 0;
+      const data = JSON.parse(raw);
+      const today = new Date().toISOString().slice(0, 10);
+      return data.date === today ? (data.count || 0) : 0;
+    } catch (_) { return 0; }
+  },
+
+  /** Increment and persist daily session count */
+  incrementDailySessions() {
+    const today = new Date().toISOString().slice(0, 10);
+    let count = this.getDailySessions() + 1;
+    localStorage.setItem('odin_pomo_sessions', JSON.stringify({ date: today, count }));
+    return count;
+  },
+
+  /** Reset daily sessions */
+  resetDailySessions() {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem('odin_pomo_sessions', JSON.stringify({ date: today, count: 0 }));
+  },
+
+  /** SVG ring circumference for radius=108 */
+  CIRCUMFERENCE: 2 * Math.PI * 108,
+
+  // ---- Session Log (localStorage) ----
+  LOG_KEY: 'odin_pomo_log',
+
+  /** Get today's date string YYYY-MM-DD */
+  todayKey() {
+    return new Date().toISOString().slice(0, 10);
+  },
+
+  /** Load all session logs { "YYYY-MM-DD": [ { id, todo, actual, mode, duration, startedAt, completedAt } ] } */
+  loadLog() {
+    try {
+      const raw = localStorage.getItem(this.LOG_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) { return {}; }
+  },
+
+  /** Save full log object */
+  saveLog(log) {
+    try {
+      localStorage.setItem(this.LOG_KEY, JSON.stringify(log));
+    } catch (_) { /* storage full */ }
+  },
+
+  /** Get today's session entries */
+  getTodayLog() {
+    const log = this.loadLog();
+    return log[this.todayKey()] || [];
+  },
+
+  /** Add a completed session entry for today */
+  addSessionEntry(entry) {
+    const log = this.loadLog();
+    const today = this.todayKey();
+    if (!log[today]) log[today] = [];
+    log[today].push(entry);
+    this.saveLog(log);
+    return log[today];
+  },
+
+  /** Delete a session entry by id */
+  deleteSessionEntry(id) {
+    const log = this.loadLog();
+    const today = this.todayKey();
+    if (log[today]) {
+      log[today] = log[today].filter(e => e.id !== id);
+      this.saveLog(log);
+    }
+    return log[today] || [];
+  },
+
+  /** Export today's log as Markdown text */
+  exportTodayMarkdown() {
+    const entries = this.getTodayLog();
+    const today = this.todayKey();
+    if (entries.length === 0) return null;
+
+    let md = '# Pomodoro Session Log — ' + today + '\n\n';
+    md += '| # | Time | Mode | Duration | Plan (Todo) | Actual |\n';
+    md += '|---|------|------|----------|-------------|--------|\n';
+
+    entries.forEach((e, i) => {
+      const time = e.completedAt ? new Date(e.completedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
+      const dur = this.formatTime(e.duration);
+      const mode = this.MODES[e.mode] ? this.MODES[e.mode].label : e.mode;
+      md += '| ' + (i + 1) + ' | ' + time + ' | ' + mode + ' | ' + dur + ' | ' + (e.todo || '-') + ' | ' + (e.actual || '-') + ' |\n';
+    });
+
+    md += '\n---\n';
+    md += 'Total sessions: ' + entries.length + '  \n';
+    const focusEntries = entries.filter(e => e.mode === 'focus');
+    const totalFocusMin = focusEntries.reduce((s, e) => s + (e.duration || 0), 0) / 60;
+    md += 'Total focus time: ' + Math.round(totalFocusMin) + ' minutes\n';
+
+    return md;
+  }
+};
+
+
+/* ================================================================
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
   return {
     // ---- Navigation ----
-    activeTool: Odin.Storage.get('active_tool', 'regex'),
+    activeTool: Odin.Storage.get('active_tool', 'pomodoro'),
     sidebarOpen: false,
 
     // ---- Toast ----
     toast: { visible: false, message: '' },
+
+    // ---- Pomodoro Timer ----
+    pomoMode: 'focus',
+    pomoTimeLeft: 25 * 60,
+    pomoTotalTime: 25 * 60,
+    pomoRunning: false,
+    pomoPaused: false,
+    pomoInterval: null,
+    pomoEndTimestamp: null,
+    pomoDailySessions: Odin.Pomodoro.getDailySessions(),
+    pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
+
+    // ---- Pomodoro Session Log ----
+    pomoTodoText: '',              // planned task before starting
+    pomoActualText: '',            // actual result after completing
+    pomoShowActualPrompt: false,   // show actual-input modal after focus session ends
+    pomoSessionLog: Odin.Pomodoro.getTodayLog(),  // today's logged sessions
+    pomoSessionStartedAt: null,    // ISO timestamp when session started
 
     // ---- Regex Tool ----
     regexPattern: Odin.Storage.get('regex_pattern', ''),
@@ -1159,17 +1368,23 @@ function odinApp() {
         if (this.qrText) this.generateQR();
       });
 
-      // Keyboard shortcuts: Ctrl+1-7
+      // Reset daily sessions if stale
+      this.pomoDailySessions = Odin.Pomodoro.getDailySessions();
+
+      // Keyboard shortcuts: Ctrl+1-8
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const tools = ['regex', 'qr', 'json', 'xml', 'diff', 'password', 'modelgen'];
+          const tools = ['pomodoro', 'regex', 'qr', 'json', 'xml', 'diff', 'password', 'modelgen'];
           const num = parseInt(e.key);
-          if (num >= 1 && num <= 7) {
+          if (num >= 1 && num <= tools.length) {
             e.preventDefault();
             this.switchTool(tools[num - 1]);
           }
         }
       });
+
+      // Restore tab title if no timer is running
+      if (!this.pomoRunning) document.title = 'Odin Dev Toolkit';
     },
 
     // ---- Tool Switching ----
@@ -1182,6 +1397,207 @@ function odinApp() {
         if (typeof lucide !== 'undefined') lucide.createIcons();
         if (tool === 'qr' && this.qrText) this.generateQR();
       });
+    },
+
+    // ---- Pomodoro Timer Methods ----
+    pomoSwitchMode(mode) {
+      // Stop any running timer
+      if (this.pomoInterval) {
+        clearInterval(this.pomoInterval);
+        this.pomoInterval = null;
+      }
+      this.pomoMode = mode;
+      this.pomoTotalTime = Odin.Pomodoro.MODES[mode].duration;
+      this.pomoTimeLeft = this.pomoTotalTime;
+      this.pomoRunning = false;
+      this.pomoPaused = false;
+      this.pomoEndTimestamp = null;
+      this.pomoSessionStartedAt = null;
+      if (!this.pomoRunning) document.title = 'Odin Dev Toolkit';
+    },
+
+    pomoStart() {
+      if (this.pomoRunning) return;
+      this.pomoRunning = true;
+      this.pomoPaused = false;
+
+      // Record start timestamp (only on fresh start, not resume)
+      if (!this.pomoSessionStartedAt) {
+        this.pomoSessionStartedAt = new Date().toISOString();
+      }
+
+      // Calculate the wall-clock end time
+      this.pomoEndTimestamp = Date.now() + this.pomoTimeLeft * 1000;
+
+      this.pomoInterval = setInterval(() => {
+        const remaining = Math.round((this.pomoEndTimestamp - Date.now()) / 1000);
+
+        if (remaining <= 0) {
+          // Timer complete
+          clearInterval(this.pomoInterval);
+          this.pomoInterval = null;
+          this.pomoTimeLeft = 0;
+          this.pomoRunning = false;
+          this.pomoPaused = false;
+          this.pomoEndTimestamp = null;
+
+          // Play ting sound
+          Odin.Pomodoro.playTing();
+
+          // Browser notification
+          const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
+          Odin.Pomodoro.sendNotification(
+            modeLabel + ' Complete!',
+            this.pomoMode === 'focus'
+              ? 'Great work! Time for a break.'
+              : 'Break is over. Ready to focus?'
+          );
+
+          // Increment sessions if focus mode
+          if (this.pomoMode === 'focus') {
+            this.pomoDailySessions = Odin.Pomodoro.incrementDailySessions();
+          }
+
+          // Show actual-input prompt for focus sessions, or auto-log breaks
+          if (this.pomoMode === 'focus') {
+            this.pomoShowActualPrompt = true;
+          } else {
+            // Auto-log break sessions (no plan/actual needed)
+            this.pomoSaveSession('');
+          }
+
+          // Toast
+          Odin.Toast.show(this, modeLabel + ' session complete! \uD83C\uDF89');
+
+          document.title = 'Odin Dev Toolkit';
+          return;
+        }
+
+        this.pomoTimeLeft = remaining;
+
+        // Update browser tab title
+        const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
+        document.title = Odin.Pomodoro.formatTime(remaining) + ' — ' + modeLabel;
+      }, 250);
+    },
+
+    pomoPause() {
+      if (!this.pomoRunning) return;
+      clearInterval(this.pomoInterval);
+      this.pomoInterval = null;
+      this.pomoRunning = false;
+      this.pomoPaused = true;
+      this.pomoEndTimestamp = null;
+      document.title = 'Odin Dev Toolkit';
+    },
+
+    pomoReset() {
+      if (this.pomoInterval) {
+        clearInterval(this.pomoInterval);
+        this.pomoInterval = null;
+      }
+      this.pomoTimeLeft = this.pomoTotalTime;
+      this.pomoRunning = false;
+      this.pomoPaused = false;
+      this.pomoEndTimestamp = null;
+      this.pomoSessionStartedAt = null;
+      document.title = 'Odin Dev Toolkit';
+    },
+
+    async pomoRequestNotif() {
+      const perm = await Odin.Pomodoro.requestNotificationPermission();
+      this.pomoNotifGranted = perm === 'granted';
+      if (this.pomoNotifGranted) {
+        Odin.Toast.show(this, 'Notifications enabled!');
+      }
+    },
+
+    get pomoFormattedTime() {
+      return Odin.Pomodoro.formatTime(this.pomoTimeLeft);
+    },
+
+    get pomoProgress() {
+      if (this.pomoTotalTime === 0) return 0;
+      return (this.pomoTotalTime - this.pomoTimeLeft) / this.pomoTotalTime;
+    },
+
+    get pomoDashOffset() {
+      const c = Odin.Pomodoro.CIRCUMFERENCE;
+      return c * (1 - this.pomoProgress);
+    },
+
+    get pomoModeLabel() {
+      return Odin.Pomodoro.MODES[this.pomoMode].label;
+    },
+
+    get pomoModeColor() {
+      return Odin.Pomodoro.MODES[this.pomoMode].color;
+    },
+
+    // ---- Pomodoro Session Log Methods ----
+
+    /** Save a completed session to the log */
+    pomoSaveSession(actual) {
+      const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        todo: this.pomoTodoText.trim() || '',
+        actual: (actual || '').trim(),
+        mode: this.pomoMode,
+        duration: this.pomoTotalTime,
+        startedAt: this.pomoSessionStartedAt || new Date().toISOString(),
+        completedAt: new Date().toISOString()
+      };
+      this.pomoSessionLog = Odin.Pomodoro.addSessionEntry(entry);
+      this.pomoTodoText = '';
+      this.pomoActualText = '';
+      this.pomoShowActualPrompt = false;
+      this.pomoSessionStartedAt = null;
+
+      // Re-render icons for new log items
+      this.$nextTick(() => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
+    },
+
+    /** Submit the actual-result from the prompt modal */
+    pomoSubmitActual() {
+      this.pomoSaveSession(this.pomoActualText);
+    },
+
+    /** Skip filling in the actual — still logs the session */
+    pomoSkipActual() {
+      this.pomoSaveSession('');
+    },
+
+    /** Delete a session from today's log */
+    pomoDeleteSession(id) {
+      this.pomoSessionLog = Odin.Pomodoro.deleteSessionEntry(id);
+    },
+
+    /** Download today's session log as Markdown */
+    pomoDownloadLog() {
+      const md = Odin.Pomodoro.exportTodayMarkdown();
+      if (!md) {
+        Odin.Toast.show(this, 'No sessions to export yet.');
+        return;
+      }
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pomodoro-log-' + Odin.Pomodoro.todayKey() + '.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      Odin.Toast.show(this, 'Session log downloaded!');
+    },
+
+    /** Format a session's completed time for display */
+    pomoFormatLogTime(iso) {
+      try {
+        return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      } catch (_) { return ''; }
     },
 
     // ---- Regex Methods ----
