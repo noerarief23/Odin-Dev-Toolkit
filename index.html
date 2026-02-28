@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Odin Dev Toolkit — Professional Developer Utility Suite</title>
-  <meta name="description" content="Odin Dev Toolkit: Regex Tester, QR Code Engine, JSON Formatter, Password Guard, and Multi-Language Model Generator. 100% client-side, offline-ready.">
-  <meta name="keywords" content="developer tools, regex tester, qr code generator, json formatter, password generator, model generator, odin">
+  <title>Odin Dev Toolkit</title>
+  <meta name="description" content="Odin Dev Toolkit: Regex Tester, QR Code Engine, JSON/XML Formatter, Password Guard, and Multi-Language Model Generator. 100% client-side, offline-ready.">
+  <meta name="keywords" content="developer tools, regex tester, qr code generator, json formatter, xml formatter, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Professional developer utility suite — 5 essential tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 5 essential tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -146,10 +146,23 @@
         class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'password'"
-        aria-label="Password Guard (Ctrl+4)"
+        aria-label="Password Guard (Ctrl+5)"
       >
         <i data-lucide="shield-check" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Password Guard</span>
+        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃5</kbd>
+      </button>
+
+      <button
+        @click="switchTool('xml')"
+        :class="activeTool === 'xml' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'xml'"
+        aria-label="XML Formatter (Ctrl+4)"
+      >
+        <i data-lucide="file-code" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>XML Formatter</span>
         <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃4</kbd>
       </button>
 
@@ -159,11 +172,11 @@
         class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'modelgen'"
-        aria-label="Model Generator (Ctrl+5)"
+        aria-label="Model Generator (Ctrl+6)"
       >
         <i data-lucide="file-code-2" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Model Generator</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃5</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃6</kbd>
       </button>
     </nav>
 
@@ -468,7 +481,7 @@
             <i data-lucide="copy" class="w-4 h-4"></i>
             Copy
           </button>
-          <button @click="jsonInput = ''; jsonOutput = ''; jsonOutputHtml = ''; jsonValidation = { valid: null, error: null }" class="btn-outline flex items-center gap-1.5 text-sm">
+          <button @click="jsonInput = ''; jsonOutput = ''; jsonOutputHtml = ''; jsonValidation = { valid: null, error: null }; $nextTick(() => { syncJsonLineNumbers(); syncJsonOutputLineNumbers(); })" class="btn-outline flex items-center gap-1.5 text-sm">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
             Clear
           </button>
@@ -478,32 +491,132 @@
           <!-- Input -->
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Input</label>
-            <textarea
-              x-model="jsonInput"
-              @input.debounce.300ms="validateJson()"
-              class="textarea-valhalla code-input h-[28rem]"
-              placeholder='{"key": "value"}'
-              spellcheck="false"
-            ></textarea>
+            <div class="json-editor h-[28rem]">
+              <pre x-ref="jsonGutter" class="json-gutter" x-text="getJsonLineNumbers()"></pre>
+              <textarea
+                x-ref="jsonInput"
+                x-model="jsonInput"
+                @input="syncJsonLineNumbers()"
+                @input.debounce.300ms="validateJson()"
+                @scroll="syncJsonLineNumbers()"
+                class="textarea-valhalla code-input json-input h-[28rem]"
+                placeholder='{"key": "value"}'
+                spellcheck="false"
+              ></textarea>
+            </div>
           </div>
 
           <!-- Output -->
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Formatted Output</label>
-            <div class="code-output h-[28rem] overflow-auto">
-              <template x-if="!jsonOutputHtml">
-                <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
-              </template>
-              <template x-if="jsonOutputHtml">
-                <pre class="m-0 bg-transparent"><code x-html="jsonOutputHtml"></code></pre>
-              </template>
+            <div class="json-editor h-[28rem]">
+              <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
+              <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
+                <template x-if="!jsonOutputHtml">
+                  <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
+                </template>
+                <template x-if="jsonOutputHtml">
+                  <pre class="m-0 bg-transparent"><code x-html="jsonOutputHtml"></code></pre>
+                </template>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ============================================================
-           TOOL 4: ODIN PASSWORD GUARD
+           TOOL 4: XML FORMATTER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'xml'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <div class="flex items-start justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="file-code" class="w-6 h-6 text-gold-500"></i>
+                XML Formatter
+              </h2>
+              <p class="text-sm text-slate-400 mt-1">Beautify, minify, and validate XML with instant feedback</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <template x-if="xmlValidation.valid === true">
+                <div class="success-badge flex items-center gap-1.5">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                  Valid XML
+                </div>
+              </template>
+              <template x-if="xmlValidation.valid === false">
+                <div class="error-badge flex items-center gap-1.5">
+                  <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                  <span x-text="xmlValidation.error ? (xmlValidation.error.line ? 'Error at line ' + xmlValidation.error.line + ': ' : '') + xmlValidation.error.message : 'Invalid XML'"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button @click="beautifyXml()" class="btn-gold flex items-center gap-1.5 text-sm">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            Beautify
+          </button>
+          <button @click="minifyXml()" class="btn-outline flex items-center gap-1.5 text-sm">
+            <i data-lucide="minimize-2" class="w-4 h-4"></i>
+            Minify
+          </button>
+          <button @click="copyXml()" class="btn-outline flex items-center gap-1.5 text-sm">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            Copy
+          </button>
+          <button @click="xmlInput = ''; xmlOutput = ''; xmlOutputHtml = ''; xmlValidation = { valid: null, error: null }; $nextTick(() => { syncXmlLineNumbers(); syncXmlOutputLineNumbers(); })" class="btn-outline flex items-center gap-1.5 text-sm">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            Clear
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Input</label>
+            <div class="json-editor h-[28rem]">
+              <pre x-ref="xmlGutter" class="json-gutter" x-text="getXmlLineNumbers()"></pre>
+              <textarea
+                x-ref="xmlInput"
+                x-model="xmlInput"
+                @input="syncXmlLineNumbers()"
+                @input.debounce.300ms="validateXml()"
+                @scroll="syncXmlLineNumbers()"
+                class="textarea-valhalla code-input json-input h-[28rem]"
+                placeholder='<root>\n  <item id="1">Odin</item>\n</root>'
+                spellcheck="false"
+              ></textarea>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Formatted Output</label>
+            <div class="json-editor h-[28rem]">
+              <pre x-ref="xmlOutputGutter" class="json-gutter" x-text="getXmlOutputLineNumbers()"></pre>
+              <div x-ref="xmlOutputPane" @scroll="syncXmlOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
+                <template x-if="!xmlOutputHtml">
+                  <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
+                </template>
+                <template x-if="xmlOutputHtml">
+                  <pre class="m-0 bg-transparent"><code x-html="xmlOutputHtml"></code></pre>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 5: ODIN PASSWORD GUARD
            ============================================================ -->
       <section
         x-show="activeTool === 'password'"
@@ -654,7 +767,7 @@
             <i data-lucide="file-code-2" class="w-6 h-6 text-gold-500"></i>
             Multi-Language Model Generator
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Convert JSON to C# classes, Go structs, Python dataclasses &amp; PHP 8.1 DTOs</p>
+          <p class="text-sm text-slate-400 mt-1">Convert JSON to C# classes, Go structs, and Python dataclasses</p>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -721,11 +834,6 @@ Example:
                 :class="modelActiveTab === 'python' ? 'active' : ''"
                 class="tab-btn"
               >Python</button>
-              <button
-                @click="modelActiveTab = 'php'"
-                :class="modelActiveTab === 'php' ? 'active' : ''"
-                class="tab-btn"
-              >PHP</button>
 
               <!-- Copy Button -->
               <button @click="copyModelOutput()" class="ml-auto btn-outline text-xs py-1 px-2.5 flex items-center gap-1">
@@ -750,12 +858,6 @@ Example:
             <div x-show="modelActiveTab === 'python'" class="code-output h-[32rem] overflow-auto rounded-t-none">
               <template x-if="!modelOutputHtml.python"><p class="text-slate-600 italic text-sm">Generated Python code will appear here...</p></template>
               <template x-if="modelOutputHtml.python"><pre class="m-0 bg-transparent"><code class="language-python" x-html="modelOutputHtml.python"></code></pre></template>
-            </div>
-
-            <!-- PHP Output -->
-            <div x-show="modelActiveTab === 'php'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <template x-if="!modelOutputHtml.php"><p class="text-slate-600 italic text-sm">Generated PHP code will appear here...</p></template>
-              <template x-if="modelOutputHtml.php"><pre class="m-0 bg-transparent"><code class="language-php" x-html="modelOutputHtml.php"></code></pre></template>
             </div>
           </div>
         </div>
@@ -795,7 +897,6 @@ Example:
   <script src="vendor/prism-csharp.min.js"></script>
   <script src="vendor/prism-go.min.js"></script>
   <script src="vendor/prism-python.min.js"></script>
-  <script src="vendor/prism-php.min.js"></script>
 
   <!-- Lucide Icons -->
   <script src="vendor/lucide.min.js"></script>

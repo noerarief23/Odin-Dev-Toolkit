@@ -303,6 +303,112 @@ Odin.JsonFormatter = {
 };
 
 /* ================================================================
+   Odin.XmlFormatter — XML Beautify/Minify/Validate
+   ================================================================ */
+Odin.XmlFormatter = {
+  beautify(input) {
+    const validation = this.validate(input);
+    if (!validation.valid) {
+      return { result: null, error: validation.error };
+    }
+    try {
+      return { result: this._formatXml(input, false), error: null };
+    } catch (e) {
+      return { result: null, error: { message: e.message, line: null, col: null } };
+    }
+  },
+
+  minify(input) {
+    const validation = this.validate(input);
+    if (!validation.valid) {
+      return { result: null, error: validation.error };
+    }
+    try {
+      return { result: this._formatXml(input, true), error: null };
+    } catch (e) {
+      return { result: null, error: { message: e.message, line: null, col: null } };
+    }
+  },
+
+  validate(input) {
+    if (!input || !input.trim()) {
+      return { valid: null, error: null };
+    }
+
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(input, 'application/xml');
+    const parserError = xmlDoc.querySelector('parsererror');
+
+    if (!parserError) {
+      return { valid: true, error: null };
+    }
+
+    return { valid: false, error: this._parseError(parserError.textContent || 'Invalid XML') };
+  },
+
+  highlight(code) {
+    if (!code) return '';
+    try {
+      if (typeof Prism !== 'undefined' && Prism.languages && Prism.languages.markup) {
+        return Prism.highlight(code, Prism.languages.markup, 'markup');
+      }
+    } catch (e) {
+      console.warn('XML Prism highlight failed:', e);
+    }
+    return this._escapeHtml(code);
+  },
+
+  _formatXml(input, minify = false) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(input, 'application/xml');
+    const serializer = new XMLSerializer();
+    let xml = serializer.serializeToString(xmlDoc);
+
+    xml = xml.replace(/>\s+</g, '><').trim();
+    if (minify) return xml;
+
+    const formatted = [];
+    const nodes = xml.replace(/(>)(<)(\/?)/g, '$1\n$2$3').split('\n');
+    let pad = 0;
+
+    for (let node of nodes) {
+      node = node.trim();
+      if (!node) continue;
+
+      if (/^<\/[^>]+>$/.test(node)) {
+        pad = Math.max(0, pad - 1);
+      }
+
+      formatted.push(`${'  '.repeat(pad)}${node}`);
+
+      if (/^<[^!?/][^>]*[^/]>$/.test(node)) {
+        pad += 1;
+      }
+    }
+
+    return formatted.join('\n');
+  },
+
+  _parseError(message) {
+    const lineMatch = message.match(/line\s*(?:Number)?\s*:?\s*(\d+)/i);
+    const colMatch = message.match(/column\s*(?:Number)?\s*:?\s*(\d+)/i);
+
+    return {
+      message: message.split('\n')[0] || 'Invalid XML',
+      line: lineMatch ? parseInt(lineMatch[1], 10) : null,
+      col: colMatch ? parseInt(colMatch[1], 10) : null
+    };
+  },
+
+  _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+};
+
+/* ================================================================
    Odin.PasswordGuard — Secure password generator with entropy
    ================================================================ */
 Odin.PasswordGuard = {
@@ -461,7 +567,7 @@ Odin.ModelGen = {
       parsed = JSON.parse(jsonString);
     } catch (e) {
       const errMsg = `// Error parsing JSON: ${e.message}`;
-      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: e.message };
+      return { csharp: errMsg, go: errMsg, python: errMsg, error: e.message };
     }
 
     // Determine root structure
@@ -474,14 +580,13 @@ Odin.ModelGen = {
       this._parseObject('Root', parsed, classes);
     } else {
       const errMsg = '// Input must be a JSON object or array of objects';
-      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: 'Not an object' };
+      return { csharp: errMsg, go: errMsg, python: errMsg, error: 'Not an object' };
     }
 
     return {
       csharp: this._genCSharp(classes, options),
       go: this._genGo(classes),
       python: this._genPython(classes),
-      php: this._genPhp(classes),
       error: null
     };
   },
@@ -759,23 +864,45 @@ Odin.ModelGen = {
 
   /* ---- Syntax highlight output ---- */
   highlight(code, language) {
-    if (typeof Prism === 'undefined') return code;
+    if (!code) return '';
+    if (typeof Prism === 'undefined') return this._escapeHtml(code);
 
     const langMap = {
       csharp: Prism.languages.csharp,
       go: Prism.languages.go,
-      python: Prism.languages.python,
-      php: Prism.languages.php
+      python: Prism.languages.python
     };
 
     const lang = langMap[language];
-    if (!lang) return code;
+    if (!lang) return this._escapeHtml(code);
 
     try {
-      return Prism.highlight(code, lang, language);
+      const highlighted = Prism.highlight(code, lang, language);
+      if (typeof highlighted !== 'string') {
+        return this._escapeHtml(code);
+      }
+
+      // Guard for PHP edge-cases where Prism may return raw, unsafe markup
+      // (e.g. "<?php" can be swallowed by innerHTML parsing and appear blank).
+      if (language === 'php') {
+        const looksUnhighlighted = highlighted === code || !highlighted.includes('token');
+        const hasUnsafePhpTag = highlighted.includes('<?php') || highlighted.includes('<?');
+        if (looksUnhighlighted || hasUnsafePhpTag) {
+          return this._escapeHtml(code);
+        }
+      }
+
+      return highlighted;
     } catch {
-      return code;
+      return this._escapeHtml(code);
     }
+  },
+
+  _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 };
 
@@ -813,6 +940,12 @@ function odinApp() {
     jsonOutputHtml: '',
     jsonValidation: { valid: null, error: null },
 
+    // ---- XML Formatter Tool ----
+    xmlInput: Odin.Storage.get('xml_input', ''),
+    xmlOutput: '',
+    xmlOutputHtml: '',
+    xmlValidation: { valid: null, error: null },
+
     // ---- Password Guard ----
     pwLength: Odin.Storage.get('pw_length', 16),
     pwLowercase: Odin.Storage.get('pw_lower', true),
@@ -824,8 +957,8 @@ function odinApp() {
     // ---- Model Generator ----
     modelJsonInput: Odin.Storage.get('model_json', ''),
     modelActiveTab: 'csharp',
-    modelOutput: { csharp: '', go: '', python: '', php: '', error: null },
-    modelOutputHtml: { csharp: '', go: '', python: '', php: '' },
+    modelOutput: { csharp: '', go: '', python: '', error: null },
+    modelOutputHtml: { csharp: '', go: '', python: '' },
     csUseJsonPropertyName: Odin.Storage.get('cs_use_jpn', false),
     csUseNullable: Odin.Storage.get('cs_nullable', false),
 
@@ -847,6 +980,7 @@ function odinApp() {
       // Run initial computations
       this.runRegex();
       this.validateJson();
+      this.validateXml();
       this.generatePassword();
       this.generateModels();
 
@@ -855,12 +989,12 @@ function odinApp() {
         if (this.qrText) this.generateQR();
       });
 
-      // Keyboard shortcuts: Ctrl+1-5
+      // Keyboard shortcuts: Ctrl+1-6
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const tools = ['regex', 'qr', 'json', 'password', 'modelgen'];
+          const tools = ['regex', 'qr', 'json', 'xml', 'password', 'modelgen'];
           const num = parseInt(e.key);
-          if (num >= 1 && num <= 5) {
+          if (num >= 1 && num <= 6) {
             e.preventDefault();
             this.switchTool(tools[num - 1]);
           }
@@ -937,6 +1071,10 @@ function odinApp() {
         this.jsonOutputHtml = '';
       }
       Odin.Storage.set('json_input', this.jsonInput);
+      this.$nextTick(() => {
+        this.syncJsonLineNumbers();
+        this.syncJsonOutputLineNumbers();
+      });
     },
 
     beautifyJson() {
@@ -950,6 +1088,10 @@ function odinApp() {
         this.jsonValidation = { valid: false, error: res.error };
       }
       Odin.Storage.set('json_input', this.jsonInput);
+      this.$nextTick(() => {
+        this.syncJsonLineNumbers();
+        this.syncJsonOutputLineNumbers();
+      });
     },
 
     minifyJson() {
@@ -963,10 +1105,117 @@ function odinApp() {
         this.jsonValidation = { valid: false, error: res.error };
       }
       Odin.Storage.set('json_input', this.jsonInput);
+      this.$nextTick(() => {
+        this.syncJsonLineNumbers();
+        this.syncJsonOutputLineNumbers();
+      });
+    },
+
+    getJsonLineNumbers() {
+      const lineCount = Math.max(1, (this.jsonInput.match(/\n/g) || []).length + 1);
+      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+    },
+
+    getJsonOutputLineNumbers() {
+      const source = this.jsonOutput || '';
+      const lineCount = Math.max(1, (source.match(/\n/g) || []).length + 1);
+      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+    },
+
+    syncJsonLineNumbers() {
+      if (!this.$refs || !this.$refs.jsonInput || !this.$refs.jsonGutter) return;
+      this.$refs.jsonGutter.scrollTop = this.$refs.jsonInput.scrollTop;
+    },
+
+    syncJsonOutputLineNumbers() {
+      if (!this.$refs || !this.$refs.jsonOutputPane || !this.$refs.jsonOutputGutter) return;
+      this.$refs.jsonOutputGutter.scrollTop = this.$refs.jsonOutputPane.scrollTop;
     },
 
     copyJson() {
       Odin.Clipboard.copy(this.jsonOutput || this.jsonInput, this);
+    },
+
+    validateXml() {
+      this.xmlValidation = Odin.XmlFormatter.validate(this.xmlInput);
+
+      if (this.xmlValidation.valid && this.xmlInput.trim()) {
+        const pretty = Odin.XmlFormatter.beautify(this.xmlInput);
+        if (pretty.result !== null) {
+          this.xmlOutput = pretty.result;
+          this.xmlOutputHtml = Odin.XmlFormatter.highlight(pretty.result);
+        }
+      } else if (!this.xmlInput.trim()) {
+        this.xmlOutput = '';
+        this.xmlOutputHtml = '';
+      }
+
+      Odin.Storage.set('xml_input', this.xmlInput);
+      this.$nextTick(() => {
+        this.syncXmlLineNumbers();
+        this.syncXmlOutputLineNumbers();
+      });
+    },
+
+    beautifyXml() {
+      const res = Odin.XmlFormatter.beautify(this.xmlInput);
+      if (res.result !== null) {
+        this.xmlInput = res.result;
+        this.xmlOutput = res.result;
+        this.xmlOutputHtml = Odin.XmlFormatter.highlight(res.result);
+        this.xmlValidation = { valid: true, error: null };
+      } else {
+        this.xmlValidation = { valid: false, error: res.error };
+      }
+
+      Odin.Storage.set('xml_input', this.xmlInput);
+      this.$nextTick(() => {
+        this.syncXmlLineNumbers();
+        this.syncXmlOutputLineNumbers();
+      });
+    },
+
+    minifyXml() {
+      const res = Odin.XmlFormatter.minify(this.xmlInput);
+      if (res.result !== null) {
+        this.xmlInput = res.result;
+        this.xmlOutput = res.result;
+        this.xmlOutputHtml = Odin.XmlFormatter.highlight(res.result);
+        this.xmlValidation = { valid: true, error: null };
+      } else {
+        this.xmlValidation = { valid: false, error: res.error };
+      }
+
+      Odin.Storage.set('xml_input', this.xmlInput);
+      this.$nextTick(() => {
+        this.syncXmlLineNumbers();
+        this.syncXmlOutputLineNumbers();
+      });
+    },
+
+    getXmlLineNumbers() {
+      const lineCount = Math.max(1, (this.xmlInput.match(/\n/g) || []).length + 1);
+      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+    },
+
+    getXmlOutputLineNumbers() {
+      const source = this.xmlOutput || '';
+      const lineCount = Math.max(1, (source.match(/\n/g) || []).length + 1);
+      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+    },
+
+    syncXmlLineNumbers() {
+      if (!this.$refs || !this.$refs.xmlInput || !this.$refs.xmlGutter) return;
+      this.$refs.xmlGutter.scrollTop = this.$refs.xmlInput.scrollTop;
+    },
+
+    syncXmlOutputLineNumbers() {
+      if (!this.$refs || !this.$refs.xmlOutputPane || !this.$refs.xmlOutputGutter) return;
+      this.$refs.xmlOutputGutter.scrollTop = this.$refs.xmlOutputPane.scrollTop;
+    },
+
+    copyXml() {
+      Odin.Clipboard.copy(this.xmlOutput || this.xmlInput, this);
     },
 
     // ---- Password Guard Methods ----
@@ -1009,8 +1258,8 @@ function odinApp() {
     // ---- Model Generator Methods ----
     generateModels() {
       if (!this.modelJsonInput.trim()) {
-        this.modelOutput = { csharp: '', go: '', python: '', php: '', error: null };
-        this.modelOutputHtml = { csharp: '', go: '', python: '', php: '' };
+        this.modelOutput = { csharp: '', go: '', python: '', error: null };
+        this.modelOutputHtml = { csharp: '', go: '', python: '' };
         return;
       }
       this.modelOutput = Odin.ModelGen.generateAll(this.modelJsonInput, {
@@ -1026,12 +1275,11 @@ function odinApp() {
         this.modelOutputHtml = {
           csharp: Odin.ModelGen.highlight(this.modelOutput.csharp, 'csharp'),
           go: Odin.ModelGen.highlight(this.modelOutput.go, 'go'),
-          python: Odin.ModelGen.highlight(this.modelOutput.python, 'python'),
-          php: Odin.ModelGen.highlight(this.modelOutput.php, 'php')
+          python: Odin.ModelGen.highlight(this.modelOutput.python, 'python')
         };
       } else {
         const err = this.modelOutput.csharp; // error message is same for all
-        this.modelOutputHtml = { csharp: err, go: err, python: err, php: err };
+        this.modelOutputHtml = { csharp: err, go: err, python: err };
       }
 
       Odin.Storage.set('model_json', this.modelJsonInput);
