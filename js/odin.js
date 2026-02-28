@@ -266,8 +266,13 @@ Odin.JsonFormatter = {
   },
 
   highlight(code) {
-    if (typeof Prism !== 'undefined' && Prism.languages.json) {
-      return Prism.highlight(code, Prism.languages.json, 'json');
+    if (!code) return '';
+    try {
+      if (typeof Prism !== 'undefined' && Prism.languages && Prism.languages.json) {
+        return Prism.highlight(code, Prism.languages.json, 'json');
+      }
+    } catch (e) {
+      console.warn('Prism highlight failed:', e);
     }
     return this._escapeHtml(code);
   },
@@ -883,6 +888,21 @@ function odinApp() {
     // ---- JSON Formatter Methods ----
     validateJson() {
       this.jsonValidation = Odin.JsonFormatter.validate(this.jsonInput);
+      // Live preview: if valid, show highlighted output
+      if (this.jsonValidation.valid && this.jsonInput.trim()) {
+        try {
+          const formatted = JSON.stringify(JSON.parse(this.jsonInput), null, 2);
+          this.jsonOutput = formatted;
+          this.jsonOutputHtml = Odin.JsonFormatter.highlight(formatted);
+        } catch (e) {
+          // fallback: show raw input
+          this.jsonOutput = this.jsonInput;
+          this.jsonOutputHtml = Odin.JsonFormatter.highlight(this.jsonInput);
+        }
+      } else if (!this.jsonInput.trim()) {
+        this.jsonOutput = '';
+        this.jsonOutputHtml = '';
+      }
       Odin.Storage.set('json_input', this.jsonInput);
     },
 
