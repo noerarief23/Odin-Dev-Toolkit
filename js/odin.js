@@ -1236,14 +1236,16 @@ Odin.Pomodoro = {
     if (entries.length === 0) return null;
 
     let md = '# Pomodoro Session Log — ' + today + '\n\n';
-    md += '| # | Time | Mode | Duration | Plan (Todo) | Actual |\n';
-    md += '|---|------|------|----------|-------------|--------|\n';
+    md += '| # | Start | Finish | Mode | Duration | Plan (Todo) | Actual |\n';
+    md += '|---|-------|--------|------|----------|-------------|--------|\n';
 
+    const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
     entries.forEach((e, i) => {
-      const time = e.completedAt ? new Date(e.completedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
+      const start = fmt(e.startedAt);
+      const finish = fmt(e.completedAt);
       const dur = this.formatTime(e.duration);
       const mode = this.MODES[e.mode] ? this.MODES[e.mode].label : e.mode;
-      md += '| ' + (i + 1) + ' | ' + time + ' | ' + mode + ' | ' + dur + ' | ' + (e.todo || '-') + ' | ' + (e.actual || '-') + ' |\n';
+      md += '| ' + (i + 1) + ' | ' + start + ' | ' + finish + ' | ' + mode + ' | ' + dur + ' | ' + (e.todo || '-') + ' | ' + (e.actual || '-') + ' |\n';
     });
 
     md += '\n---\n';
@@ -1552,6 +1554,9 @@ function odinApp() {
       this.pomoActualText = '';
       this.pomoShowActualPrompt = false;
       this.pomoSessionStartedAt = null;
+
+      // Reset timer back to full duration
+      this.pomoTimeLeft = this.pomoTotalTime;
 
       // Re-render icons for new log items
       this.$nextTick(() => {
