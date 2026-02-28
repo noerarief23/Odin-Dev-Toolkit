@@ -14,7 +14,7 @@
 |---|------|-------------|
 | 1 | **Regex Tester** | Real-time matching, color-coded groups, common patterns cheatsheet |
 | 2 | **QR Code Engine** | Generate QR codes with size control, download as PNG |
-| 3 | **JSON Pro Formatter** | Beautify/Minify with instant validation & error line indicator |
+| 3 | **JSON Formatter** | Beautify/Minify with instant validation & error line indicator |
 | 4 | **XML Formatter** | Beautify/Minify with instant validation & line indicators |
 | 5 | **Password Guard** | Secure generation with entropy meter (uses `crypto.getRandomValues`) |
 | 6 | **Model Generator** | JSON → C# classes, Go structs, Python dataclasses |
