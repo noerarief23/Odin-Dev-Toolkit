@@ -72,6 +72,20 @@ Odin.Clipboard = {
 };
 
 /* ================================================================
+   Odin.Utils — Shared utility helpers
+   ================================================================ */
+Odin.Utils = {
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+};
+
+/* ================================================================
    Odin.Regex — Real-time regex tester
    ================================================================ */
 Odin.Regex = {
@@ -90,9 +104,12 @@ Odin.Regex = {
 
   groupColors: ['match-group-0', 'match-group-1', 'match-group-2', 'match-group-3', 'match-group-4', 'match-group-5'],
 
+  /** Maximum execution time for regex matching (ms) */
+  TIMEOUT_MS: 3000,
+
   test(pattern, flags, testString) {
     if (!pattern || !testString) {
-      return { html: this._escapeHtml(testString || ''), matches: [], error: null, matchCount: 0 };
+      return { html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: null, matchCount: 0 };
     }
 
     let regex;
@@ -102,15 +119,24 @@ Odin.Regex = {
       flagSet.add('g');
       regex = new RegExp(pattern, [...flagSet].join(''));
     } catch (e) {
-      return { html: this._escapeHtml(testString), matches: [], error: e.message, matchCount: 0 };
+      return { html: Odin.Utils.escapeHtml(testString), matches: [], error: e.message, matchCount: 0 };
     }
 
     const matches = [];
-    let match;
     const allMatches = [];
 
     try {
+      const startTime = Date.now();
       for (const m of testString.matchAll(regex)) {
+        // ReDoS protection: abort if execution exceeds timeout
+        if (Date.now() - startTime > this.TIMEOUT_MS) {
+          return {
+            html: Odin.Utils.escapeHtml(testString),
+            matches: matches,
+            error: `Regex execution timed out after ${this.TIMEOUT_MS / 1000}s (possible ReDoS). Simplify your pattern.`,
+            matchCount: allMatches.length
+          };
+        }
         allMatches.push(m);
         matches.push({
           fullMatch: m[0],
@@ -120,7 +146,7 @@ Odin.Regex = {
         });
       }
     } catch (e) {
-      return { html: this._escapeHtml(testString), matches: [], error: e.message, matchCount: 0 };
+      return { html: Odin.Utils.escapeHtml(testString), matches: [], error: e.message, matchCount: 0 };
     }
 
     // Build highlighted HTML
@@ -129,8 +155,88 @@ Odin.Regex = {
     return { html, matches, error: null, matchCount: allMatches.length };
   },
 
+  /**
+   * Async version: runs regex in a Web Worker with hard timeout.
+   * Falls back to sync test() if Workers are unavailable.
+   */
+  testAsync(pattern, flags, testString, timeoutMs) {
+    const timeout = timeoutMs || this.TIMEOUT_MS;
+
+    if (typeof Worker === 'undefined') {
+      return Promise.resolve(this.test(pattern, flags, testString));
+    }
+
+    return new Promise((resolve) => {
+      const workerCode = `
+        self.onmessage = function(e) {
+          const { pattern, flags, testString } = e.data;
+          try {
+            const flagSet = new Set(flags.split(''));
+            flagSet.add('g');
+            const regex = new RegExp(pattern, [...flagSet].join(''));
+            const matches = [];
+            for (const m of testString.matchAll(regex)) {
+              matches.push({ fullMatch: m[0], index: m.index, groups: [...m].slice(1), namedGroups: m.groups || {} });
+            }
+            self.postMessage({ ok: true, matches });
+          } catch (err) {
+            self.postMessage({ ok: false, error: err.message });
+          }
+        };
+      `;
+
+      let worker;
+      try {
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        worker = new Worker(URL.createObjectURL(blob));
+      } catch (_) {
+        resolve(this.test(pattern, flags, testString));
+        return;
+      }
+
+      const timer = setTimeout(() => {
+        worker.terminate();
+        resolve({
+          html: Odin.Utils.escapeHtml(testString),
+          matches: [],
+          error: `Regex execution timed out after ${timeout / 1000}s (possible ReDoS). Simplify your pattern.`,
+          matchCount: 0
+        });
+      }, timeout);
+
+      worker.onmessage = (e) => {
+        clearTimeout(timer);
+        worker.terminate();
+        const data = e.data;
+
+        if (!data.ok) {
+          resolve({ html: Odin.Utils.escapeHtml(testString), matches: [], error: data.error, matchCount: 0 });
+          return;
+        }
+
+        // Rebuild highlighted HTML in main thread
+        const fakeMatches = data.matches.map(m => {
+          const arr = [m.fullMatch, ...m.groups];
+          arr.index = m.index;
+          arr.groups = m.namedGroups;
+          return arr;
+        });
+        const html = this._buildHighlightedHtml(testString, fakeMatches);
+        resolve({ html, matches: data.matches, error: null, matchCount: data.matches.length });
+      };
+
+      worker.onerror = () => {
+        clearTimeout(timer);
+        worker.terminate();
+        resolve(this.test(pattern, flags, testString));
+      };
+
+      worker.postMessage({ pattern, flags, testString });
+    });
+  },
+
   _buildHighlightedHtml(text, matches) {
-    if (!matches.length) return this._escapeHtml(text);
+    if (!matches.length) return Odin.Utils.escapeHtml(text);
 
     let result = '';
     let lastIndex = 0;
@@ -138,29 +244,20 @@ Odin.Regex = {
     for (const m of matches) {
       // Text before match
       if (m.index > lastIndex) {
-        result += this._escapeHtml(text.slice(lastIndex, m.index));
+        result += Odin.Utils.escapeHtml(text.slice(lastIndex, m.index));
       }
 
       // Full match with highlight
-      result += `<span class="match-highlight match-group-0">${this._escapeHtml(m[0])}</span>`;
+      result += `<span class="match-highlight match-group-0">${Odin.Utils.escapeHtml(m[0])}</span>`;
       lastIndex = m.index + m[0].length;
     }
 
     // Remaining text
     if (lastIndex < text.length) {
-      result += this._escapeHtml(text.slice(lastIndex));
+      result += Odin.Utils.escapeHtml(text.slice(lastIndex));
     }
 
     return result;
-  },
-
-  _escapeHtml(str) {
-    if (!str) return '';
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
   }
 };
 
@@ -274,7 +371,7 @@ Odin.JsonFormatter = {
     } catch (e) {
       console.warn('Prism highlight failed:', e);
     }
-    return this._escapeHtml(code);
+    return Odin.Utils.escapeHtml(code);
   },
 
   _parseError(e, input) {
@@ -292,13 +389,6 @@ Odin.JsonFormatter = {
     }
 
     return { message: msg, line, col };
-  },
-
-  _escapeHtml(str) {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
   }
 };
 
@@ -355,7 +445,7 @@ Odin.XmlFormatter = {
     } catch (e) {
       console.warn('XML Prism highlight failed:', e);
     }
-    return this._escapeHtml(code);
+    return Odin.Utils.escapeHtml(code);
   },
 
   _formatXml(input, minify = false) {
@@ -398,13 +488,6 @@ Odin.XmlFormatter = {
       line: lineMatch ? parseInt(lineMatch[1], 10) : null,
       col: colMatch ? parseInt(colMatch[1], 10) : null
     };
-  },
-
-  _escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
   }
 };
 
@@ -498,54 +581,155 @@ Odin.DiffChecker = {
   _lineDiff(leftText, rightText) {
     const a = leftText.split('\n');
     const b = rightText.split('\n');
-    const maxLen = Math.max(a.length, b.length);
+
+    // Myers diff algorithm (O(ND)) for optimal edit script
+    const lcs = this._myers(a, b);
     const lines = [];
     const stats = { added: 0, removed: 0, changed: 0 };
+    let lineNum = 0;
 
-    for (let i = 0; i < maxLen; i++) {
-      const left = a[i] ?? null;
-      const right = b[i] ?? null;
+    let ai = 0;
+    let bi = 0;
+    let li = 0;
 
-      if (left === right) {
-        lines.push({ type: 'same', left, right, line: i + 1 });
-        continue;
+    while (ai < a.length || bi < b.length) {
+      if (li < lcs.length && ai === lcs[li].ai && bi === lcs[li].bi) {
+        // Common line
+        lineNum++;
+        lines.push({ type: 'same', left: a[ai], right: b[bi], line: lineNum });
+        ai++;
+        bi++;
+        li++;
+      } else if (ai < a.length && (li >= lcs.length || ai < lcs[li].ai) && (li >= lcs.length || bi >= lcs[li].bi || a[ai] !== b[bi])) {
+        // Check if both sides changed (a removed and b added at same position)
+        const nextLcsAi = li < lcs.length ? lcs[li].ai : a.length;
+        const nextLcsBi = li < lcs.length ? lcs[li].bi : b.length;
+
+        // Pair up removals and additions as "changed" lines
+        if (ai < nextLcsAi && bi < nextLcsBi) {
+          lineNum++;
+          lines.push({ type: 'changed', left: a[ai], right: b[bi], line: lineNum });
+          stats.changed++;
+          ai++;
+          bi++;
+        } else if (ai < nextLcsAi) {
+          lineNum++;
+          lines.push({ type: 'removed', left: a[ai], right: '', line: lineNum });
+          stats.removed++;
+          ai++;
+        } else {
+          lineNum++;
+          lines.push({ type: 'added', left: '', right: b[bi], line: lineNum });
+          stats.added++;
+          bi++;
+        }
+      } else if (bi < b.length) {
+        lineNum++;
+        lines.push({ type: 'added', left: '', right: b[bi], line: lineNum });
+        stats.added++;
+        bi++;
+      } else {
+        lineNum++;
+        lines.push({ type: 'removed', left: a[ai], right: '', line: lineNum });
+        stats.removed++;
+        ai++;
       }
-
-      if (left === null) {
-        lines.push({ type: 'added', left: '', right, line: i + 1 });
-        stats.added += 1;
-        continue;
-      }
-
-      if (right === null) {
-        lines.push({ type: 'removed', left, right: '', line: i + 1 });
-        stats.removed += 1;
-        continue;
-      }
-
-      lines.push({ type: 'changed', left, right, line: i + 1 });
-      stats.changed += 1;
     }
 
     return { lines, stats };
+  },
+
+  /**
+   * Myers diff — compute LCS indices using the O(ND) algorithm.
+   * Returns array of { ai, bi } pairs indicating matching line indices.
+   */
+  _myers(a, b) {
+    const N = a.length;
+    const M = b.length;
+    const MAX = N + M;
+
+    if (MAX === 0) return [];
+
+    // Optimisation: trivial cases
+    if (N === 0 || M === 0) return [];
+
+    const vSize = 2 * MAX + 1;
+    const v = new Int32Array(vSize).fill(-1);
+    const offset = MAX;
+    v[offset + 1] = 0;
+
+    // Store trace for backtracking
+    const trace = [];
+
+    outer:
+    for (let d = 0; d <= MAX; d++) {
+      trace.push(v.slice());
+
+      for (let k = -d; k <= d; k += 2) {
+        let x;
+        if (k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1])) {
+          x = v[offset + k + 1]; // move down
+        } else {
+          x = v[offset + k - 1] + 1; // move right
+        }
+
+        let y = x - k;
+
+        // Follow diagonal (matches)
+        while (x < N && y < M && a[x] === b[y]) {
+          x++;
+          y++;
+        }
+
+        v[offset + k] = x;
+
+        if (x >= N && y >= M) break outer;
+      }
+    }
+
+    // Backtrack to find the actual edit path
+    const lcs = [];
+    let x = N;
+    let y = M;
+
+    for (let d = trace.length - 1; d >= 0; d--) {
+      const vPrev = trace[d];
+      const k = x - y;
+
+      let prevK;
+      if (k === -d || (k !== d && vPrev[offset + k - 1] < vPrev[offset + k + 1])) {
+        prevK = k + 1;
+      } else {
+        prevK = k - 1;
+      }
+
+      const prevX = vPrev[offset + prevK];
+      const prevY = prevX - prevK;
+
+      // Diagonal moves are matches
+      while (x > prevX && y > prevY) {
+        x--;
+        y--;
+        lcs.push({ ai: x, bi: y });
+      }
+
+      x = prevX;
+      y = prevY;
+    }
+
+    lcs.reverse();
+    return lcs;
   },
 
   _renderDiff(diff) {
     return diff.lines
       .map((row) => {
         const cls = `diff-row diff-${row.type}`;
-        const left = this._escapeHtml(row.left ?? '');
-        const right = this._escapeHtml(row.right ?? '');
+        const left = Odin.Utils.escapeHtml(row.left ?? '');
+        const right = Odin.Utils.escapeHtml(row.right ?? '');
         return `<div class="${cls}"><span class="diff-ln">${row.line}</span><span class="diff-left">${left}</span><span class="diff-right">${right}</span></div>`;
       })
       .join('');
-  },
-
-  _escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
   }
 };
 
@@ -562,26 +746,69 @@ Odin.PasswordGuard = {
 
   generate(length, options) {
     let pool = '';
-    if (options.lowercase) pool += this.charsets.lowercase;
-    if (options.uppercase) pool += this.charsets.uppercase;
-    if (options.numbers) pool += this.charsets.numbers;
-    if (options.symbols) pool += this.charsets.symbols;
+    const activeSets = [];
+    if (options.lowercase) { pool += this.charsets.lowercase; activeSets.push(this.charsets.lowercase); }
+    if (options.uppercase) { pool += this.charsets.uppercase; activeSets.push(this.charsets.uppercase); }
+    if (options.numbers)   { pool += this.charsets.numbers;   activeSets.push(this.charsets.numbers); }
+    if (options.symbols)   { pool += this.charsets.symbols;   activeSets.push(this.charsets.symbols); }
 
-    if (!pool) pool = this.charsets.lowercase; // fallback
+    if (!pool) { pool = this.charsets.lowercase; activeSets.push(this.charsets.lowercase); } // fallback
 
-    const password = this._secureRandom(pool, length);
+    let password = this._secureRandom(pool, length);
+
+    // Guarantee at least one character from each active set (if length allows)
+    if (activeSets.length > 1 && length >= activeSets.length) {
+      let chars = password.split('');
+      const usedPositions = new Set();
+
+      for (const set of activeSets) {
+        const hasChar = chars.some(c => set.includes(c));
+        if (!hasChar) {
+          // Pick a random position that hasn't been force-set yet
+          let pos;
+          do {
+            pos = this._secureRandomIndex(chars.length);
+          } while (usedPositions.has(pos));
+          usedPositions.add(pos);
+          chars[pos] = set[this._secureRandomIndex(set.length)];
+        }
+      }
+
+      password = chars.join('');
+    }
+
     const entropy = this.calcEntropy(length, pool.length);
     const strength = this.getStrength(entropy);
 
     return { password, entropy, strength, poolSize: pool.length };
   },
 
+  /** Rejection sampling: unbiased random index for a given range */
+  _secureRandomIndex(range) {
+    const array = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / range) * range; // largest multiple of range within Uint32
+    let val;
+    do {
+      crypto.getRandomValues(array);
+      val = array[0];
+    } while (val >= limit); // reject biased values
+    return val % range;
+  },
+
   _secureRandom(pool, length) {
     const array = new Uint32Array(length);
     crypto.getRandomValues(array);
     let result = '';
+    const limit = Math.floor(0x100000000 / pool.length) * pool.length;
     for (let i = 0; i < length; i++) {
-      result += pool[array[i] % pool.length];
+      // Rejection sampling to eliminate modulo bias
+      let val = array[i];
+      while (val >= limit) {
+        const extra = new Uint32Array(1);
+        crypto.getRandomValues(extra);
+        val = extra[0];
+      }
+      result += pool[val % pool.length];
     }
     return result;
   },
@@ -664,9 +891,10 @@ Odin.ModelGen = {
 
       const firstItem = value[0];
       if (firstItem !== null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
-        // Array of objects — generate a class for the item
+        // Array of objects — merge ALL elements' properties for complete schema
         const className = this.toClassName(key);
-        this._parseObject(className, firstItem, classes);
+        const merged = this._mergeArrayObjects(value);
+        this._parseObject(className, merged, classes);
         return { type: 'object', isArray: true, className };
       }
 
@@ -701,6 +929,24 @@ Odin.ModelGen = {
     classes.push({ name: className, properties });
   },
 
+  /**
+   * Merge properties from all objects in an array into a single superset object.
+   * This ensures the generated class captures all possible fields from heterogeneous arrays.
+   * If the same key appears with different types, the first non-null type wins.
+   */
+  _mergeArrayObjects(arr) {
+    const merged = {};
+    for (const item of arr) {
+      if (item === null || typeof item !== 'object' || Array.isArray(item)) continue;
+      for (const [key, value] of Object.entries(item)) {
+        if (!(key in merged) || merged[key] === null || merged[key] === undefined) {
+          merged[key] = value;
+        }
+      }
+    }
+    return merged;
+  },
+
   /* ---- Generate All Languages ---- */
   generateAll(jsonString, options = {}) {
     let parsed;
@@ -715,7 +961,9 @@ Odin.ModelGen = {
     const classes = [];
     if (Array.isArray(parsed)) {
       if (parsed.length > 0 && typeof parsed[0] === 'object') {
-        this._parseObject('Root', parsed[0], classes);
+        // Merge all array elements for complete schema
+        const merged = this._mergeArrayObjects(parsed);
+        this._parseObject('Root', merged, classes);
       }
     } else if (typeof parsed === 'object' && parsed !== null) {
       this._parseObject('Root', parsed, classes);
@@ -1001,15 +1249,10 @@ Odin.ModelGen = {
         const isNullable = schema.type === 'nullable';
         const typePrefix = isNullable ? '?' : '';
         const defaultVal = isNullable ? ' = null' : (schema.isArray ? ' = []' : '');
-        const comma = idx < cls.properties.length - 1 ? ',' : ',';
+        const comma = idx < cls.properties.length - 1 ? ',' : '';
 
         return `        public ${typePrefix}${phpType} $${paramName}${defaultVal}${comma}`;
       });
-
-      // Remove trailing comma from last param
-      if (params.length > 0) {
-        params[params.length - 1] = params[params.length - 1].replace(/,$/, '');
-      }
 
       lines.push(...params);
       lines.push('    ) {}');
@@ -1023,7 +1266,7 @@ Odin.ModelGen = {
   /* ---- Syntax highlight output ---- */
   highlight(code, language) {
     if (!code) return '';
-    if (typeof Prism === 'undefined') return this._escapeHtml(code);
+    if (typeof Prism === 'undefined') return Odin.Utils.escapeHtml(code);
 
     const langMap = {
       csharp: Prism.languages.csharp,
@@ -1033,12 +1276,12 @@ Odin.ModelGen = {
     };
 
     const lang = langMap[language];
-    if (!lang) return this._escapeHtml(code);
+    if (!lang) return Odin.Utils.escapeHtml(code);
 
     try {
       const highlighted = Prism.highlight(code, lang, language);
       if (typeof highlighted !== 'string') {
-        return this._escapeHtml(code);
+        return Odin.Utils.escapeHtml(code);
       }
 
       // Guard for PHP edge-cases where Prism may return raw, unsafe markup
@@ -1047,21 +1290,14 @@ Odin.ModelGen = {
         const looksUnhighlighted = highlighted === code || !highlighted.includes('token');
         const hasUnsafePhpTag = highlighted.includes('<?php') || highlighted.includes('<?');
         if (looksUnhighlighted || hasUnsafePhpTag) {
-          return this._escapeHtml(code);
+          return Odin.Utils.escapeHtml(code);
         }
       }
 
       return highlighted;
     } catch {
-      return this._escapeHtml(code);
+      return Odin.Utils.escapeHtml(code);
     }
-  },
-
-  _escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
   }
 };
 
@@ -1070,10 +1306,51 @@ Odin.ModelGen = {
    Odin.Pomodoro — Pomodoro Timer Engine
    ================================================================ */
 Odin.Pomodoro = {
-  MODES: {
-    focus: { duration: 25 * 60, label: 'Focus',       color: 'focus' },
-    short: { duration:  5 * 60, label: 'Short Break',  color: 'short' },
-    long:  { duration: 15 * 60, label: 'Long Break',   color: 'long'  }
+  /** Default durations (seconds) */
+  DEFAULTS: {
+    focus: 25 * 60,
+    short:  5 * 60,
+    long:  15 * 60
+  },
+
+  /** Min/Max constraints (minutes) */
+  LIMITS: { min: 1, max: 120 },
+
+  /** Load user-customised durations from localStorage, or fall back to defaults */
+  loadCustomDurations() {
+    try {
+      const raw = localStorage.getItem('odin_pomo_durations');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          focus: Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.focus ?? this.DEFAULTS.focus)),
+          short: Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.short ?? this.DEFAULTS.short)),
+          long:  Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.long  ?? this.DEFAULTS.long))
+        };
+      }
+    } catch (_) { /* ignore */ }
+    return { ...this.DEFAULTS };
+  },
+
+  /** Persist custom durations */
+  saveCustomDurations(durations) {
+    try {
+      localStorage.setItem('odin_pomo_durations', JSON.stringify(durations));
+    } catch (_) { /* ignore */ }
+  },
+
+  /** Build MODES dynamically from durations */
+  getModes(durations) {
+    const d = durations || this.loadCustomDurations();
+    return {
+      focus: { duration: d.focus, label: 'Focus',       color: 'focus' },
+      short: { duration: d.short, label: 'Short Break',  color: 'short' },
+      long:  { duration: d.long,  label: 'Long Break',   color: 'long'  }
+    };
+  },
+
+  get MODES() {
+    return this.getModes();
   },
 
   formatTime(seconds) {
@@ -1082,10 +1359,25 @@ Odin.Pomodoro = {
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
   },
 
+  /** Cached AudioContext instance */
+  _audioCtx: null,
+
+  /** Get or create a shared AudioContext */
+  _getAudioContext() {
+    if (!this._audioCtx || this._audioCtx.state === 'closed') {
+      this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Resume if suspended (e.g. after autoplay policy)
+    if (this._audioCtx.state === 'suspended') {
+      this._audioCtx.resume();
+    }
+    return this._audioCtx;
+  },
+
   /** Generate a pleasant "ting" sound using the Web Audio API */
   playTing() {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = this._getAudioContext();
 
       // Primary tone — 830 Hz sine
       const osc1 = ctx.createOscillator();
@@ -1128,9 +1420,6 @@ Odin.Pomodoro = {
           osc3.stop(ctx.currentTime + 0.6);
         } catch (_) { /* ignore */ }
       }, 300);
-
-      // Clean up context after playback
-      setTimeout(() => ctx.close(), 2000);
     } catch (_) {
       // Web Audio API not available — silent fallback
     }
@@ -1187,6 +1476,9 @@ Odin.Pomodoro = {
     return new Date().toISOString().slice(0, 10);
   },
 
+  /** Maximum age for session log entries (days) */
+  LOG_MAX_AGE_DAYS: 30,
+
   /** Load all session logs { "YYYY-MM-DD": [ { id, todo, actual, mode, duration, startedAt, completedAt } ] } */
   loadLog() {
     try {
@@ -1200,6 +1492,32 @@ Odin.Pomodoro = {
     try {
       localStorage.setItem(this.LOG_KEY, JSON.stringify(log));
     } catch (_) { /* storage full */ }
+  },
+
+  /**
+   * Remove log entries older than LOG_MAX_AGE_DAYS.
+   * Should be called once on app initialization.
+   */
+  cleanupOldLogs() {
+    const log = this.loadLog();
+    const keys = Object.keys(log);
+    if (keys.length === 0) return;
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - this.LOG_MAX_AGE_DAYS);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    let removed = 0;
+    for (const dateKey of keys) {
+      if (dateKey < cutoffStr) {
+        delete log[dateKey];
+        removed++;
+      }
+    }
+
+    if (removed > 0) {
+      this.saveLog(log);
+    }
   },
 
   /** Get today's session entries */
@@ -1273,14 +1591,19 @@ function odinApp() {
 
     // ---- Pomodoro Timer ----
     pomoMode: 'focus',
-    pomoTimeLeft: 25 * 60,
-    pomoTotalTime: 25 * 60,
+    pomoCustomDurations: Odin.Pomodoro.loadCustomDurations(),
+    pomoTimeLeft: Odin.Pomodoro.loadCustomDurations().focus,
+    pomoTotalTime: Odin.Pomodoro.loadCustomDurations().focus,
     pomoRunning: false,
     pomoPaused: false,
     pomoInterval: null,
     pomoEndTimestamp: null,
     pomoDailySessions: Odin.Pomodoro.getDailySessions(),
     pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
+    pomoShowSettings: false,       // show settings modal
+    pomoSettingFocus: 25,          // editable: minutes
+    pomoSettingShort: 5,
+    pomoSettingLong: 15,
 
     // ---- Pomodoro Session Log ----
     pomoTodoText: '',              // planned task before starting
@@ -1373,6 +1696,9 @@ function odinApp() {
       // Reset daily sessions if stale
       this.pomoDailySessions = Odin.Pomodoro.getDailySessions();
 
+      // Auto-cleanup old session logs (>30 days)
+      Odin.Pomodoro.cleanupOldLogs();
+
       // Keyboard shortcuts: Ctrl+1-8
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -1409,13 +1735,49 @@ function odinApp() {
         this.pomoInterval = null;
       }
       this.pomoMode = mode;
-      this.pomoTotalTime = Odin.Pomodoro.MODES[mode].duration;
+      const modes = Odin.Pomodoro.getModes(this.pomoCustomDurations);
+      this.pomoTotalTime = modes[mode].duration;
       this.pomoTimeLeft = this.pomoTotalTime;
       this.pomoRunning = false;
       this.pomoPaused = false;
       this.pomoEndTimestamp = null;
       this.pomoSessionStartedAt = null;
       if (!this.pomoRunning) document.title = 'Odin Dev Toolkit';
+    },
+
+    /** Open settings and populate fields from current durations */
+    pomoOpenSettings() {
+      this.pomoSettingFocus = Math.round(this.pomoCustomDurations.focus / 60);
+      this.pomoSettingShort = Math.round(this.pomoCustomDurations.short / 60);
+      this.pomoSettingLong  = Math.round(this.pomoCustomDurations.long / 60);
+      this.pomoShowSettings = true;
+    },
+
+    /** Save custom durations and apply */
+    pomoSaveSettings() {
+      const lim = Odin.Pomodoro.LIMITS;
+      const clamp = (v) => Math.max(lim.min, Math.min(lim.max, parseInt(v) || lim.min));
+      this.pomoCustomDurations = {
+        focus: clamp(this.pomoSettingFocus) * 60,
+        short: clamp(this.pomoSettingShort) * 60,
+        long:  clamp(this.pomoSettingLong) * 60
+      };
+      Odin.Pomodoro.saveCustomDurations(this.pomoCustomDurations);
+      this.pomoShowSettings = false;
+
+      // Re-apply to current mode if not running
+      if (!this.pomoRunning && !this.pomoPaused) {
+        this.pomoSwitchMode(this.pomoMode);
+      }
+
+      Odin.Toast.show(this, 'Timer durations updated!');
+    },
+
+    /** Reset durations to defaults */
+    pomoResetSettings() {
+      this.pomoSettingFocus = 25;
+      this.pomoSettingShort = 5;
+      this.pomoSettingLong = 15;
     },
 
     pomoStart() {
@@ -1615,9 +1977,10 @@ function odinApp() {
       Odin.Storage.set('regex_flags', f);
     },
 
-    runRegex() {
+    async runRegex() {
       this.buildFlags();
-      this.regexResult = Odin.Regex.test(this.regexPattern, this.regexFlags, this.regexTestString);
+      // Use async Web Worker-based matching for ReDoS protection
+      this.regexResult = await Odin.Regex.testAsync(this.regexPattern, this.regexFlags, this.regexTestString);
       Odin.Storage.set('regex_pattern', this.regexPattern);
       Odin.Storage.set('regex_test', this.regexTestString);
     },

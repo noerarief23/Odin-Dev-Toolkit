@@ -236,12 +236,72 @@
         class="tool-panel"
       >
         <!-- Header -->
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-            <i data-lucide="timer" class="w-6 h-6 text-gold-500"></i>
-            Pomodoro Timer
-          </h2>
-          <p class="text-sm text-slate-400 mt-1">Focus timer using the Pomodoro Technique — stay productive, one session at a time.</p>
+        <div class="mb-6 flex items-start justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+              <i data-lucide="timer" class="w-6 h-6 text-gold-500"></i>
+              Pomodoro Timer
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">Focus timer using the Pomodoro Technique — stay productive, one session at a time.</p>
+          </div>
+          <button
+            @click="pomoOpenSettings()"
+            class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            title="Timer Settings"
+          >
+            <i data-lucide="settings" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Duration Settings Modal -->
+        <div
+          x-show="pomoShowSettings"
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0"
+          x-transition:enter-end="opacity-100"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          @click.self="pomoShowSettings = false"
+          @keydown.escape.window="pomoShowSettings = false"
+        >
+          <div class="glass-strong rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <i data-lucide="clock" class="w-5 h-5 text-gold-500"></i>
+              Timer Durations
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Focus (minutes)</label>
+                <input type="number" x-model.number="pomoSettingFocus" min="1" max="120"
+                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Short Break (minutes)</label>
+                <input type="number" x-model.number="pomoSettingShort" min="1" max="120"
+                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Long Break (minutes)</label>
+                <input type="number" x-model.number="pomoSettingLong" min="1" max="120"
+                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-sky-400 focus:outline-none">
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-6">
+              <button @click="pomoResetSettings()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                Reset to defaults
+              </button>
+              <div class="flex gap-2">
+                <button @click="pomoShowSettings = false" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition-colors">
+                  Cancel
+                </button>
+                <button @click="pomoSaveSettings()" class="px-4 py-2 text-sm rounded-lg bg-gold-500 text-black font-medium hover:bg-gold-400 transition-colors">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Mode Tabs -->
