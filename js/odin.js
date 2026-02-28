@@ -1968,6 +1968,7 @@ function odinApp() {
       this.validateXml();
       this.runDiffCheck();
       this.generatePassword();
+      this.fgUpdateCSS();
       this.generateModels();
 
       // Generate QR on next tick
@@ -2577,6 +2578,10 @@ function odinApp() {
       } catch (err) {
         this.jwtError = err.message;
       }
+      // Refresh Lucide icons in dynamically rendered template blocks
+      this.$nextTick(() => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
     },
 
     jwtHighlight(obj) {
@@ -2669,6 +2674,7 @@ function odinApp() {
 
     imgReset() {
       if (this.imgResultUrl) URL.revokeObjectURL(this.imgResultUrl);
+      if (this.imgPreviewUrl && this.imgPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(this.imgPreviewUrl);
       this.imgFile = null;
       this.imgFileName = '';
       this.imgOriginalSize = 0;
@@ -2676,6 +2682,8 @@ function odinApp() {
       this.imgResultUrl = '';
       this.imgResultSize = 0;
       this.imgScale = 50;
+      this.imgFormat = 'image/webp';
+      this.imgQuality = 0.8;
       this.imgWidth = 0;
       this.imgHeight = 0;
       this.imgNewWidth = 0;
@@ -2799,6 +2807,7 @@ function odinApp() {
 
     b64SwitchMode(mode) {
       this.b64Mode = mode;
+      this.b64Input = '';
       this.b64Output = '';
       this.b64FileResult = '';
       this.b64FileName = '';
