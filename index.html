@@ -203,6 +203,69 @@
         <span>Model Generator</span>
         <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃8</kbd>
       </button>
+
+      <!-- Divider -->
+      <div class="my-2 border-t border-slate-800/40"></div>
+
+      <button
+        @click="switchTool('jwt')"
+        :class="activeTool === 'jwt' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'jwt'"
+        aria-label="JWT Explorer"
+      >
+        <i data-lucide="key" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>JWT Explorer</span>
+      </button>
+
+      <button
+        @click="switchTool('imgshrink')"
+        :class="activeTool === 'imgshrink' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'imgshrink'"
+        aria-label="Image Shrink"
+      >
+        <i data-lucide="image-down" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Image Shrink</span>
+      </button>
+
+      <button
+        @click="switchTool('caseconv')"
+        :class="activeTool === 'caseconv' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'caseconv'"
+        aria-label="Case Converter"
+      >
+        <i data-lucide="case-sensitive" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Case Converter</span>
+      </button>
+
+      <button
+        @click="switchTool('flexgrid')"
+        :class="activeTool === 'flexgrid' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'flexgrid'"
+        aria-label="Flex/Grid Lab"
+      >
+        <i data-lucide="layout-grid" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Flex/Grid Lab</span>
+      </button>
+
+      <button
+        @click="switchTool('base64')"
+        :class="activeTool === 'base64' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'base64'"
+        aria-label="Base64 Codec"
+      >
+        <i data-lucide="binary" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Base64 Codec</span>
+      </button>
     </nav>
 
     <!-- Sidebar Footer -->
@@ -1333,6 +1396,627 @@ Example:
             <div x-show="modelActiveTab === 'php'" class="code-output h-[32rem] overflow-auto rounded-t-none">
               <template x-if="!modelOutputHtml.php"><p class="text-slate-600 italic text-sm">Generated PHP code will appear here...</p></template>
               <template x-if="modelOutputHtml.php"><pre class="m-0 bg-transparent"><code class="language-php" x-html="modelOutputHtml.php"></code></pre></template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================
+           TOOL 9: JWT EXPLORER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'jwt'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="key" class="w-6 h-6 text-gold-500"></i>
+            JWT Explorer
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Local-only JWT decoder &mdash; nothing leaves your browser</p>
+        </div>
+
+        <!-- JWT Input -->
+        <div class="mb-6">
+          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste JWT Token</label>
+          <textarea
+            x-model="jwtInput"
+            @input.debounce.300ms="decodeJWT()"
+            class="textarea-valhalla w-full h-28 font-mono text-sm"
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Error -->
+        <template x-if="jwtError">
+          <div class="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <i data-lucide="alert-triangle" class="w-4 h-4 inline-block mr-1"></i>
+            <span x-text="jwtError"></span>
+          </div>
+        </template>
+
+        <!-- Expiry Badge -->
+        <template x-if="jwtPayload && jwtExpired !== null">
+          <div class="mb-4">
+            <span
+              :class="jwtExpired ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'"
+              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border"
+            >
+              <i :data-lucide="jwtExpired ? 'clock-alert' : 'check-circle'" class="w-3.5 h-3.5"></i>
+              <span x-text="jwtExpired ? 'Token Expired' : 'Token Valid (not expired)'"></span>
+            </span>
+          </div>
+        </template>
+
+        <!-- Decoded Panels -->
+        <template x-if="jwtHeader">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <!-- Header Panel -->
+            <div class="jwt-panel jwt-header-panel">
+              <div class="jwt-panel-label">
+                <i data-lucide="file-json" class="w-4 h-4"></i> Header
+              </div>
+              <pre class="m-0 bg-transparent text-sm overflow-auto max-h-64"><code class="language-json" x-html="jwtHighlight(jwtHeader)"></code></pre>
+            </div>
+
+            <!-- Payload Panel -->
+            <div class="jwt-panel jwt-payload-panel">
+              <div class="jwt-panel-label">
+                <i data-lucide="database" class="w-4 h-4"></i> Payload
+              </div>
+              <pre class="m-0 bg-transparent text-sm overflow-auto max-h-64"><code class="language-json" x-html="jwtHighlight(jwtPayload)"></code></pre>
+
+              <!-- Standard Claims -->
+              <template x-if="jwtPayload">
+                <div class="mt-3 pt-3 border-t border-slate-700/50 space-y-1">
+                  <template x-for="(val, key) in jwtPayload" :key="key">
+                    <template x-if="['iss','sub','aud','exp','iat','nbf','jti'].includes(key)">
+                      <div class="flex items-center gap-2 text-xs">
+                        <span class="text-gold-400 font-mono font-semibold" x-text="key"></span>
+                        <span class="text-slate-500" x-text="jwtFormatClaim(key, val)"></span>
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Signature Panel -->
+        <template x-if="jwtSignature">
+          <div class="jwt-panel jwt-signature-panel">
+            <div class="jwt-panel-label">
+              <i data-lucide="fingerprint" class="w-4 h-4"></i> Signature (hex)
+            </div>
+            <div class="font-mono text-xs text-slate-400 break-all leading-relaxed" x-text="jwtSignature"></div>
+          </div>
+        </template>
+      </section>
+
+
+      <!-- ============================================================
+           TOOL 10: IMAGE SHRINK
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'imgshrink'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="image-down" class="w-6 h-6 text-gold-500"></i>
+            Image Shrink
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Resize &amp; compress images locally using Canvas API &mdash; no uploads</p>
+        </div>
+
+        <!-- Drop Zone -->
+        <div
+          x-show="!imgFile"
+          @dragover.prevent="imgDragover = true"
+          @dragleave.prevent="imgDragover = false"
+          @drop.prevent="imgHandleDrop($event)"
+          @click="$refs.imgFileInput.click()"
+          :class="imgDragover ? 'img-dropzone-active' : ''"
+          class="img-dropzone cursor-pointer"
+        >
+          <i data-lucide="upload-cloud" class="w-12 h-12 text-slate-600 mb-3"></i>
+          <p class="text-slate-400 text-sm font-medium">Drop an image here or click to browse</p>
+          <p class="text-slate-600 text-xs mt-1">Supports JPEG, PNG, WebP, GIF, SVG</p>
+          <input type="file" accept="image/*" x-ref="imgFileInput" @change="imgHandleFile($event)" class="hidden">
+        </div>
+
+        <!-- Controls (visible when file loaded) -->
+        <template x-if="imgFile">
+          <div class="space-y-5">
+            <!-- Preview + Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <img :src="imgPreviewUrl" class="img-preview rounded-lg border border-slate-700/50" alt="Preview">
+              </div>
+              <div class="space-y-3">
+                <div class="text-sm">
+                  <span class="text-slate-500">File:</span>
+                  <span class="text-white font-medium ml-1" x-text="imgFileName"></span>
+                </div>
+                <div class="text-sm">
+                  <span class="text-slate-500">Original size:</span>
+                  <span class="text-white font-medium ml-1" x-text="Odin.ImageShrink.fileSizeLabel(imgOriginalSize)"></span>
+                </div>
+                <div class="text-sm">
+                  <span class="text-slate-500">Dimensions:</span>
+                  <span class="text-white font-medium ml-1" x-text="imgWidth + ' × ' + imgHeight + ' px'"></span>
+                </div>
+                <div class="text-sm">
+                  <span class="text-slate-500">New dimensions:</span>
+                  <span class="text-gold-400 font-semibold ml-1" x-text="imgNewWidth + ' × ' + imgNewHeight + ' px'"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scale Slider -->
+            <div>
+              <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+                Scale: <span class="text-gold-400 font-semibold" x-text="imgScale + '%'"></span>
+              </label>
+              <input
+                type="range" min="1" max="100" step="1"
+                x-model.number="imgScale"
+                @input="imgUpdateDimensions()"
+                class="slider-gold w-full"
+              >
+            </div>
+
+            <!-- Format + Quality -->
+            <div class="flex flex-wrap items-end gap-4">
+              <div>
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Format</label>
+                <div class="flex gap-1">
+                  <button
+                    @click="imgFormat = 'image/webp'"
+                    :class="imgFormat === 'image/webp' ? 'active' : ''"
+                    class="tab-btn px-3 py-1.5 text-xs rounded-lg"
+                  >WebP</button>
+                  <button
+                    @click="imgFormat = 'image/png'"
+                    :class="imgFormat === 'image/png' ? 'active' : ''"
+                    class="tab-btn px-3 py-1.5 text-xs rounded-lg"
+                  >PNG</button>
+                </div>
+              </div>
+              <div x-show="imgFormat === 'image/webp'" class="flex-1 min-w-[180px]">
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+                  Quality: <span class="text-gold-400 font-semibold" x-text="Math.round(imgQuality * 100) + '%'"></span>
+                </label>
+                <input
+                  type="range" min="0.1" max="1" step="0.05"
+                  x-model.number="imgQuality"
+                  class="slider-gold w-full"
+                >
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                @click="imgProcess()"
+                class="btn-gold px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+                :disabled="imgProcessing"
+              >
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                <span x-text="imgProcessing ? 'Processing...' : 'Shrink Image'"></span>
+              </button>
+              <button
+                x-show="imgResultUrl"
+                @click="imgDownload()"
+                class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+              >
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Download
+              </button>
+              <button
+                @click="imgReset()"
+                class="px-3 py-2 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+              >Reset</button>
+            </div>
+
+            <!-- Result -->
+            <template x-if="imgResultUrl">
+              <div class="glass rounded-xl p-4">
+                <div class="flex items-center gap-3 text-sm">
+                  <span class="text-slate-500">Output:</span>
+                  <span class="text-white font-medium" x-text="Odin.ImageShrink.fileSizeLabel(imgResultSize)"></span>
+                  <span class="text-slate-600">|</span>
+                  <span
+                    :class="imgResultSize < imgOriginalSize ? 'text-emerald-400' : 'text-red-400'"
+                    class="font-semibold"
+                    x-text="(imgResultSize < imgOriginalSize ? '↓ ' : '↑ ') + Math.abs(Math.round((1 - imgResultSize / imgOriginalSize) * 100)) + '% ' + (imgResultSize < imgOriginalSize ? 'smaller' : 'larger')"
+                  ></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </section>
+
+
+      <!-- ============================================================
+           TOOL 11: CASE CONVERTER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'caseconv'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="case-sensitive" class="w-6 h-6 text-gold-500"></i>
+            Case Converter
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Transform text between UPPERCASE, lowercase, camelCase, PascalCase, snake_case &amp; more</p>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mb-4">
+          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Conversion Mode</label>
+          <div class="flex flex-wrap gap-1.5">
+            <template x-for="m in [
+              {key:'upper', label:'UPPER'},
+              {key:'lower', label:'lower'},
+              {key:'camel', label:'camelCase'},
+              {key:'pascal', label:'PascalCase'},
+              {key:'snake', label:'snake_case'},
+              {key:'kebab', label:'kebab-case'},
+              {key:'title', label:'Title Case'}
+            ]" :key="m.key">
+              <button
+                @click="setCaseMode(m.key)"
+                :class="caseMode === m.key ? 'active' : ''"
+                class="tab-btn px-3 py-1.5 text-xs rounded-lg font-mono"
+                x-text="m.label"
+              ></button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="mb-4">
+          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
+          <textarea
+            x-model="caseInput"
+            @input.debounce.200ms="convertCase()"
+            class="textarea-valhalla w-full h-36 font-mono text-sm"
+            placeholder="Type or paste your text here..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Output -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs text-slate-500 uppercase tracking-wider">Output</label>
+            <button
+              @click="copyCaseOutput()"
+              x-show="caseOutput"
+              class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
+            >
+              <i data-lucide="copy" class="w-3 h-3"></i> Copy
+            </button>
+          </div>
+          <textarea
+            x-model="caseOutput"
+            readonly
+            class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-900/50"
+            placeholder="Converted text will appear here..."
+          ></textarea>
+        </div>
+      </section>
+
+
+      <!-- ============================================================
+           TOOL 12: FLEXBOX / GRID INTERACTIVE PLAYGROUND
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'flexgrid'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+        x-init="$watch('flexGridMode', () => fgUpdateCSS()); $watch('fgFlexDirection', () => fgUpdateCSS()); $watch('fgJustifyContent', () => fgUpdateCSS()); $watch('fgAlignItems', () => fgUpdateCSS()); $watch('fgFlexWrap', () => fgUpdateCSS()); $watch('fgGap', () => fgUpdateCSS()); $watch('fgGridCols', () => fgUpdateCSS()); $watch('fgGridRows', () => fgUpdateCSS()); $watch('fgGridGap', () => fgUpdateCSS()); $watch('fgGridJustifyItems', () => fgUpdateCSS()); $watch('fgGridAlignItems', () => fgUpdateCSS());"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-6 h-6 text-gold-500"></i>
+            Flex/Grid Lab
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Visual playground to experiment with CSS Flexbox &amp; Grid properties</p>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex gap-1.5 mb-5">
+          <button
+            @click="flexGridMode = 'flex'"
+            :class="flexGridMode === 'flex' ? 'active' : ''"
+            class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+          >Flexbox</button>
+          <button
+            @click="flexGridMode = 'grid'"
+            :class="flexGridMode === 'grid' ? 'active' : ''"
+            class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+          >Grid</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Controls Panel -->
+          <div class="lg:col-span-1 space-y-4">
+            <!-- Flexbox Controls -->
+            <div x-show="flexGridMode === 'flex'" class="space-y-3">
+              <div>
+                <label class="fg-label">flex-direction</label>
+                <select x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
+                  <option value="row">row</option>
+                  <option value="row-reverse">row-reverse</option>
+                  <option value="column">column</option>
+                  <option value="column-reverse">column-reverse</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">justify-content</label>
+                <select x-model="fgJustifyContent" class="input-valhalla w-full text-sm">
+                  <option value="flex-start">flex-start</option>
+                  <option value="flex-end">flex-end</option>
+                  <option value="center">center</option>
+                  <option value="space-between">space-between</option>
+                  <option value="space-around">space-around</option>
+                  <option value="space-evenly">space-evenly</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">align-items</label>
+                <select x-model="fgAlignItems" class="input-valhalla w-full text-sm">
+                  <option value="stretch">stretch</option>
+                  <option value="flex-start">flex-start</option>
+                  <option value="flex-end">flex-end</option>
+                  <option value="center">center</option>
+                  <option value="baseline">baseline</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">flex-wrap</label>
+                <select x-model="fgFlexWrap" class="input-valhalla w-full text-sm">
+                  <option value="nowrap">nowrap</option>
+                  <option value="wrap">wrap</option>
+                  <option value="wrap-reverse">wrap-reverse</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">gap: <span class="text-gold-400" x-text="fgGap + 'px'"></span></label>
+                <input type="range" min="0" max="40" step="2" x-model="fgGap" class="slider-gold w-full">
+              </div>
+            </div>
+
+            <!-- Grid Controls -->
+            <div x-show="flexGridMode === 'grid'" class="space-y-3">
+              <div>
+                <label class="fg-label">grid-template-columns</label>
+                <input type="text" x-model="fgGridCols" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="1fr 1fr 1fr">
+              </div>
+              <div>
+                <label class="fg-label">grid-template-rows</label>
+                <input type="text" x-model="fgGridRows" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="auto">
+              </div>
+              <div>
+                <label class="fg-label">justify-items</label>
+                <select x-model="fgGridJustifyItems" class="input-valhalla w-full text-sm">
+                  <option value="stretch">stretch</option>
+                  <option value="start">start</option>
+                  <option value="end">end</option>
+                  <option value="center">center</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">align-items</label>
+                <select x-model="fgGridAlignItems" class="input-valhalla w-full text-sm">
+                  <option value="stretch">stretch</option>
+                  <option value="start">start</option>
+                  <option value="end">end</option>
+                  <option value="center">center</option>
+                </select>
+              </div>
+              <div>
+                <label class="fg-label">gap: <span class="text-gold-400" x-text="fgGridGap + 'px'"></span></label>
+                <input type="range" min="0" max="40" step="2" x-model="fgGridGap" class="slider-gold w-full">
+              </div>
+            </div>
+
+            <!-- Item Count (shared) -->
+            <div>
+              <label class="fg-label">Items: <span class="text-gold-400" x-text="fgItemCount"></span></label>
+              <div class="flex items-center gap-2">
+                <button @click="fgRemoveItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">−</button>
+                <div class="flex-1 h-1 rounded bg-slate-700"></div>
+                <button @click="fgAddItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="fg-preview-container" :style="fgGetPreviewStyle()">
+              <template x-for="i in fgItemCount" :key="i">
+                <div class="fg-preview-item" x-text="i"></div>
+              </template>
+            </div>
+
+            <!-- Generated CSS -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs text-slate-500 uppercase tracking-wider">Generated CSS</label>
+                <button
+                  @click="fgCopyCSS()"
+                  x-show="fgGeneratedCSS"
+                  class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
+                >
+                  <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                </button>
+              </div>
+              <pre class="code-output rounded-lg overflow-auto p-4 text-sm font-mono" x-text="fgGeneratedCSS"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ============================================================
+           TOOL 13: BASE64 ENCODER / DECODER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'base64'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="binary" class="w-6 h-6 text-gold-500"></i>
+            Base64 Codec
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Encode &amp; decode text or files to Base64 strings &mdash; fully offline</p>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <div class="flex gap-1.5">
+            <button
+              @click="b64SwitchMode('encode')"
+              :class="b64Mode === 'encode' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >Encode</button>
+            <button
+              @click="b64SwitchMode('decode')"
+              :class="b64Mode === 'decode' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >Decode</button>
+          </div>
+
+          <!-- File Mode Toggle -->
+          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer ml-2">
+            <span class="relative inline-block">
+              <input type="checkbox" class="sr-only peer" x-model="b64FileMode">
+              <div class="toggle-track peer-checked:bg-gold-500/30"></div>
+              <div class="toggle-thumb peer-checked:translate-x-5 peer-checked:bg-gold-400"></div>
+            </span>
+            File mode
+          </label>
+        </div>
+
+        <!-- Text Mode -->
+        <div x-show="!b64FileMode" class="space-y-4">
+          <div>
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="b64Mode === 'encode' ? 'Plain Text' : 'Base64 String'"></label>
+            <textarea
+              x-model="b64Input"
+              @input.debounce.300ms="b64Convert()"
+              class="textarea-valhalla w-full h-36 font-mono text-sm"
+              :placeholder="b64Mode === 'encode' ? 'Enter text to encode...' : 'Paste Base64 string to decode...'"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs text-slate-500 uppercase tracking-wider" x-text="b64Mode === 'encode' ? 'Base64 Output' : 'Decoded Text'"></label>
+              <button
+                @click="b64CopyOutput()"
+                x-show="b64Output"
+                class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
+              >
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy
+              </button>
+            </div>
+            <textarea
+              x-model="b64Output"
+              readonly
+              class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-900/50"
+              placeholder="Output will appear here..."
+            ></textarea>
+          </div>
+
+          <!-- Decode to File button -->
+          <template x-if="b64Mode === 'decode' && b64Input.trim()">
+            <button
+              @click="b64DownloadDecoded()"
+              class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+            >
+              <i data-lucide="download" class="w-4 h-4"></i>
+              Download as File
+            </button>
+          </template>
+        </div>
+
+        <!-- File Mode -->
+        <div x-show="b64FileMode" class="space-y-4">
+          <!-- Encode File -->
+          <div x-show="b64Mode === 'encode'">
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Select File to Encode</label>
+            <div class="flex items-center gap-3">
+              <label class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
+                <i data-lucide="file-up" class="w-4 h-4"></i>
+                Choose File
+                <input type="file" @change="b64HandleFile($event)" class="hidden">
+              </label>
+              <span class="text-sm text-slate-400" x-text="b64FileName || 'No file selected'"></span>
+            </div>
+
+            <template x-if="b64FileResult">
+              <div class="mt-4">
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs text-slate-500 uppercase tracking-wider">Base64 Output</label>
+                  <button
+                    @click="b64CopyOutput()"
+                    class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
+                  >
+                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                  </button>
+                </div>
+                <div class="code-output rounded-lg overflow-auto p-3 max-h-48 font-mono text-xs break-all" x-text="b64FileResult"></div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Decode File -->
+          <div x-show="b64Mode === 'decode'">
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste Base64 String</label>
+            <textarea
+              x-model="b64Input"
+              class="textarea-valhalla w-full h-36 font-mono text-sm"
+              placeholder="Paste Base64-encoded file data here..."
+              spellcheck="false"
+            ></textarea>
+
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                @click="b64DownloadDecoded()"
+                class="btn-gold px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+                :disabled="!b64Input.trim()"
+              >
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Decode &amp; Download
+              </button>
+              <template x-if="b64DetectedMime">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-sky-500/15 text-sky-400 border border-sky-500/30" x-text="b64DetectedMime"></span>
+              </template>
             </div>
           </div>
         </div>

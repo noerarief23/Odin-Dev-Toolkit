@@ -1578,6 +1578,234 @@ Odin.Pomodoro = {
 
 
 /* ================================================================
+   Odin.JWT — Local-only JWT Decoder
+   ================================================================ */
+Odin.JWT = {
+  _b64urlDecode(str) {
+    let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    try {
+      return decodeURIComponent(
+        atob(b64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      );
+    } catch (_) {
+      return atob(b64);
+    }
+  },
+
+  decode(token) {
+    if (!token || typeof token !== 'string') throw new Error('Empty token');
+    const parts = token.trim().split('.');
+    if (parts.length !== 3) throw new Error('Invalid JWT: expected 3 parts, got ' + parts.length);
+
+    let header, payload;
+    try { header = JSON.parse(this._b64urlDecode(parts[0])); }
+    catch (_) { throw new Error('Invalid JWT header: not valid Base64/JSON'); }
+
+    try { payload = JSON.parse(this._b64urlDecode(parts[1])); }
+    catch (_) { throw new Error('Invalid JWT payload: not valid Base64/JSON'); }
+
+    const sigBytes = atob(parts[2].replace(/-/g, '+').replace(/_/g, '/'));
+    const sigHex = Array.from(sigBytes, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+
+    return { header, payload, signature: sigHex };
+  },
+
+  isExpired(payload) {
+    if (!payload || typeof payload.exp !== 'number') return null;
+    return (payload.exp * 1000) < Date.now();
+  },
+
+  standardClaims: {
+    iss: 'Issuer', sub: 'Subject', aud: 'Audience', exp: 'Expiration Time',
+    nbf: 'Not Before', iat: 'Issued At', jti: 'JWT ID'
+  },
+
+  formatTimestamp(val) {
+    if (typeof val !== 'number') return null;
+    try { return new Date(val * 1000).toISOString(); } catch (_) { return null; }
+  }
+};
+
+
+/* ================================================================
+   Odin.ImageShrink — Browser Canvas Image Resizer
+   ================================================================ */
+Odin.ImageShrink = {
+  processImage(file, scalePercent, format, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = scalePercent / 100;
+          const w = Math.round(img.naturalWidth * scale);
+          const h = Math.round(img.naturalHeight * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, w, h);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return reject(new Error('Canvas export failed'));
+              resolve({ blob, width: w, height: h, size: blob.size });
+            },
+            format,
+            format === 'image/png' ? undefined : quality
+          );
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  fileSizeLabel(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+};
+
+
+/* ================================================================
+   Odin.CaseConverter — Text Case Transformations
+   ================================================================ */
+Odin.CaseConverter = {
+  _splitWords(text) {
+    return text
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/[_\-\.]+/g, ' ')
+      .replace(/[^a-zA-Z0-9\s]/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+  },
+
+  toUpperCase(text) { return text.toUpperCase(); },
+  toLowerCase(text) { return text.toLowerCase(); },
+
+  toCamelCase(text) {
+    const words = this._splitWords(text);
+    if (!words.length) return '';
+    return words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+  },
+
+  toPascalCase(text) {
+    return this._splitWords(text).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+  },
+
+  toSnakeCase(text) {
+    return this._splitWords(text).map(w => w.toLowerCase()).join('_');
+  },
+
+  toKebabCase(text) {
+    return this._splitWords(text).map(w => w.toLowerCase()).join('-');
+  },
+
+  toTitleCase(text) {
+    return text.replace(/\b\w/g, c => c.toUpperCase());
+  },
+
+  convert(text, mode) {
+    switch (mode) {
+      case 'upper':   return this.toUpperCase(text);
+      case 'lower':   return this.toLowerCase(text);
+      case 'camel':   return this.toCamelCase(text);
+      case 'pascal':  return this.toPascalCase(text);
+      case 'snake':   return this.toSnakeCase(text);
+      case 'kebab':   return this.toKebabCase(text);
+      case 'title':   return this.toTitleCase(text);
+      default: return text;
+    }
+  }
+};
+
+
+/* ================================================================
+   Odin.FlexGridPlayground — CSS Layout Code Generator
+   ================================================================ */
+Odin.FlexGridPlayground = {
+  getFlexCSS(opts) {
+    let css = '.container {\n';
+    css += '  display: flex;\n';
+    if (opts.direction && opts.direction !== 'row') css += '  flex-direction: ' + opts.direction + ';\n';
+    if (opts.justifyContent && opts.justifyContent !== 'flex-start') css += '  justify-content: ' + opts.justifyContent + ';\n';
+    if (opts.alignItems && opts.alignItems !== 'stretch') css += '  align-items: ' + opts.alignItems + ';\n';
+    if (opts.flexWrap && opts.flexWrap !== 'nowrap') css += '  flex-wrap: ' + opts.flexWrap + ';\n';
+    if (opts.gap && opts.gap !== '0') css += '  gap: ' + opts.gap + 'px;\n';
+    css += '}';
+    return css;
+  },
+
+  getGridCSS(opts) {
+    let css = '.container {\n';
+    css += '  display: grid;\n';
+    if (opts.columns) css += '  grid-template-columns: ' + opts.columns + ';\n';
+    if (opts.rows && opts.rows !== 'auto') css += '  grid-template-rows: ' + opts.rows + ';\n';
+    if (opts.justifyItems && opts.justifyItems !== 'stretch') css += '  justify-items: ' + opts.justifyItems + ';\n';
+    if (opts.alignItems && opts.alignItems !== 'stretch') css += '  align-items: ' + opts.alignItems + ';\n';
+    if (opts.gap && opts.gap !== '0') css += '  gap: ' + opts.gap + 'px;\n';
+    css += '}';
+    return css;
+  }
+};
+
+
+/* ================================================================
+   Odin.Base64 — Encode / Decode (Text & File)
+   ================================================================ */
+Odin.Base64 = {
+  encodeText(text) {
+    return btoa(unescape(encodeURIComponent(text)));
+  },
+
+  decodeText(b64) {
+    try {
+      return decodeURIComponent(escape(atob(b64)));
+    } catch (_) {
+      return atob(b64);
+    }
+  },
+
+  encodeArrayBuffer(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  },
+
+  decodeToBlob(b64, mimeType) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+  },
+
+  detectMime(b64) {
+    try {
+      const raw = atob(b64.substring(0, 16));
+      const hex = Array.from(raw, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      if (hex.startsWith('89504e47')) return 'image/png';
+      if (hex.startsWith('ffd8ff'))   return 'image/jpeg';
+      if (hex.startsWith('47494638')) return 'image/gif';
+      if (hex.startsWith('52494646') && raw.substring(8, 12) === 'WEBP') return 'image/webp';
+      if (hex.startsWith('25504446')) return 'application/pdf';
+      if (hex.startsWith('504b0304')) return 'application/zip';
+    } catch (_) { /* ignore */ }
+    return 'application/octet-stream';
+  }
+};
+
+
+/* ================================================================
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
@@ -1664,6 +1892,60 @@ function odinApp() {
     goUsePointers: Odin.Storage.get('go_use_pointers', false),
     pyUseOptional: Odin.Storage.get('py_use_optional', false),
     phpUseReadonly: Odin.Storage.get('php_use_readonly', true),
+
+    // ---- JWT Explorer ----
+    jwtInput: '',
+    jwtHeader: null,
+    jwtPayload: null,
+    jwtSignature: '',
+    jwtError: '',
+    jwtExpired: null,
+
+    // ---- Image Shrink ----
+    imgFile: null,
+    imgFileName: '',
+    imgOriginalSize: 0,
+    imgPreviewUrl: '',
+    imgResultUrl: '',
+    imgResultSize: 0,
+    imgScale: 50,
+    imgFormat: 'image/webp',
+    imgQuality: 0.8,
+    imgProcessing: false,
+    imgWidth: 0,
+    imgHeight: 0,
+    imgNewWidth: 0,
+    imgNewHeight: 0,
+    imgDragover: false,
+
+    // ---- Case Converter ----
+    caseInput: '',
+    caseMode: 'upper',
+    caseOutput: '',
+
+    // ---- Flex/Grid Playground ----
+    flexGridMode: 'flex',
+    fgFlexDirection: 'row',
+    fgJustifyContent: 'flex-start',
+    fgAlignItems: 'stretch',
+    fgFlexWrap: 'nowrap',
+    fgGap: '10',
+    fgGridCols: '1fr 1fr 1fr',
+    fgGridRows: 'auto',
+    fgGridGap: '10',
+    fgGridJustifyItems: 'stretch',
+    fgGridAlignItems: 'stretch',
+    fgItemCount: 4,
+    fgGeneratedCSS: '',
+
+    // ---- Base64 Codec ----
+    b64Input: '',
+    b64Output: '',
+    b64Mode: 'encode',
+    b64FileMode: false,
+    b64FileName: '',
+    b64FileResult: '',
+    b64DetectedMime: '',
 
     // ---- Init ----
     init() {
@@ -2276,6 +2558,251 @@ function odinApp() {
     copyModelOutput() {
       const code = this.modelOutput[this.modelActiveTab];
       if (code) Odin.Clipboard.copy(code, this);
+    },
+
+    // ---- JWT Explorer Methods ----
+    decodeJWT() {
+      this.jwtHeader = null;
+      this.jwtPayload = null;
+      this.jwtSignature = '';
+      this.jwtError = '';
+      this.jwtExpired = null;
+      if (!this.jwtInput.trim()) return;
+      try {
+        const result = Odin.JWT.decode(this.jwtInput.trim());
+        this.jwtHeader = result.header;
+        this.jwtPayload = result.payload;
+        this.jwtSignature = result.signature;
+        this.jwtExpired = Odin.JWT.isExpired(result.payload);
+      } catch (err) {
+        this.jwtError = err.message;
+      }
+    },
+
+    jwtHighlight(obj) {
+      if (!obj) return '';
+      try {
+        const raw = JSON.stringify(obj, null, 2);
+        if (typeof Prism !== 'undefined') {
+          return Prism.highlight(raw, Prism.languages.json, 'json');
+        }
+        return Odin.Utils.escapeHtml(raw);
+      } catch (_) { return ''; }
+    },
+
+    jwtFormatClaim(key, val) {
+      const label = Odin.JWT.standardClaims[key];
+      const ts = (key === 'exp' || key === 'iat' || key === 'nbf') ? Odin.JWT.formatTimestamp(val) : null;
+      return (label ? label : key) + (ts ? ' — ' + ts : '');
+    },
+
+    // ---- Image Shrink Methods ----
+    imgHandleDrop(e) {
+      this.imgDragover = false;
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (files && files.length) this.imgLoadFile(files[0]);
+    },
+
+    imgHandleFile(e) {
+      const files = e.target.files;
+      if (files && files.length) this.imgLoadFile(files[0]);
+    },
+
+    imgLoadFile(file) {
+      if (!file.type.startsWith('image/')) {
+        Odin.Toast.show(this, 'Please select an image file');
+        return;
+      }
+      this.imgFile = file;
+      this.imgFileName = file.name;
+      this.imgOriginalSize = file.size;
+      this.imgResultUrl = '';
+      this.imgResultSize = 0;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imgPreviewUrl = reader.result;
+        const img = new Image();
+        img.onload = () => {
+          this.imgWidth = img.naturalWidth;
+          this.imgHeight = img.naturalHeight;
+          this.imgNewWidth = Math.round(img.naturalWidth * this.imgScale / 100);
+          this.imgNewHeight = Math.round(img.naturalHeight * this.imgScale / 100);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    },
+
+    imgUpdateDimensions() {
+      this.imgNewWidth = Math.round(this.imgWidth * this.imgScale / 100);
+      this.imgNewHeight = Math.round(this.imgHeight * this.imgScale / 100);
+    },
+
+    async imgProcess() {
+      if (!this.imgFile) return;
+      this.imgProcessing = true;
+      try {
+        const result = await Odin.ImageShrink.processImage(
+          this.imgFile, this.imgScale, this.imgFormat, this.imgQuality
+        );
+        if (this.imgResultUrl) URL.revokeObjectURL(this.imgResultUrl);
+        this.imgResultUrl = URL.createObjectURL(result.blob);
+        this.imgResultSize = result.size;
+        this.imgNewWidth = result.width;
+        this.imgNewHeight = result.height;
+        Odin.Toast.show(this, 'Image processed! ' + Odin.ImageShrink.fileSizeLabel(result.size));
+      } catch (err) {
+        Odin.Toast.show(this, 'Error: ' + err.message);
+      }
+      this.imgProcessing = false;
+    },
+
+    imgDownload() {
+      if (!this.imgResultUrl) return;
+      const ext = this.imgFormat === 'image/webp' ? '.webp' : '.png';
+      const name = (this.imgFileName.replace(/\.[^.]+$/, '') || 'image') + '-shrunk' + ext;
+      const a = document.createElement('a');
+      a.href = this.imgResultUrl;
+      a.download = name;
+      a.click();
+    },
+
+    imgReset() {
+      if (this.imgResultUrl) URL.revokeObjectURL(this.imgResultUrl);
+      this.imgFile = null;
+      this.imgFileName = '';
+      this.imgOriginalSize = 0;
+      this.imgPreviewUrl = '';
+      this.imgResultUrl = '';
+      this.imgResultSize = 0;
+      this.imgScale = 50;
+      this.imgWidth = 0;
+      this.imgHeight = 0;
+      this.imgNewWidth = 0;
+      this.imgNewHeight = 0;
+    },
+
+    // ---- Case Converter Methods ----
+    convertCase() {
+      this.caseOutput = this.caseInput ? Odin.CaseConverter.convert(this.caseInput, this.caseMode) : '';
+    },
+
+    setCaseMode(mode) {
+      this.caseMode = mode;
+      this.convertCase();
+    },
+
+    copyCaseOutput() {
+      if (this.caseOutput) Odin.Clipboard.copy(this.caseOutput, this);
+    },
+
+    // ---- Flex/Grid Playground Methods ----
+    fgUpdateCSS() {
+      if (this.flexGridMode === 'flex') {
+        this.fgGeneratedCSS = Odin.FlexGridPlayground.getFlexCSS({
+          direction: this.fgFlexDirection,
+          justifyContent: this.fgJustifyContent,
+          alignItems: this.fgAlignItems,
+          flexWrap: this.fgFlexWrap,
+          gap: this.fgGap
+        });
+      } else {
+        this.fgGeneratedCSS = Odin.FlexGridPlayground.getGridCSS({
+          columns: this.fgGridCols,
+          rows: this.fgGridRows,
+          justifyItems: this.fgGridJustifyItems,
+          alignItems: this.fgGridAlignItems,
+          gap: this.fgGridGap
+        });
+      }
+    },
+
+    fgGetPreviewStyle() {
+      if (this.flexGridMode === 'flex') {
+        return {
+          display: 'flex',
+          flexDirection: this.fgFlexDirection,
+          justifyContent: this.fgJustifyContent,
+          alignItems: this.fgAlignItems,
+          flexWrap: this.fgFlexWrap,
+          gap: this.fgGap + 'px'
+        };
+      } else {
+        return {
+          display: 'grid',
+          gridTemplateColumns: this.fgGridCols,
+          gridTemplateRows: this.fgGridRows,
+          justifyItems: this.fgGridJustifyItems,
+          alignItems: this.fgGridAlignItems,
+          gap: this.fgGridGap + 'px'
+        };
+      }
+    },
+
+    fgCopyCSS() {
+      if (this.fgGeneratedCSS) Odin.Clipboard.copy(this.fgGeneratedCSS, this);
+    },
+
+    fgAddItem() { if (this.fgItemCount < 12) this.fgItemCount++; },
+    fgRemoveItem() { if (this.fgItemCount > 1) this.fgItemCount--; },
+
+    // ---- Base64 Codec Methods ----
+    b64Convert() {
+      if (!this.b64Input.trim()) { this.b64Output = ''; return; }
+      try {
+        if (this.b64Mode === 'encode') {
+          this.b64Output = Odin.Base64.encodeText(this.b64Input);
+        } else {
+          this.b64Output = Odin.Base64.decodeText(this.b64Input);
+        }
+      } catch (err) {
+        this.b64Output = 'Error: ' + err.message;
+      }
+    },
+
+    b64HandleFile(e) {
+      const files = e.target.files;
+      if (!files || !files.length) return;
+      const file = files[0];
+      this.b64FileName = file.name;
+      if (this.b64Mode === 'encode') {
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.b64FileResult = Odin.Base64.encodeArrayBuffer(reader.result);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    },
+
+    b64DownloadDecoded() {
+      if (!this.b64Input.trim()) return;
+      try {
+        const clean = this.b64Input.trim().replace(/\s/g, '');
+        this.b64DetectedMime = Odin.Base64.detectMime(clean);
+        const blob = Odin.Base64.decodeToBlob(clean, this.b64DetectedMime);
+        const ext = this.b64DetectedMime.split('/')[1] || 'bin';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'decoded-file.' + ext;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        Odin.Toast.show(this, 'File downloaded as ' + this.b64DetectedMime);
+      } catch (err) {
+        Odin.Toast.show(this, 'Decode error: ' + err.message);
+      }
+    },
+
+    b64CopyOutput() {
+      const text = this.b64FileMode ? this.b64FileResult : this.b64Output;
+      if (text) Odin.Clipboard.copy(text, this);
+    },
+
+    b64SwitchMode(mode) {
+      this.b64Mode = mode;
+      this.b64Output = '';
+      this.b64FileResult = '';
+      this.b64FileName = '';
+      this.b64DetectedMime = '';
     },
 
     // ---- Utility ----

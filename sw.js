@@ -3,7 +3,7 @@
    Cache-first strategy for offline PWA support
    ================================================================ */
 
-const CACHE_NAME = 'odin-toolkit-v6';
+const CACHE_NAME = 'odin-toolkit-v7';
 
 const ASSETS = [
   './',

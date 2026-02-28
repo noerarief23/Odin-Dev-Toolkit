@@ -557,6 +557,234 @@ describe('Odin.Pomodoro', () => {
 });
 
 // ================================================================
+//  Odin.JWT
+// ================================================================
+describe('Odin.JWT', () => {
+  const sampleJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
+  it('decodes a valid JWT into header, payload, signature', () => {
+    const result = Odin.JWT.decode(sampleJWT);
+    assertEqual(result.header.alg, 'HS256');
+    assertEqual(result.header.typ, 'JWT');
+    assertEqual(result.payload.sub, '1234567890');
+    assertEqual(result.payload.name, 'John Doe');
+    assertEqual(result.payload.iat, 1516239022);
+    assert(typeof result.signature === 'string');
+    assert(result.signature.length > 0);
+  });
+
+  it('throws on empty token', () => {
+    let threw = false;
+    try { Odin.JWT.decode(''); } catch (_) { threw = true; }
+    assert(threw);
+  });
+
+  it('throws on token with wrong number of parts', () => {
+    let threw = false;
+    try { Odin.JWT.decode('abc.def'); } catch (e) { threw = e.message.includes('3 parts'); }
+    assert(threw);
+  });
+
+  it('isExpired returns true for past timestamp', () => {
+    assert(Odin.JWT.isExpired({ exp: 1000000000 }) === true);
+  });
+
+  it('isExpired returns false for far future timestamp', () => {
+    assert(Odin.JWT.isExpired({ exp: 9999999999 }) === false);
+  });
+
+  it('isExpired returns null when no exp claim', () => {
+    assert(Odin.JWT.isExpired({ sub: '123' }) === null);
+  });
+
+  it('formatTimestamp converts unix timestamp', () => {
+    const ts = Odin.JWT.formatTimestamp(1516239022);
+    assert(ts !== null);
+    assert(ts.includes('2018'));
+  });
+
+  it('standardClaims has known keys', () => {
+    assert(Odin.JWT.standardClaims.iss === 'Issuer');
+    assert(Odin.JWT.standardClaims.exp === 'Expiration Time');
+  });
+});
+
+// ================================================================
+//  Odin.CaseConverter
+// ================================================================
+describe('Odin.CaseConverter', () => {
+  it('toUpperCase converts correctly', () => {
+    assertEqual(Odin.CaseConverter.toUpperCase('hello world'), 'HELLO WORLD');
+  });
+
+  it('toLowerCase converts correctly', () => {
+    assertEqual(Odin.CaseConverter.toLowerCase('Hello WORLD'), 'hello world');
+  });
+
+  it('toCamelCase converts multi-word string', () => {
+    assertEqual(Odin.CaseConverter.toCamelCase('hello world test'), 'helloWorldTest');
+  });
+
+  it('toCamelCase handles snake_case input', () => {
+    assertEqual(Odin.CaseConverter.toCamelCase('my_variable_name'), 'myVariableName');
+  });
+
+  it('toPascalCase converts correctly', () => {
+    assertEqual(Odin.CaseConverter.toPascalCase('hello world'), 'HelloWorld');
+  });
+
+  it('toPascalCase handles kebab-case input', () => {
+    assertEqual(Odin.CaseConverter.toPascalCase('my-component-name'), 'MyComponentName');
+  });
+
+  it('toSnakeCase converts correctly', () => {
+    assertEqual(Odin.CaseConverter.toSnakeCase('Hello World'), 'hello_world');
+  });
+
+  it('toSnakeCase handles camelCase input', () => {
+    assertEqual(Odin.CaseConverter.toSnakeCase('myVariableName'), 'my_variable_name');
+  });
+
+  it('toKebabCase converts correctly', () => {
+    assertEqual(Odin.CaseConverter.toKebabCase('Hello World'), 'hello-world');
+  });
+
+  it('toTitleCase capitalizes first letter of each word', () => {
+    assertEqual(Odin.CaseConverter.toTitleCase('hello world test'), 'Hello World Test');
+  });
+
+  it('convert dispatch works for all modes', () => {
+    assertEqual(Odin.CaseConverter.convert('hello', 'upper'), 'HELLO');
+    assertEqual(Odin.CaseConverter.convert('HELLO', 'lower'), 'hello');
+    assertEqual(Odin.CaseConverter.convert('hello world', 'camel'), 'helloWorld');
+    assertEqual(Odin.CaseConverter.convert('hello world', 'pascal'), 'HelloWorld');
+    assertEqual(Odin.CaseConverter.convert('hello world', 'snake'), 'hello_world');
+    assertEqual(Odin.CaseConverter.convert('hello world', 'kebab'), 'hello-world');
+  });
+
+  it('handles empty string', () => {
+    assertEqual(Odin.CaseConverter.toUpperCase(''), '');
+    assertEqual(Odin.CaseConverter.toCamelCase(''), '');
+    assertEqual(Odin.CaseConverter.toSnakeCase(''), '');
+  });
+});
+
+// ================================================================
+//  Odin.Base64
+// ================================================================
+describe('Odin.Base64', () => {
+  it('encodeText encodes ASCII correctly', () => {
+    assertEqual(Odin.Base64.encodeText('Hello'), 'SGVsbG8=');
+  });
+
+  it('decodeText decodes correctly', () => {
+    assertEqual(Odin.Base64.decodeText('SGVsbG8='), 'Hello');
+  });
+
+  it('roundtrip encode/decode preserves text', () => {
+    const input = 'The quick brown fox jumps over the lazy dog!';
+    assertEqual(Odin.Base64.decodeText(Odin.Base64.encodeText(input)), input);
+  });
+
+  it('encodeText handles Unicode', () => {
+    const input = 'Hello 🌍 Ñoño';
+    const encoded = Odin.Base64.encodeText(input);
+    const decoded = Odin.Base64.decodeText(encoded);
+    assertEqual(decoded, input);
+  });
+
+  it('encodeText handles empty string', () => {
+    assertEqual(Odin.Base64.encodeText(''), '');
+  });
+
+  it('decodeText throws on invalid base64', () => {
+    let threw = false;
+    try { Odin.Base64.decodeText('!!!invalid!!!'); } catch (_) { threw = true; }
+    assert(threw);
+  });
+
+  it('encodeArrayBuffer works with simple data', () => {
+    const buf = new Uint8Array([72, 101, 108, 108, 111]).buffer;
+    assertEqual(Odin.Base64.encodeArrayBuffer(buf), 'SGVsbG8=');
+  });
+
+  it('detectMime identifies PNG', () => {
+    // PNG magic bytes: 89 50 4E 47
+    const pngB64 = btoa(String.fromCharCode(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0));
+    assertEqual(Odin.Base64.detectMime(pngB64), 'image/png');
+  });
+
+  it('detectMime identifies JPEG', () => {
+    const jpegB64 = btoa(String.fromCharCode(0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+    assertEqual(Odin.Base64.detectMime(jpegB64), 'image/jpeg');
+  });
+
+  it('detectMime returns octet-stream for unknown', () => {
+    assertEqual(Odin.Base64.detectMime('AAAA'), 'application/octet-stream');
+  });
+});
+
+// ================================================================
+//  Odin.FlexGridPlayground
+// ================================================================
+describe('Odin.FlexGridPlayground', () => {
+  it('getFlexCSS generates valid CSS', () => {
+    const css = Odin.FlexGridPlayground.getFlexCSS({
+      direction: 'row',
+      justifyContent: 'center',
+      alignItems: 'stretch',
+      flexWrap: 'nowrap',
+      gap: '10'
+    });
+    assert(css.includes('display: flex'));
+    assert(css.includes('justify-content: center'));
+    assert(css.includes('gap: 10px'));
+  });
+
+  it('getFlexCSS omits default values', () => {
+    const css = Odin.FlexGridPlayground.getFlexCSS({
+      direction: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'stretch',
+      flexWrap: 'nowrap',
+      gap: '0'
+    });
+    assert(css.includes('display: flex'));
+    assert(!css.includes('flex-direction'));
+    assert(!css.includes('justify-content'));
+    assert(!css.includes('align-items'));
+    assert(!css.includes('flex-wrap'));
+    assert(!css.includes('gap'));
+  });
+
+  it('getGridCSS generates valid CSS', () => {
+    const css = Odin.FlexGridPlayground.getGridCSS({
+      columns: '1fr 1fr 1fr',
+      rows: 'auto',
+      justifyItems: 'center',
+      alignItems: 'stretch',
+      gap: '20'
+    });
+    assert(css.includes('display: grid'));
+    assert(css.includes('grid-template-columns: 1fr 1fr 1fr'));
+    assert(css.includes('justify-items: center'));
+    assert(css.includes('gap: 20px'));
+  });
+
+  it('getGridCSS omits default row value', () => {
+    const css = Odin.FlexGridPlayground.getGridCSS({
+      columns: '1fr',
+      rows: 'auto',
+      justifyItems: 'stretch',
+      alignItems: 'stretch',
+      gap: '0'
+    });
+    assert(!css.includes('grid-template-rows'));
+    assert(!css.includes('justify-items'));
+  });
+});
+
+// ================================================================
 //  Summary
 // ================================================================
 console.log('\n' + '='.repeat(50));
