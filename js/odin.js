@@ -708,7 +708,7 @@ Odin.ModelGen = {
       parsed = JSON.parse(jsonString);
     } catch (e) {
       const errMsg = `// Error parsing JSON: ${e.message}`;
-      return { csharp: errMsg, go: errMsg, python: errMsg, error: e.message };
+      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: e.message };
     }
 
     // Determine root structure
@@ -721,13 +721,14 @@ Odin.ModelGen = {
       this._parseObject('Root', parsed, classes);
     } else {
       const errMsg = '// Input must be a JSON object or array of objects';
-      return { csharp: errMsg, go: errMsg, python: errMsg, error: 'Not an object' };
+      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: 'Not an object' };
     }
 
     return {
       csharp: this._genCSharp(classes, options),
-      go: this._genGo(classes),
-      python: this._genPython(classes),
+      go: this._genGo(classes, options),
+      python: this._genPython(classes, options),
+      php: this._genPhp(classes, options),
       error: null
     };
   },
@@ -814,7 +815,10 @@ Odin.ModelGen = {
   },
 
   /* ---- Go Generator ---- */
-  _genGo(classes) {
+  _genGo(classes, options = {}) {
+    const useOmitEmpty = options.goUseOmitEmpty || false;
+    const usePointers = options.goUsePointers || false;
+
     const typeMap = {
       string: 'string',
       int: 'int',
@@ -859,7 +863,12 @@ Odin.ModelGen = {
           goType = `[]${goType}`;
         }
 
-        return { fieldName, goType, originalKey };
+        if (usePointers && !schema.isArray && schema.type === 'nullable' && goType !== 'interface{}') {
+          goType = `*${goType}`;
+        }
+
+        const jsonTag = useOmitEmpty ? `${originalKey},omitempty` : originalKey;
+        return { fieldName, goType, jsonTag };
       });
 
       const maxNameLen = Math.max(...fields.map(f => f.fieldName.length));
@@ -868,7 +877,7 @@ Odin.ModelGen = {
       for (const f of fields) {
         const name = f.fieldName.padEnd(maxNameLen);
         const type = f.goType.padEnd(maxTypeLen);
-        lines.push(`\t${name} ${type} \`json:"${f.originalKey}"\``);
+        lines.push(`\t${name} ${type} \`json:"${f.jsonTag}"\``);
       }
 
       lines.push('}');
@@ -879,7 +888,9 @@ Odin.ModelGen = {
   },
 
   /* ---- Python Generator ---- */
-  _genPython(classes) {
+  _genPython(classes, options = {}) {
+    const useOptional = options.pyUseOptional || false;
+
     const typeMap = {
       string: 'str',
       int: 'int',
@@ -892,11 +903,13 @@ Odin.ModelGen = {
 
     let needsDatetime = false;
     let needsAny = false;
+    let needsOptional = false;
 
     for (const cls of classes) {
       for (const prop of cls.properties) {
         if (prop.schema.type === 'datetime') needsDatetime = true;
         if (prop.schema.type === 'nullable' || prop.schema.type === 'any') needsAny = true;
+        if (useOptional && prop.schema.type === 'nullable') needsOptional = true;
       }
     }
 
@@ -906,6 +919,7 @@ Odin.ModelGen = {
     ];
     if (needsDatetime) lines.push('from datetime import datetime');
     if (needsAny) lines.push('from typing import Any');
+    if (needsOptional) lines.push('from typing import Optional');
     lines.push('');
 
     // Reverse order so nested classes appear first
@@ -936,7 +950,8 @@ Odin.ModelGen = {
           pyType = `list[${pyType}]`;
           lines.push(`    ${fieldName}: ${pyType} = field(default_factory=list)`);
         } else if (schema.type === 'nullable') {
-          lines.push(`    ${fieldName}: ${pyType} = None`);
+          const nullableType = useOptional ? `Optional[${pyType}]` : pyType;
+          lines.push(`    ${fieldName}: ${nullableType} = None`);
         } else {
           lines.push(`    ${fieldName}: ${pyType} = None`);
         }
@@ -947,7 +962,9 @@ Odin.ModelGen = {
   },
 
   /* ---- PHP 8.1 Generator ---- */
-  _genPhp(classes) {
+  _genPhp(classes, options = {}) {
+    const useReadonly = options.phpUseReadonly !== false;
+
     const typeMap = {
       string: 'string',
       int: 'int',
@@ -961,7 +978,7 @@ Odin.ModelGen = {
     const lines = ['<?php', '', 'declare(strict_types=1);', ''];
 
     for (const cls of classes) {
-      lines.push(`final readonly class ${cls.name}`);
+      lines.push(`final ${useReadonly ? 'readonly ' : ''}class ${cls.name}`);
       lines.push('{');
       lines.push('    public function __construct(');
 
@@ -1011,7 +1028,8 @@ Odin.ModelGen = {
     const langMap = {
       csharp: Prism.languages.csharp,
       go: Prism.languages.go,
-      python: Prism.languages.python
+      python: Prism.languages.python,
+      php: Prism.languages.php
     };
 
     const lang = langMap[language];
@@ -1104,10 +1122,14 @@ function odinApp() {
     // ---- Model Generator ----
     modelJsonInput: Odin.Storage.get('model_json', ''),
     modelActiveTab: 'csharp',
-    modelOutput: { csharp: '', go: '', python: '', error: null },
-    modelOutputHtml: { csharp: '', go: '', python: '' },
+    modelOutput: { csharp: '', go: '', python: '', php: '', error: null },
+    modelOutputHtml: { csharp: '', go: '', python: '', php: '' },
     csUseJsonPropertyName: Odin.Storage.get('cs_use_jpn', false),
     csUseNullable: Odin.Storage.get('cs_nullable', false),
+    goUseOmitEmpty: Odin.Storage.get('go_use_omitempty', false),
+    goUsePointers: Odin.Storage.get('go_use_pointers', false),
+    pyUseOptional: Odin.Storage.get('py_use_optional', false),
+    phpUseReadonly: Odin.Storage.get('php_use_readonly', true),
 
     // ---- Init ----
     init() {
@@ -1431,28 +1453,37 @@ function odinApp() {
     // ---- Model Generator Methods ----
     generateModels() {
       if (!this.modelJsonInput.trim()) {
-        this.modelOutput = { csharp: '', go: '', python: '', error: null };
-        this.modelOutputHtml = { csharp: '', go: '', python: '' };
+        this.modelOutput = { csharp: '', go: '', python: '', php: '', error: null };
+        this.modelOutputHtml = { csharp: '', go: '', python: '', php: '' };
         return;
       }
       this.modelOutput = Odin.ModelGen.generateAll(this.modelJsonInput, {
         csUseJsonPropertyName: this.csUseJsonPropertyName,
-        csUseNullable: this.csUseNullable
+        csUseNullable: this.csUseNullable,
+        goUseOmitEmpty: this.goUseOmitEmpty,
+        goUsePointers: this.goUsePointers,
+        pyUseOptional: this.pyUseOptional,
+        phpUseReadonly: this.phpUseReadonly
       });
 
       Odin.Storage.set('cs_use_jpn', this.csUseJsonPropertyName);
       Odin.Storage.set('cs_nullable', this.csUseNullable);
+      Odin.Storage.set('go_use_omitempty', this.goUseOmitEmpty);
+      Odin.Storage.set('go_use_pointers', this.goUsePointers);
+      Odin.Storage.set('py_use_optional', this.pyUseOptional);
+      Odin.Storage.set('php_use_readonly', this.phpUseReadonly);
 
       // Highlight each language
       if (!this.modelOutput.error) {
         this.modelOutputHtml = {
           csharp: Odin.ModelGen.highlight(this.modelOutput.csharp, 'csharp'),
           go: Odin.ModelGen.highlight(this.modelOutput.go, 'go'),
-          python: Odin.ModelGen.highlight(this.modelOutput.python, 'python')
+          python: Odin.ModelGen.highlight(this.modelOutput.python, 'python'),
+          php: Odin.ModelGen.highlight(this.modelOutput.php, 'php')
         };
       } else {
         const err = this.modelOutput.csharp; // error message is same for all
-        this.modelOutputHtml = { csharp: err, go: err, python: err };
+        this.modelOutputHtml = { csharp: err, go: err, python: err, php: err };
       }
 
       Odin.Storage.set('model_json', this.modelJsonInput);
