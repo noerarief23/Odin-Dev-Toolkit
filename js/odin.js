@@ -511,8 +511,6 @@ Odin.ModelGen = {
 
     if (useJPN) {
       lines.push('using System.Text.Json.Serialization;');
-    } else {
-      lines.push('using Newtonsoft.Json;');
     }
 
     if (useNullable) {
@@ -557,8 +555,6 @@ Odin.ModelGen = {
 
         if (useJPN) {
           lines.push(`    [JsonPropertyName("${originalKey}")]`);
-        } else {
-          lines.push(`    [JsonProperty("${originalKey}")]`);
         }
         lines.push(`    public ${csType} ${propName} { get; set; }`);
         lines.push('');
