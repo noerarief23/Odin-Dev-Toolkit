@@ -455,7 +455,7 @@ Odin.ModelGen = {
   },
 
   /* ---- Generate All Languages ---- */
-  generateAll(jsonString) {
+  generateAll(jsonString, options = {}) {
     let parsed;
     try {
       parsed = JSON.parse(jsonString);
@@ -478,7 +478,7 @@ Odin.ModelGen = {
     }
 
     return {
-      csharp: this._genCSharp(classes),
+      csharp: this._genCSharp(classes, options),
       go: this._genGo(classes),
       python: this._genPython(classes),
       php: this._genPhp(classes),
@@ -487,7 +487,10 @@ Odin.ModelGen = {
   },
 
   /* ---- C# Generator ---- */
-  _genCSharp(classes) {
+  _genCSharp(classes, options = {}) {
+    const useJPN = options.csUseJsonPropertyName || false;
+    const useNullable = options.csUseNullable || false;
+
     const typeMap = {
       string: 'string',
       int: 'int',
@@ -498,12 +501,26 @@ Odin.ModelGen = {
       any: 'object'
     };
 
+    // Nullable reference type suffixes
+    const nullableRefTypes = new Set(['string', 'object', 'DateTime']);
+
     const lines = [
       'using System;',
       'using System.Collections.Generic;',
-      'using Newtonsoft.Json;',
-      ''
     ];
+
+    if (useJPN) {
+      lines.push('using System.Text.Json.Serialization;');
+    } else {
+      lines.push('using Newtonsoft.Json;');
+    }
+
+    if (useNullable) {
+      lines.push('');
+      lines.push('#nullable enable');
+    }
+
+    lines.push('');
 
     for (const cls of classes) {
       lines.push(`public class ${cls.name}`);
@@ -524,7 +541,25 @@ Odin.ModelGen = {
           csType = `List<${csType}>`;
         }
 
-        lines.push(`    [JsonProperty("${originalKey}")]`);
+        // Add nullable suffix for reference types
+        if (useNullable && !schema.isArray) {
+          if (nullableRefTypes.has(csType) || (schema.type === 'object' && schema.className)) {
+            csType += '?';
+          }
+          if (schema.type === 'nullable') {
+            csType = 'object?';
+          }
+        }
+
+        if (useNullable && schema.isArray) {
+          csType += '?';
+        }
+
+        if (useJPN) {
+          lines.push(`    [JsonPropertyName("${originalKey}")]`);
+        } else {
+          lines.push(`    [JsonProperty("${originalKey}")]`);
+        }
         lines.push(`    public ${csType} ${propName} { get; set; }`);
         lines.push('');
       }
@@ -795,6 +830,8 @@ function odinApp() {
     modelActiveTab: 'csharp',
     modelOutput: { csharp: '', go: '', python: '', php: '', error: null },
     modelOutputHtml: { csharp: '', go: '', python: '', php: '' },
+    csUseJsonPropertyName: Odin.Storage.get('cs_use_jpn', false),
+    csUseNullable: Odin.Storage.get('cs_nullable', false),
 
     // ---- Init ----
     init() {
@@ -980,7 +1017,13 @@ function odinApp() {
         this.modelOutputHtml = { csharp: '', go: '', python: '', php: '' };
         return;
       }
-      this.modelOutput = Odin.ModelGen.generateAll(this.modelJsonInput);
+      this.modelOutput = Odin.ModelGen.generateAll(this.modelJsonInput, {
+        csUseJsonPropertyName: this.csUseJsonPropertyName,
+        csUseNullable: this.csUseNullable
+      });
+
+      Odin.Storage.set('cs_use_jpn', this.csUseJsonPropertyName);
+      Odin.Storage.set('cs_nullable', this.csUseNullable);
 
       // Highlight each language
       if (!this.modelOutput.error) {
