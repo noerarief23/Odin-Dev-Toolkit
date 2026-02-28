@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: Pomodoro Timer, Regex Tester, QR Code Engine, JSON/XML Formatter, Diff Checker, Password Guard, and Multi-Language Model Generator. 100% client-side, offline-ready.">
+  <meta name="description" content="Odin Dev Toolkit: 13 developer tools — Pomodoro Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec. 100% client-side, offline-ready.">
   <meta name="keywords" content="developer tools, pomodoro timer, focus timer, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Developer utility suite — Pomodoro Timer + 7 essential tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 13 essential developer tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -1911,12 +1911,10 @@ Example:
           </div>
 
           <!-- File Mode Toggle -->
-          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer ml-2">
-            <span class="relative inline-block">
-              <input type="checkbox" class="sr-only peer" x-model="b64FileMode">
-              <div class="toggle-track peer-checked:bg-gold-500/30"></div>
-              <div class="toggle-thumb peer-checked:translate-x-5 peer-checked:bg-gold-400"></div>
-            </span>
+          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer ml-2" @click.prevent="b64FileMode = !b64FileMode">
+            <div class="toggle-track" :class="b64FileMode ? 'active' : ''">
+              <div class="toggle-thumb"></div>
+            </div>
             File mode
           </label>
         </div>

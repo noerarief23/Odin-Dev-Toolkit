@@ -1,7 +1,7 @@
 {
   "name": "Odin Dev Toolkit",
   "short_name": "Odin",
-  "description": "Developer utility suite — Pomodoro Timer with Session Log, Regex Tester, QR Code Engine, JSON/XML Formatter, Password Guard, and Model Generator.",
+  "description": "Developer utility suite — 13 tools: Pomodoro Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec.",
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#020617",
