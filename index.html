@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: Regex Tester, QR Code Engine, JSON/XML Formatter, Password Guard, and Multi-Language Model Generator. 100% client-side, offline-ready.">
-  <meta name="keywords" content="developer tools, regex tester, qr code generator, json formatter, xml formatter, password generator, model generator, odin">
+  <meta name="description" content="Odin Dev Toolkit: Regex Tester, QR Code Engine, JSON/XML Formatter, Diff Checker, Password Guard, and Multi-Language Model Generator. 100% client-side, offline-ready.">
+  <meta name="keywords" content="developer tools, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
@@ -33,11 +33,9 @@
             valhalla: {
               950: '#020617',
               900: '#0f172a',
-              800: '#1e293b',
               700: '#334155',
               600: '#475569',
             },
-            gold: {
               400: '#facc15',
               500: '#eab308',
               600: '#ca8a04',
@@ -141,19 +139,6 @@
       </button>
 
       <button
-        @click="switchTool('password')"
-        :class="activeTool === 'password' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
-        role="tab"
-        :aria-selected="activeTool === 'password'"
-        aria-label="Password Guard (Ctrl+5)"
-      >
-        <i data-lucide="shield-check" class="link-icon w-4 h-4 flex-shrink-0"></i>
-        <span>Password Guard</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃5</kbd>
-      </button>
-
-      <button
         @click="switchTool('xml')"
         :class="activeTool === 'xml' ? 'active' : ''"
         class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
@@ -167,16 +152,42 @@
       </button>
 
       <button
+        @click="switchTool('diff')"
+        :class="activeTool === 'diff' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'diff'"
+        aria-label="Diff Checker (Ctrl+5)"
+      >
+        <i data-lucide="git-compare" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Diff Checker</span>
+        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃5</kbd>
+      </button>
+
+      <button
+        @click="switchTool('password')"
+        :class="activeTool === 'password' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'password'"
+        aria-label="Password Guard (Ctrl+6)"
+      >
+        <i data-lucide="shield-check" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Password Guard</span>
+        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃6</kbd>
+      </button>
+
+      <button
         @click="switchTool('modelgen')"
         :class="activeTool === 'modelgen' ? 'active' : ''"
         class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'modelgen'"
-        aria-label="Model Generator (Ctrl+6)"
+        aria-label="Model Generator (Ctrl+7)"
       >
         <i data-lucide="file-code-2" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Model Generator</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃6</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃7</kbd>
       </button>
     </nav>
 
@@ -616,7 +627,88 @@
       </section>
 
       <!-- ============================================================
-           TOOL 5: ODIN PASSWORD GUARD
+           TOOL 5: DIFF CHECKER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'diff'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="git-compare" class="w-6 h-6 text-gold-500"></i>
+            Diff Checker (JSON/XML)
+          </h2>
+          <p class="text-sm text-slate-400 mt-1">Bandingkan dua JSON atau XML secara real-time dan lihat perbedaannya</p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4">
+          <button @click="setDiffMode('json')" :class="diffMode === 'json' ? 'btn-gold' : 'btn-outline'" class="text-sm px-3 py-1.5">JSON</button>
+          <button @click="setDiffMode('xml')" :class="diffMode === 'xml' ? 'btn-gold' : 'btn-outline'" class="text-sm px-3 py-1.5">XML</button>
+          <button @click="runDiffCheck()" class="btn-outline text-sm px-3 py-1.5 ml-2 flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            Compare
+          </button>
+          <button @click="diffLeftInput=''; diffRightInput=''; runDiffCheck()" class="btn-outline text-sm px-3 py-1.5 flex items-center gap-1.5">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            Clear
+          </button>
+        </div>
+
+        <template x-if="diffResult.error">
+          <div class="error-badge mb-4" x-text="diffResult.error"></div>
+        </template>
+
+        <template x-if="!diffResult.error && diffLeftInput && diffRightInput">
+          <div class="mb-4 flex items-center gap-3 text-sm">
+            <span :class="diffResult.equal ? 'success-badge' : 'error-badge'" x-text="diffResult.equal ? 'No differences found' : 'Differences detected'"></span>
+            <span class="text-slate-400">Added: <span class="text-green-400" x-text="diffResult.stats.added"></span></span>
+            <span class="text-slate-400">Removed: <span class="text-red-400" x-text="diffResult.stats.removed"></span></span>
+            <span class="text-slate-400">Changed: <span class="text-yellow-400" x-text="diffResult.stats.changed"></span></span>
+          </div>
+        </template>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Input A</label>
+            <textarea
+              x-model="diffLeftInput"
+              @input.debounce.300ms="runDiffCheck()"
+              class="textarea-valhalla code-input h-[18rem]"
+              :placeholder="diffMode === 'json' ? '{\n  \"name\": \"Odin\"\n}' : '<root>\n  <name>Odin</name>\n</root>'"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Input B</label>
+            <textarea
+              x-model="diffRightInput"
+              @input.debounce.300ms="runDiffCheck()"
+              class="textarea-valhalla code-input h-[18rem]"
+              :placeholder="diffMode === 'json' ? '{\n  \"name\": \"Thor\"\n}' : '<root>\n  <name>Thor</name>\n</root>'"
+              spellcheck="false"
+            ></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Differences</label>
+          <div class="code-output h-[22rem] overflow-auto diff-output">
+            <template x-if="!diffResult.html">
+              <p class="text-slate-600 italic text-sm">Masukkan Input A dan Input B untuk melihat perbedaan...</p>
+            </template>
+            <template x-if="diffResult.html">
+              <div x-html="diffResult.html"></div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 6: ODIN PASSWORD GUARD
            ============================================================ -->
       <section
         x-show="activeTool === 'password'"

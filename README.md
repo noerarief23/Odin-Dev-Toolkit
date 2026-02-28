@@ -16,8 +16,9 @@
 | 2 | **QR Code Engine** | Generate QR codes with size control, download as PNG |
 | 3 | **JSON Formatter** | Beautify/Minify with instant validation & error line indicator |
 | 4 | **XML Formatter** | Beautify/Minify with instant validation & line indicators |
-| 5 | **Password Guard** | Secure generation with entropy meter (uses `crypto.getRandomValues`) |
-| 6 | **Model Generator** | JSON → C# classes, Go structs, Python dataclasses |
+| 5 | **Diff Checker** | Compare two JSON/XML payloads and highlight added/removed/changed lines |
+| 6 | **Password Guard** | Secure generation with entropy meter (uses `crypto.getRandomValues`) |
+| 7 | **Model Generator** | JSON → C# classes, Go structs, Python dataclasses |
 
 ## Tech Stack
 

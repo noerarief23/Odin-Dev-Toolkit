@@ -409,6 +409,147 @@ Odin.XmlFormatter = {
 };
 
 /* ================================================================
+   Odin.DiffChecker — Compare JSON/XML differences
+   ================================================================ */
+Odin.DiffChecker = {
+  compare(leftInput, rightInput, mode) {
+    if (!leftInput.trim() || !rightInput.trim()) {
+      return {
+        equal: false,
+        error: 'Both inputs are required',
+        html: '',
+        stats: { added: 0, removed: 0, changed: 0 }
+      };
+    }
+
+    let leftNormalized;
+    let rightNormalized;
+
+    try {
+      if (mode === 'json') {
+        leftNormalized = this._normalizeJson(leftInput);
+        rightNormalized = this._normalizeJson(rightInput);
+      } else {
+        leftNormalized = this._normalizeXml(leftInput);
+        rightNormalized = this._normalizeXml(rightInput);
+      }
+    } catch (e) {
+      return {
+        equal: false,
+        error: e.message,
+        html: '',
+        stats: { added: 0, removed: 0, changed: 0 }
+      };
+    }
+
+    const equal = leftNormalized === rightNormalized;
+    const diff = this._lineDiff(leftNormalized, rightNormalized);
+
+    return {
+      equal,
+      error: null,
+      html: this._renderDiff(diff),
+      stats: diff.stats,
+      leftNormalized,
+      rightNormalized
+    };
+  },
+
+  _normalizeJson(input) {
+    const parsed = JSON.parse(input);
+    const sorted = this._sortObject(parsed);
+    return JSON.stringify(sorted, null, 2);
+  },
+
+  _sortObject(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => this._sortObject(item));
+    }
+    if (value && typeof value === 'object') {
+      return Object.keys(value)
+        .sort()
+        .reduce((acc, key) => {
+          acc[key] = this._sortObject(value[key]);
+          return acc;
+        }, {});
+    }
+    return value;
+  },
+
+  _normalizeXml(input) {
+    const validation = Odin.XmlFormatter.validate(input);
+    if (!validation.valid) {
+      throw new Error(validation.error?.message || 'Invalid XML');
+    }
+
+    const minified = Odin.XmlFormatter.minify(input);
+    if (minified.result === null) {
+      throw new Error(minified.error?.message || 'Invalid XML');
+    }
+
+    const beautified = Odin.XmlFormatter.beautify(minified.result);
+    if (beautified.result === null) {
+      throw new Error(beautified.error?.message || 'Invalid XML');
+    }
+
+    return beautified.result;
+  },
+
+  _lineDiff(leftText, rightText) {
+    const a = leftText.split('\n');
+    const b = rightText.split('\n');
+    const maxLen = Math.max(a.length, b.length);
+    const lines = [];
+    const stats = { added: 0, removed: 0, changed: 0 };
+
+    for (let i = 0; i < maxLen; i++) {
+      const left = a[i] ?? null;
+      const right = b[i] ?? null;
+
+      if (left === right) {
+        lines.push({ type: 'same', left, right, line: i + 1 });
+        continue;
+      }
+
+      if (left === null) {
+        lines.push({ type: 'added', left: '', right, line: i + 1 });
+        stats.added += 1;
+        continue;
+      }
+
+      if (right === null) {
+        lines.push({ type: 'removed', left, right: '', line: i + 1 });
+        stats.removed += 1;
+        continue;
+      }
+
+      lines.push({ type: 'changed', left, right, line: i + 1 });
+      stats.changed += 1;
+    }
+
+    return { lines, stats };
+  },
+
+  _renderDiff(diff) {
+    return diff.lines
+      .map((row) => {
+        const cls = `diff-row diff-${row.type}`;
+        const left = this._escapeHtml(row.left ?? '');
+        const right = this._escapeHtml(row.right ?? '');
+        return `<div class="${cls}"><span class="diff-ln">${row.line}</span><span class="diff-left">${left}</span><span class="diff-right">${right}</span></div>`;
+      })
+      .join('');
+  },
+
+  _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+};
+
+/* ================================================================
    Odin.PasswordGuard — Secure password generator with entropy
    ================================================================ */
 Odin.PasswordGuard = {
@@ -946,6 +1087,12 @@ function odinApp() {
     xmlOutputHtml: '',
     xmlValidation: { valid: null, error: null },
 
+    // ---- Diff Checker Tool ----
+    diffMode: Odin.Storage.get('diff_mode', 'json'),
+    diffLeftInput: Odin.Storage.get('diff_left_input', ''),
+    diffRightInput: Odin.Storage.get('diff_right_input', ''),
+    diffResult: { equal: false, error: null, html: '', stats: { added: 0, removed: 0, changed: 0 } },
+
     // ---- Password Guard ----
     pwLength: Odin.Storage.get('pw_length', 16),
     pwLowercase: Odin.Storage.get('pw_lower', true),
@@ -981,6 +1128,7 @@ function odinApp() {
       this.runRegex();
       this.validateJson();
       this.validateXml();
+      this.runDiffCheck();
       this.generatePassword();
       this.generateModels();
 
@@ -989,12 +1137,12 @@ function odinApp() {
         if (this.qrText) this.generateQR();
       });
 
-      // Keyboard shortcuts: Ctrl+1-6
+      // Keyboard shortcuts: Ctrl+1-7
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const tools = ['regex', 'qr', 'json', 'xml', 'password', 'modelgen'];
+          const tools = ['regex', 'qr', 'json', 'xml', 'diff', 'password', 'modelgen'];
           const num = parseInt(e.key);
-          if (num >= 1 && num <= 6) {
+          if (num >= 1 && num <= 7) {
             e.preventDefault();
             this.switchTool(tools[num - 1]);
           }
@@ -1216,6 +1364,31 @@ function odinApp() {
 
     copyXml() {
       Odin.Clipboard.copy(this.xmlOutput || this.xmlInput, this);
+    },
+
+    runDiffCheck() {
+      const result = Odin.DiffChecker.compare(this.diffLeftInput, this.diffRightInput, this.diffMode);
+      this.diffResult = result;
+      Odin.Storage.set('diff_mode', this.diffMode);
+      Odin.Storage.set('diff_left_input', this.diffLeftInput);
+      Odin.Storage.set('diff_right_input', this.diffRightInput);
+    },
+
+    setDiffMode(mode) {
+      this.diffMode = mode;
+      this.runDiffCheck();
+    },
+
+    copyDiffLeftNormalized() {
+      if (this.diffResult.leftNormalized) {
+        Odin.Clipboard.copy(this.diffResult.leftNormalized, this);
+      }
+    },
+
+    copyDiffRightNormalized() {
+      if (this.diffResult.rightNormalized) {
+        Odin.Clipboard.copy(this.diffResult.rightNormalized, this);
+      }
     },
 
     // ---- Password Guard Methods ----
