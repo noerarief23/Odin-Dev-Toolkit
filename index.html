@@ -302,10 +302,10 @@
             <!-- Highlighted Output -->
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2">Highlighted Matches</label>
-              <div
-                class="bg-slate-900/80 border border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words"
-                x-html="regexResult.html || '<span class=\'text-slate-600 italic\'>Results will appear here...</span>'"
-              ></div>
+              <div class="bg-slate-900/80 border border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words">
+                <template x-if="!regexResult.html"><span class="text-slate-600 italic">Results will appear here...</span></template>
+                <span x-show="regexResult.html" x-html="regexResult.html"></span>
+              </div>
             </div>
 
             <!-- Match Details -->
@@ -491,7 +491,12 @@
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Formatted Output</label>
             <div class="code-output h-[28rem] overflow-auto">
-              <pre><code x-html="jsonOutputHtml || '<span class=\'text-slate-600 italic\'>Output appears after Beautify or Minify...</span>'"></code></pre>
+              <template x-if="!jsonOutputHtml">
+                <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
+              </template>
+              <template x-if="jsonOutputHtml">
+                <pre class="m-0 bg-transparent"><code x-html="jsonOutputHtml"></code></pre>
+              </template>
             </div>
           </div>
         </div>
@@ -714,22 +719,26 @@ Example:
 
             <!-- C# Output -->
             <div x-show="modelActiveTab === 'csharp'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <pre><code class="language-csharp" x-html="modelOutputHtml.csharp || '<span class=\'text-slate-600 italic\'>Generated C# code will appear here...</span>'"></code></pre>
+              <template x-if="!modelOutputHtml.csharp"><p class="text-slate-600 italic text-sm">Generated C# code will appear here...</p></template>
+              <template x-if="modelOutputHtml.csharp"><pre class="m-0 bg-transparent"><code class="language-csharp" x-html="modelOutputHtml.csharp"></code></pre></template>
             </div>
 
             <!-- Go Output -->
             <div x-show="modelActiveTab === 'go'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <pre><code class="language-go" x-html="modelOutputHtml.go || '<span class=\'text-slate-600 italic\'>Generated Go code will appear here...</span>'"></code></pre>
+              <template x-if="!modelOutputHtml.go"><p class="text-slate-600 italic text-sm">Generated Go code will appear here...</p></template>
+              <template x-if="modelOutputHtml.go"><pre class="m-0 bg-transparent"><code class="language-go" x-html="modelOutputHtml.go"></code></pre></template>
             </div>
 
             <!-- Python Output -->
             <div x-show="modelActiveTab === 'python'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <pre><code class="language-python" x-html="modelOutputHtml.python || '<span class=\'text-slate-600 italic\'>Generated Python code will appear here...</span>'"></code></pre>
+              <template x-if="!modelOutputHtml.python"><p class="text-slate-600 italic text-sm">Generated Python code will appear here...</p></template>
+              <template x-if="modelOutputHtml.python"><pre class="m-0 bg-transparent"><code class="language-python" x-html="modelOutputHtml.python"></code></pre></template>
             </div>
 
             <!-- PHP Output -->
             <div x-show="modelActiveTab === 'php'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <pre><code class="language-php" x-html="modelOutputHtml.php || '<span class=\'text-slate-600 italic\'>Generated PHP code will appear here...</span>'"></code></pre>
+              <template x-if="!modelOutputHtml.php"><p class="text-slate-600 italic text-sm">Generated PHP code will appear here...</p></template>
+              <template x-if="modelOutputHtml.php"><pre class="m-0 bg-transparent"><code class="language-php" x-html="modelOutputHtml.php"></code></pre></template>
             </div>
           </div>
         </div>
