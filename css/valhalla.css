@@ -861,7 +861,7 @@ code[class*="language-"] {
   border: 1px solid var(--valhalla-300);
   border-radius: 0.75rem;
   padding: 0.625rem 1rem;
-  color: var(--valhalla-900);
+  color: #1f2937;
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.2s ease;
