@@ -463,13 +463,13 @@
                     }"
                     x-text="pomoFormattedTime"
                   ></span>
-                  <span class="text-xs text-slate-500 mt-1 uppercase tracking-widest" x-text="pomoModeLabel"></span>
+                  <span class="text-xs text-slate-600 dark:text-slate-500 mt-1 uppercase tracking-widest" x-text="pomoModeLabel"></span>
                 </div>
               </div>
 
               <!-- Plan/Task Input (Focus mode only) -->
               <div class="w-full max-w-md mt-2" x-show="pomoMode === 'focus'" x-transition>
-                <label for="pomo-plan-input" class="text-[11px] text-slate-500 uppercase tracking-wider mb-1.5 block">
+                <label for="pomo-plan-input" class="text-[11px] text-slate-600 dark:text-slate-500 uppercase tracking-wider mb-1.5 block">
                   <i data-lucide="clipboard-list" class="w-3 h-3 inline -mt-0.5 mr-1"></i>
                   Session Plan
                 </label>
@@ -524,14 +524,14 @@
           <div class="space-y-4">
             <!-- Daily Sessions Counter -->
             <div class="glass rounded-xl p-5 text-center">
-              <div class="text-xs text-slate-500 uppercase tracking-wider mb-2">Sessions Today</div>
+              <div class="text-xs text-slate-600 dark:text-slate-500 uppercase tracking-wider mb-2">Sessions Today</div>
               <div class="pomo-session-count text-4xl font-bold text-gold-500" x-text="pomoDailySessions"></div>
               <div class="mt-3 flex items-center justify-center gap-1">
                 <template x-for="i in Math.min(pomoDailySessions, 12)" :key="i">
                   <span class="w-2.5 h-2.5 rounded-full bg-gold-500 opacity-80"></span>
                 </template>
                 <template x-for="i in Math.max(0, Math.min(12, 12 - pomoDailySessions))" :key="'e'+i">
-                  <span class="w-2.5 h-2.5 rounded-full bg-slate-700/50"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700/50"></span>
                 </template>
               </div>
             </div>
@@ -549,7 +549,7 @@
 
             <!-- Notification Permission -->
             <div class="glass rounded-xl p-5">
-              <div class="text-xs text-slate-500 uppercase tracking-wider mb-3">Notifications</div>
+              <div class="text-xs text-slate-600 dark:text-slate-500 uppercase tracking-wider mb-3">Notifications</div>
               <template x-if="pomoNotifGranted">
                 <div class="flex items-center gap-2 text-sm text-emerald-400">
                   <i data-lucide="bell-ring" class="w-4 h-4"></i>
@@ -573,18 +573,18 @@
         <!-- Session Log Table -->
         <div class="mt-8">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <i data-lucide="scroll-text" class="w-4 h-4 text-gold-500"></i>
               Today's Session Log
-              <span class="text-xs font-normal text-slate-600" x-text="'(' + pomoSessionLog.length + ')'"></span>
+              <span class="text-xs font-normal text-slate-600 dark:text-slate-500" x-text="'(' + pomoSessionLog.length + ')'"></span>
             </h3>
           </div>
 
           <!-- Empty state -->
           <template x-if="pomoSessionLog.length === 0">
             <div class="glass rounded-xl p-8 text-center">
-              <i data-lucide="clock" class="w-10 h-10 text-slate-700 mx-auto mb-3"></i>
-              <p class="text-slate-500 text-sm">No sessions logged today. Start a focus session to begin tracking!</p>
+              <i data-lucide="clock" class="w-10 h-10 text-slate-400 dark:text-slate-700 mx-auto mb-3"></i>
+              <p class="text-slate-600 dark:text-slate-500 text-sm">No sessions logged today. Start a focus session to begin tracking!</p>
             </div>
           </template>
 
@@ -594,8 +594,8 @@
               <div class="pomo-log-item pomo-log-enter">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-mono text-slate-500" x-text="'#' + (pomoSessionLog.length - idx)"></span>
-                    <span class="text-[11px] font-mono text-slate-500" x-text="pomoFormatLogTime(entry.startedAt) + ' → ' + pomoFormatLogTime(entry.completedAt)"></span>
+                    <span class="text-[11px] font-mono text-slate-600 dark:text-slate-500" x-text="'#' + (pomoSessionLog.length - idx)"></span>
+                    <span class="text-[11px] font-mono text-slate-600 dark:text-slate-500" x-text="pomoFormatLogTime(entry.startedAt) + ' → ' + pomoFormatLogTime(entry.completedAt)"></span>
                     <span
                       class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full"
                       :class="{
@@ -619,11 +619,11 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div>
                       <span class="text-[10px] text-slate-600 uppercase">Plan</span>
-                      <p class="text-xs text-slate-300 mt-0.5" x-text="entry.todo || '—'"></p>
+                      <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5" x-text="entry.todo || '—'"></p>
                     </div>
                     <div>
                       <span class="text-[10px] text-slate-600 uppercase">Actual</span>
-                      <p class="text-xs text-slate-300 mt-0.5" x-text="entry.actual || '—'"></p>
+                      <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5" x-text="entry.actual || '—'"></p>
                     </div>
                   </div>
                 </template>
@@ -657,7 +657,7 @@
             <!-- Pattern Input -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-300">Pattern</label>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Pattern</label>
                 <!-- Common Patterns Dropdown -->
                 <div class="relative">
                   <button
@@ -698,24 +698,24 @@
 
             <!-- Flags -->
             <div class="flex items-center gap-4">
-              <span class="text-sm text-slate-400">Flags:</span>
+              <span class="text-sm text-slate-600 dark:text-slate-400">Flags:</span>
               <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagG" @change="runRegex()" class="w-4 h-4 rounded border-slate-600 text-gold-500 focus:ring-gold-500 bg-slate-800">
+                <input type="checkbox" x-model="regexFlagG" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagG ? 'text-gold-400' : 'text-slate-500'">g</span>
               </label>
               <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagI" @change="runRegex()" class="w-4 h-4 rounded border-slate-600 text-gold-500 focus:ring-gold-500 bg-slate-800">
+                <input type="checkbox" x-model="regexFlagI" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagI ? 'text-gold-400' : 'text-slate-500'">i</span>
               </label>
               <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagM" @change="runRegex()" class="w-4 h-4 rounded border-slate-600 text-gold-500 focus:ring-gold-500 bg-slate-800">
+                <input type="checkbox" x-model="regexFlagM" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagM ? 'text-gold-400' : 'text-slate-500'">m</span>
               </label>
             </div>
 
             <!-- Test String -->
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2">Test String</label>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Test String</label>
               <textarea
                 x-model="regexTestString"
                 @input.debounce.150ms="runRegex()"
@@ -746,9 +746,9 @@
 
             <!-- Highlighted Output -->
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2">Highlighted Matches</label>
-              <div class="bg-slate-900/80 border border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words">
-                <template x-if="!regexResult.html"><span class="text-slate-600 italic">Results will appear here...</span></template>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Highlighted Matches</label>
+              <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words">
+                <template x-if="!regexResult.html"><span class="text-slate-400 dark:text-slate-600 italic">Results will appear here...</span></template>
                 <span x-show="regexResult.html" x-html="regexResult.html"></span>
               </div>
             </div>
@@ -756,21 +756,21 @@
             <!-- Match Details -->
             <template x-if="regexResult.matches.length > 0">
               <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Match Details</label>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Match Details</label>
                 <div class="space-y-2 max-h-48 overflow-auto">
                   <template x-for="(m, idx) in regexResult.matches" :key="idx">
                     <div class="glass rounded-lg px-3 py-2 text-xs font-mono">
                       <div class="flex items-center gap-2">
                         <span class="text-gold-400 font-semibold" x-text="'#' + (idx + 1)"></span>
                         <span class="text-slate-200" x-text="m.fullMatch"></span>
-                        <span class="text-slate-600" x-text="'@' + m.index"></span>
+                        <span class="text-slate-600 dark:text-slate-500" x-text="'@' + m.index"></span>
                       </div>
                       <template x-if="m.groups.length > 0">
                         <div class="mt-1 flex flex-wrap gap-2">
                           <template x-for="(g, gi) in m.groups" :key="gi">
-                            <span class="bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
-                              <span class="text-slate-500" x-text="'$' + (gi + 1) + ':'"></span>
-                              <span class="text-sky-400" x-text="g || '(empty)'"></span>
+                            <span class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
+                              <span class="text-slate-500 dark:text-slate-500" x-text="'$' + (gi + 1) + ':'"></span>
+                              <span class="text-sky-600 dark:text-sky-400" x-text="g || '(empty)'"></span>
                             </span>
                           </template>
                         </div>
@@ -806,7 +806,7 @@
           <!-- Controls -->
           <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2">Data / URL</label>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data / URL</label>
               <textarea
                 x-model="qrText"
                 @input.debounce.300ms="generateQR()"
@@ -817,7 +817,7 @@
 
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-300">Size</label>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Size</label>
                 <span class="text-sm font-mono text-gold-400" x-text="qrSize + 'px'"></span>
               </div>
               <input
@@ -850,8 +850,8 @@
             <div class="glass rounded-xl p-6 w-full flex items-center justify-center min-h-[300px]">
               <div id="qr-preview" class="qr-container rounded-lg" :style="qrText ? 'padding: 1rem; background: white;' : 'background: transparent;'">
                 <template x-if="!qrText">
-                  <div class="text-slate-600 text-sm flex flex-col items-center gap-2">
-                    <i data-lucide="qr-code" class="w-12 h-12 text-slate-700"></i>
+                  <div class="text-slate-600 dark:text-slate-600 text-sm flex flex-col items-center gap-2">
+                    <i data-lucide="qr-code" class="w-12 h-12 text-slate-400 dark:text-slate-700"></i>
                     <span>Enter data to generate QR code</span>
                   </div>
                 </template>
@@ -922,7 +922,7 @@
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <!-- Input -->
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Input</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="jsonGutter" class="json-gutter" x-text="getJsonLineNumbers()"></pre>
               <textarea
@@ -940,7 +940,7 @@
 
           <!-- Output -->
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Formatted Output</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
               <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
@@ -1014,7 +1014,7 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Input</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="xmlGutter" class="json-gutter" x-text="getXmlLineNumbers()"></pre>
               <textarea
@@ -1031,7 +1031,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Formatted Output</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="xmlOutputGutter" class="json-gutter" x-text="getXmlOutputLineNumbers()"></pre>
               <div x-ref="xmlOutputPane" @scroll="syncXmlOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
@@ -1085,15 +1085,15 @@
         <template x-if="!diffResult.error && diffLeftInput && diffRightInput">
           <div class="mb-4 flex items-center gap-3 text-sm">
             <span :class="diffResult.equal ? 'success-badge' : 'error-badge'" x-text="diffResult.equal ? 'No differences found' : 'Differences detected'"></span>
-            <span class="text-slate-400">Added: <span class="text-green-400" x-text="diffResult.stats.added"></span></span>
-            <span class="text-slate-400">Removed: <span class="text-red-400" x-text="diffResult.stats.removed"></span></span>
-            <span class="text-slate-400">Changed: <span class="text-yellow-400" x-text="diffResult.stats.changed"></span></span>
+            <span class="text-slate-600 dark:text-slate-400">Added: <span class="text-green-600 dark:text-green-400" x-text="diffResult.stats.added"></span></span>
+            <span class="text-slate-600 dark:text-slate-400">Removed: <span class="text-red-600 dark:text-red-400" x-text="diffResult.stats.removed"></span></span>
+            <span class="text-slate-600 dark:text-slate-400">Changed: <span class="text-yellow-600 dark:text-yellow-400" x-text="diffResult.stats.changed"></span></span>
           </div>
         </template>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Input A</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input A</label>
             <textarea
               x-model="diffLeftInput"
               @input.debounce.300ms="runDiffCheck()"
@@ -1104,7 +1104,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">Input B</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input B</label>
             <textarea
               x-model="diffRightInput"
               @input.debounce.300ms="runDiffCheck()"
@@ -1116,7 +1116,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2">Differences</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Differences</label>
           <div class="code-output h-[22rem] overflow-auto diff-output">
             <template x-if="!diffResult.html">
               <p class="text-slate-600 italic text-sm">Masukkan Input A dan Input B untuk melihat perbedaan...</p>
@@ -1160,7 +1160,7 @@
             <!-- Entropy Bar -->
             <div class="space-y-2">
               <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-400">Entropy</span>
+                <span class="text-slate-600 dark:text-slate-400">Entropy</span>
                 <span :class="pwResult.strength.color" class="font-semibold" x-text="pwResult.strength.label + ' (' + pwResult.entropy + ' bits)'"></span>
               </div>
               <div class="entropy-bar-bg">
@@ -1177,8 +1177,8 @@
             <!-- Length Slider -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-300">Password Length</label>
-                <span class="text-sm font-mono text-gold-400 bg-slate-800 px-2 py-0.5 rounded" x-text="pwLength"></span>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Password Length</label>
+                <span class="text-sm font-mono text-gold-600 dark:text-gold-400 bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded" x-text="pwLength"></span>
               </div>
               <input
                 type="range"
@@ -1251,15 +1251,15 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="glass rounded-lg p-3 text-center">
               <div class="text-lg font-bold text-gold-400" x-text="pwResult.poolSize"></div>
-              <div class="text-xs text-slate-500">Pool Size</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">Pool Size</div>
             </div>
             <div class="glass rounded-lg p-3 text-center">
               <div class="text-lg font-bold text-gold-400" x-text="pwLength"></div>
-              <div class="text-xs text-slate-500">Length</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">Length</div>
             </div>
             <div class="glass rounded-lg p-3 text-center">
               <div class="text-lg font-bold text-gold-400" x-text="pwResult.entropy + ' bits'"></div>
-              <div class="text-xs text-slate-500">Entropy</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">Entropy</div>
             </div>
           </div>
         </div>
@@ -1287,7 +1287,7 @@
           <!-- JSON Input -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-slate-300">Input JSON</label>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Input JSON</label>
               <button
                 @click="modelJsonInput = JSON.stringify({id:1,name:'Odin',email:'odin@valhalla.com',created_at:'2024-01-15T10:30:00',is_active:true,score:98.5,address:{street:'Bifrost Bridge',city:'Asgard',zip_code:'00001'},tags:['developer','toolkit'],items:[{product_name:'Mjolnir',price:999.99,quantity:1}]}, null, 2); generateModels()"
                 class="btn-outline text-xs py-1 px-2"
@@ -1312,42 +1312,42 @@ Example:
 
             <!-- Generator Options -->
             <div class="mt-3 glass rounded-lg p-3 space-y-2">
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Generator Options</p>
+              <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Generator Options</p>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="csUseJsonPropertyName = !csUseJsonPropertyName; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="csUseJsonPropertyName ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">C#</span> Use <code class="text-gold-400 text-xs">[JsonPropertyName]</code> <span class="text-slate-500 text-xs">(System.Text.Json)</span></span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">C#</span> Use <code class="text-gold-400 text-xs">[JsonPropertyName]</code> <span class="text-slate-500 text-xs">(System.Text.Json)</span></span>
               </label>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="csUseNullable = !csUseNullable; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="csUseNullable ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">C#</span> Nullable reference types <span class="text-slate-500 text-xs">(e.g. string?)</span></span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">C#</span> Nullable reference types <span class="text-slate-500 text-xs">(e.g. string?)</span></span>
               </label>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="goUseOmitEmpty = !goUseOmitEmpty; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="goUseOmitEmpty ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">Go</span> Add <code class="text-gold-400 text-xs">omitempty</code> to JSON tags</span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">Go</span> Add <code class="text-gold-400 text-xs">omitempty</code> to JSON tags</span>
               </label>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="goUsePointers = !goUsePointers; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="goUsePointers ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">Go</span> Use pointers for nullable fields</span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">Go</span> Use pointers for nullable fields</span>
               </label>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="pyUseOptional = !pyUseOptional; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="pyUseOptional ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">Python</span> Use <code class="text-gold-400 text-xs">Optional[...]</code> for nullable fields</span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">Python</span> Use <code class="text-gold-400 text-xs">Optional[...]</code> for nullable fields</span>
               </label>
               <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="phpUseReadonly = !phpUseReadonly; generateModels()">
                 <div class="toggle-track flex-shrink-0" :class="phpUseReadonly ? 'active' : ''" style="width:36px;height:20px">
                   <div class="toggle-thumb" style="width:16px;height:16px"></div>
                 </div>
-                <span class="text-sm text-slate-300"><span class="text-gold-400 text-xs">PHP</span> Generate <code class="text-gold-400 text-xs">readonly</code> class</span>
+                <span class="text-sm text-slate-700 dark:text-slate-300"><span class="text-gold-400 text-xs">PHP</span> Generate <code class="text-gold-400 text-xs">readonly</code> class</span>
               </label>
             </div>
           </div>
@@ -1483,7 +1483,7 @@ Example:
 
               <!-- Standard Claims -->
               <template x-if="jwtPayload">
-                <div class="mt-3 pt-3 border-t border-slate-700/50 space-y-1">
+                <div class="mt-3 pt-3 border-t border-slate-300 dark:border-slate-700/50 space-y-1">
                   <template x-for="(val, key) in jwtPayload" :key="key">
                     <template x-if="['iss','sub','aud','exp','iat','nbf','jti'].includes(key)">
                       <div class="flex items-center gap-2 text-xs">
@@ -1504,7 +1504,7 @@ Example:
             <div class="jwt-panel-label">
               <i data-lucide="fingerprint" class="w-4 h-4"></i> Signature (hex)
             </div>
-            <div class="font-mono text-xs text-slate-400 break-all leading-relaxed" x-text="jwtSignature"></div>
+            <div class="font-mono text-xs text-slate-600 dark:text-slate-400 break-all leading-relaxed" x-text="jwtSignature"></div>
           </div>
         </template>
       </section>
@@ -1538,9 +1538,9 @@ Example:
           :class="imgDragover ? 'img-dropzone-active' : ''"
           class="img-dropzone cursor-pointer"
         >
-          <i data-lucide="upload-cloud" class="w-12 h-12 text-slate-600 mb-3"></i>
-          <p class="text-slate-400 text-sm font-medium">Drop an image here or click to browse</p>
-          <p class="text-slate-600 text-xs mt-1">Supports JPEG, PNG, WebP, GIF, SVG</p>
+          <i data-lucide="upload-cloud" class="w-12 h-12 text-slate-500 dark:text-slate-600 mb-3"></i>
+          <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Drop an image here or click to browse</p>
+          <p class="text-slate-500 dark:text-slate-600 text-xs mt-1">Supports JPEG, PNG, WebP, GIF, SVG</p>
           <input type="file" accept="image/*" x-ref="imgFileInput" @change="imgHandleFile($event)" class="hidden">
         </div>
 
@@ -1550,11 +1550,11 @@ Example:
             <!-- Preview + Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <img :src="imgPreviewUrl" class="img-preview rounded-lg border border-slate-700/50" alt="Preview">
+                <img :src="imgPreviewUrl" class="img-preview rounded-lg border border-slate-300 dark:border-slate-700/50" alt="Preview">
               </div>
               <div class="space-y-3">
                 <div class="text-sm">
-                  <span class="text-slate-500">File:</span>
+                  <span class="text-slate-500 dark:text-slate-500">File:</span>
                   <span class="text-slate-900 dark:text-white font-medium ml-1" x-text="imgFileName"></span>
                 </div>
                 <div class="text-sm">
@@ -1634,7 +1634,7 @@ Example:
               </button>
               <button
                 @click="imgReset()"
-                class="px-3 py-2 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                class="px-3 py-2 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
               >Reset</button>
             </div>
 
@@ -1854,7 +1854,7 @@ Example:
               <label class="fg-label">Items: <span class="text-gold-400" x-text="fgItemCount"></span></label>
               <div class="flex items-center gap-2">
                 <button @click="fgRemoveItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">−</button>
-                <div class="flex-1 h-1 rounded bg-slate-700"></div>
+                <div class="flex-1 h-1 rounded bg-slate-300 dark:bg-slate-700"></div>
                 <button @click="fgAddItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">+</button>
               </div>
             </div>
@@ -1921,7 +1921,7 @@ Example:
           </div>
 
           <!-- File Mode Toggle -->
-          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer ml-2" @click.prevent="b64FileMode = !b64FileMode">
+          <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer ml-2" @click.prevent="b64FileMode = !b64FileMode">
             <div class="toggle-track" :class="b64FileMode ? 'active' : ''">
               <div class="toggle-thumb"></div>
             </div>
@@ -1984,7 +1984,7 @@ Example:
                 Choose File
                 <input type="file" @change="b64HandleFile($event)" class="hidden">
               </label>
-              <span class="text-sm text-slate-400" x-text="b64FileName || 'No file selected'"></span>
+              <span class="text-sm text-slate-600 dark:text-slate-400" x-text="b64FileName || 'No file selected'"></span>
             </div>
 
             <template x-if="b64FileResult">
@@ -2069,7 +2069,7 @@ Example:
         <p class="text-sm text-slate-700 dark:text-slate-300 mt-0.5" x-text="pomoTodoText"></p>
       </div>
 
-      <label for="pomo-actual-input" class="text-[11px] text-slate-500 uppercase tracking-wider mb-1.5 block">Actual Result</label>
+      <label for="pomo-actual-input" class="text-[11px] text-slate-600 dark:text-slate-500 uppercase tracking-wider mb-1.5 block">Actual Result</label>
       <input
         id="pomo-actual-input"
         type="text"
@@ -2084,7 +2084,7 @@ Example:
       <div class="flex items-center gap-2 justify-end">
         <button
           @click="pomoSkipActual()"
-          class="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          class="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
         >Skip</button>
         <button
           @click="pomoSubmitActual()"

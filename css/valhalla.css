@@ -169,32 +169,48 @@ textarea.code-input,
 
 .btn-outline {
   background: transparent;
-  color: var(--valhalla-200);
+  color: var(--valhalla-700);
   font-weight: 500;
-  border: 1px solid var(--valhalla-700);
+  border: 1px solid var(--valhalla-300);
   border-radius: 0.5rem;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.dark .btn-outline {
+  color: var(--valhalla-200);
+  border-color: var(--valhalla-700);
+}
+
 .btn-outline:hover {
   border-color: var(--gold-500);
-  color: var(--gold-400);
+  color: var(--gold-600);
   background: rgba(234, 179, 8, 0.05);
+}
+
+.dark .btn-outline:hover {
+  color: var(--gold-400);
 }
 
 /* ---- Form Elements ---- */
 .input-valhalla,
 .textarea-valhalla {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid var(--valhalla-700);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--valhalla-300);
   border-radius: 0.5rem;
-  color: var(--valhalla-200);
+  color: var(--valhalla-900);
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   transition: all 0.2s ease;
   width: 100%;
+}
+
+.dark .input-valhalla,
+.dark .textarea-valhalla {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: var(--valhalla-700);
+  color: var(--valhalla-200);
 }
 
 .input-valhalla:focus,
@@ -206,6 +222,11 @@ textarea.code-input,
 
 .input-valhalla::placeholder,
 .textarea-valhalla::placeholder {
+  color: var(--valhalla-500);
+}
+
+.dark .input-valhalla::placeholder,
+.dark .textarea-valhalla::placeholder {
   color: var(--valhalla-600);
 }
 
@@ -230,9 +251,9 @@ textarea.code-input,
   margin: 0;
   width: 3.25rem;
   padding: 0.625rem 0.5rem;
-  border-right: 1px solid var(--valhalla-800);
-  background: rgba(2, 6, 23, 0.45);
-  color: var(--valhalla-600);
+  border-right: 1px solid var(--valhalla-300);
+  background: rgba(248, 250, 252, 0.45);
+  color: var(--valhalla-500);
   text-align: right;
   user-select: none;
   overflow: hidden;
@@ -240,6 +261,12 @@ textarea.code-input,
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8125rem;
   line-height: 1.6;
+}
+
+.dark .json-gutter {
+  border-right-color: var(--valhalla-800);
+  background: rgba(2, 6, 23, 0.45);
+  color: var(--valhalla-600);
 }
 
 .json-input {
@@ -424,13 +451,18 @@ input[type="range"].slider-gold::-moz-range-thumb {
 
 /* ---- Code Output ---- */
 .code-output {
-  background: rgba(2, 6, 23, 0.9);
-  border: 1px solid var(--valhalla-800);
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid var(--valhalla-300);
   border-radius: 0.5rem;
   padding: 1rem;
   overflow-x: auto;
   font-size: 0.8125rem;
   line-height: 1.7;
+}
+
+.dark .code-output {
+  background: rgba(2, 6, 23, 0.9);
+  border-color: var(--valhalla-800);
 }
 
 .code-output pre {
@@ -707,14 +739,22 @@ code[class*="language-"] {
   font-weight: 500;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--valhalla-400);
+  color: var(--valhalla-500);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.dark .pomo-mode-btn {
+  color: var(--valhalla-400);
+}
+
 .pomo-mode-btn:hover {
-  color: var(--valhalla-200);
+  color: var(--valhalla-700);
   background: rgba(148, 163, 184, 0.08);
+}
+
+.dark .pomo-mode-btn:hover {
+  color: var(--valhalla-200);
 }
 
 .pomo-mode-btn.active-focus {
@@ -816,14 +856,20 @@ code[class*="language-"] {
 
 .pomo-session-input {
   flex: 1;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--valhalla-300);
   border-radius: 0.75rem;
   padding: 0.625rem 1rem;
-  color: var(--valhalla-200);
+  color: var(--valhalla-900);
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.2s ease;
+}
+
+.dark .pomo-session-input {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: var(--glass-border);
+  color: var(--valhalla-200);
 }
 
 .pomo-session-input:focus {
@@ -831,6 +877,10 @@ code[class*="language-"] {
 }
 
 .pomo-session-input::placeholder {
+  color: var(--valhalla-500);
+}
+
+.dark .pomo-session-input::placeholder {
   color: var(--valhalla-600);
 }
 
@@ -933,10 +983,15 @@ code[class*="language-"] {
   justify-content: center;
   min-height: 12rem;
   padding: 2rem;
-  border: 2px dashed var(--valhalla-700);
+  border: 2px dashed var(--valhalla-300);
   border-radius: 1rem;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(248, 250, 252, 0.3);
   transition: border-color 0.2s, background 0.2s;
+}
+
+.dark .img-dropzone {
+  border-color: var(--valhalla-700);
+  background: rgba(15, 23, 42, 0.3);
 }
 
 .img-dropzone:hover,
