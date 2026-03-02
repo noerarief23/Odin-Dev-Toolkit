@@ -147,6 +147,28 @@ textarea.code-input,
   box-shadow: 0 1px 4px rgba(234, 179, 8, 0.2);
 }
 
+.btn-amber {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #1f2937;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.btn-amber:hover {
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-amber:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.2);
+}
+
 .btn-crimson {
   background: linear-gradient(135deg, var(--crimson-700), var(--crimson-600));
   color: white;
@@ -915,7 +937,6 @@ code[class*="language-"] {
   background: rgba(15, 23, 42, 0.6);
   border-color: rgba(148, 163, 184, 0.15);
 }
-}
 
 @keyframes pomo-log-slide-in {
   from {
@@ -952,6 +973,91 @@ code[class*="language-"] {
   border: 1px solid var(--glass-border);
   background: var(--valhalla-900);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Warning modal (mode switch) */
+.pomo-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.pomo-warning-modal {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--glass-border);
+  background: var(--valhalla-900);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Break selection modal */
+.pomo-break-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.pomo-break-modal {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--glass-border);
+  background: var(--valhalla-900);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.pomo-break-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pomo-break-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--gold-500);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(234, 179, 8, 0.15);
+}
+
+.pomo-break-btn-skip:hover {
+  border-color: var(--slate-600);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.1);
+}
+
+.pomo-break-badge {
+  position: absolute;
+  top: -0.5rem;
+  right: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #1f2937;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 

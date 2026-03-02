@@ -2095,6 +2095,124 @@ Example:
   </div>
 
   <!-- ============================================================
+       POMODORO: MODE SWITCH WARNING MODAL
+       ============================================================ -->
+  <div
+    x-show="pomoShowSwitchWarning"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="pomo-warning-overlay"
+    @keydown.escape.window="if(pomoShowSwitchWarning) pomoCancelSwitch()"
+  >
+    <div
+      class="pomo-warning-modal"
+      x-show="pomoShowSwitchWarning"
+      x-transition:enter="transition ease-out duration-200 delay-75"
+      x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+      x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+      @click.outside="pomoCancelSwitch()"
+    >
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Switch Mode?</h3>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        You have an active <span class="font-semibold" x-text="pomoMode === 'focus' ? 'Focus' : pomoMode === 'short' ? 'Short Break' : 'Long Break'"></span> session. 
+        Switching will actualize this session with elapsed time.
+      </p>
+
+      <div class="flex items-center gap-2 justify-end">
+        <button
+          @click="pomoCancelSwitch()"
+          class="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+        >Cancel</button>
+        <button
+          @click="pomoConfirmSwitch()"
+          class="btn-amber px-4 py-1.5 rounded-lg text-sm font-semibold"
+        >Switch Mode</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       POMODORO: BREAK SELECTION MODAL
+       ============================================================ -->
+  <div
+    x-show="pomoShowBreakChoice"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="pomo-break-overlay"
+  >
+    <div
+      class="pomo-break-modal"
+      x-show="pomoShowBreakChoice"
+      x-transition:enter="transition ease-out duration-200 delay-75"
+      x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+      x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+    >
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="coffee" class="w-5 h-5 text-emerald-400"></i>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Choose Your Break</h3>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Time to rest! Select your break duration.</p>
+
+      <div class="space-y-2">
+        <!-- Short Break Button -->
+        <button
+          @click="pomoSelectBreak('short')"
+          class="pomo-break-btn"
+        >
+          <i data-lucide="coffee" class="w-5 h-5"></i>
+          <div class="flex-1 text-left">
+            <div class="font-semibold text-slate-900 dark:text-white">Short Break</div>
+            <div class="text-xs text-slate-600 dark:text-slate-400" x-text="Math.round(pomoCustomDurations.short / 60) + ' minutes'"></div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </button>
+
+        <!-- Long Break Button (with badge if cycle complete) -->
+        <button
+          @click="pomoSelectBreak('long')"
+          class="pomo-break-btn relative"
+        >
+          <i data-lucide="sunset" class="w-5 h-5"></i>
+          <div class="flex-1 text-left">
+            <div class="font-semibold text-slate-900 dark:text-white">Long Break</div>
+            <div class="text-xs text-slate-600 dark:text-slate-400" x-text="Math.round(pomoCustomDurations.long / 60) + ' minutes'"></div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          <!-- Recommended badge after 4 focus sessions -->
+          <span
+            x-show="pomoSessionCount % 4 === 0 && pomoSessionCount > 0"
+            class="pomo-break-badge"
+          >Recommended</span>
+        </button>
+
+        <!-- Skip Break Button -->
+        <button
+          @click="pomoSelectBreak('skip')"
+          class="pomo-break-btn pomo-break-btn-skip"
+        >
+          <i data-lucide="x-circle" class="w-5 h-5"></i>
+          <div class="flex-1 text-left">
+            <div class="font-semibold text-slate-900 dark:text-white">Skip Break</div>
+            <div class="text-xs text-slate-600 dark:text-slate-400">Continue working (resets cycle)</div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
        TOAST NOTIFICATION
        ============================================================ -->
   <div class="toast-container">

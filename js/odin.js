@@ -1866,6 +1866,10 @@ function odinApp() {
     pomoShowActualPrompt: false,   // show actual-input modal after focus session ends
     pomoSessionLog: Odin.Pomodoro.getTodayLog(),  // today's logged sessions
     pomoSessionStartedAt: null,    // ISO timestamp when session started
+    pomoShowSwitchWarning: false,  // show warning modal when switching modes
+    pomoPendingMode: null,         // target mode if user confirms switch
+    pomoShowBreakChoice: false,    // show break selection modal after focus
+    pomoSessionCount: 0,           // completed focus sessions for cycle tracking
 
     // ---- Regex Tool ----
     regexPattern: Odin.Storage.get('regex_pattern', ''),
@@ -2012,6 +2016,18 @@ function odinApp() {
       // Auto-cleanup old session logs (>30 days)
       Odin.Pomodoro.cleanupOldLogs();
 
+      // Load Pomodoro cycle counter (reset at midnight)
+      const cycleData = localStorage.getItem('odin_pomo_cycle_count');
+      const cycleDate = localStorage.getItem('odin_pomo_cycle_date');
+      const today = new Date().toLocaleDateString();
+      if (cycleDate === today && cycleData) {
+        this.pomoSessionCount = parseInt(cycleData) || 0;
+      } else {
+        this.pomoSessionCount = 0;
+        localStorage.setItem('odin_pomo_cycle_date', today);
+        localStorage.setItem('odin_pomo_cycle_count', '0');
+      }
+
       // Keyboard shortcuts: Ctrl+1-8
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -2062,6 +2078,17 @@ function odinApp() {
 
     // ---- Productive Timer Methods ----
     pomoSwitchMode(mode) {
+      // Check if there's an active or paused session
+      if (this.pomoRunning || this.pomoPaused) {
+        // Show warning modal
+        this.pomoPendingMode = mode;
+        this.pomoShowSwitchWarning = true;
+        this.$nextTick(() => {
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+        return;
+      }
+
       // Stop any running timer
       if (this.pomoInterval) {
         clearInterval(this.pomoInterval);
@@ -2262,6 +2289,16 @@ function odinApp() {
     /** Submit the actual-result from the prompt modal */
     pomoSubmitActual() {
       this.pomoSaveSession(this.pomoActualText);
+      
+      // Increment session counter for Pomodoro cycles
+      this.pomoSessionCount++;
+      localStorage.setItem('odin_pomo_cycle_count', this.pomoSessionCount.toString());
+      
+      // Show break choice modal
+      this.pomoShowBreakChoice = true;
+      this.$nextTick(() => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
     },
 
     /** Skip filling in the actual — still logs the session */
@@ -2272,6 +2309,65 @@ function odinApp() {
     /** Delete a session from today's log */
     pomoDeleteSession(id) {
       this.pomoSessionLog = Odin.Pomodoro.deleteSessionEntry(id);
+    },
+
+    /** Confirm switching modes - actualize current session with elapsed time */
+    pomoConfirmSwitch() {
+      // Calculate elapsed time (in seconds)
+      const elapsedTime = this.pomoTotalTime - this.pomoTimeLeft;
+      const elapsedMin = Math.floor(elapsedTime / 60);
+      
+      // Generate actual text for incomplete session
+      const actualText = `Session switched early (${elapsedMin} min elapsed)`;
+      
+      // Save the partial session
+      this.pomoSaveSession(actualText);
+      
+      // Proceed with the mode switch
+      const targetMode = this.pomoPendingMode;
+      
+      // Stop any running timer
+      if (this.pomoInterval) {
+        clearInterval(this.pomoInterval);
+        this.pomoInterval = null;
+      }
+      
+      this.pomoMode = targetMode;
+      const modes = Odin.Pomodoro.getModes(this.pomoCustomDurations);
+      this.pomoTotalTime = modes[targetMode].duration;
+      this.pomoTimeLeft = this.pomoTotalTime;
+      this.pomoRunning = false;
+      this.pomoPaused = false;
+      this.pomoEndTimestamp = null;
+      this.pomoSessionStartedAt = null;
+      document.title = 'Odin Dev Toolkit';
+      
+      // Hide warning modal
+      this.pomoShowSwitchWarning = false;
+      this.pomoPendingMode = null;
+    },
+
+    /** Cancel mode switch - keep current session running */
+    pomoCancelSwitch() {
+      this.pomoShowSwitchWarning = false;
+      this.pomoPendingMode = null;
+    },
+
+    /** Handle break type selection after focus session */
+    pomoSelectBreak(type) {
+      if (type === 'short' || type === 'long') {
+        // Switch to selected break mode and auto-start
+        this.pomoSwitchMode(type);
+        this.pomoStart();
+      } else if (type === 'skip') {
+        // Reset to focus mode and reset cycle counter
+        this.pomoSwitchMode('focus');
+        this.pomoSessionCount = 0;
+        localStorage.setItem('odin_pomo_cycle_count', '0');
+      }
+      
+      // Hide break choice modal
+      this.pomoShowBreakChoice = false;
     },
 
     /** Download today's session log as Markdown */
