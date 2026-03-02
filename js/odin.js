@@ -1304,7 +1304,7 @@ Odin.ModelGen = {
 
 
 /* ================================================================
-   Odin.Pomodoro — Pomodoro Timer Engine
+   Odin.Pomodoro — Productive Timer Engine
    ================================================================ */
 Odin.Pomodoro = {
   /** Default durations (seconds) */
@@ -1818,7 +1818,7 @@ function odinApp() {
     // ---- Toast ----
     toast: { visible: false, message: '' },
 
-    // ---- Pomodoro Timer ----
+    // ---- Productive Timer ----
     pomoMode: 'focus',
     pomoCustomDurations: Odin.Pomodoro.loadCustomDurations(),
     pomoTimeLeft: Odin.Pomodoro.loadCustomDurations().focus,
@@ -2011,7 +2011,7 @@ function odinApp() {
       });
     },
 
-    // ---- Pomodoro Timer Methods ----
+    // ---- Productive Timer Methods ----
     pomoSwitchMode(mode) {
       // Stop any running timer
       if (this.pomoInterval) {

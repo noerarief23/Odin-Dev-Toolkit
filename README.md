@@ -12,7 +12,7 @@
 
 | # | Tool | Description |
 |---|------|-------------|
-| 1 | **Pomodoro Timer** | Focus timer with session planning (todo/actual), daily session log & Markdown export |
+| 1 | **Productive Timer** | Focus timer with session planning (todo/actual), daily session log & Markdown export |
 | 2 | **Regex Tester** | Real-time matching, color-coded groups, common patterns cheatsheet |
 | 3 | **QR Code Engine** | Generate QR codes with size control, download as PNG |
 | 4 | **JSON Formatter** | Beautify/Minify with instant validation & error line indicator |
@@ -33,7 +33,7 @@
 - **Prism.js** for syntax highlighting (JSON, XML/Markup, C#, Go, Python, PHP)
 - **Lucide Icons**
 - **QRCode Generator** (qrcode-generator)
-- **Web Audio API** for Pomodoro timer sounds
+- **Web Audio API** for Productive timer sounds
 - **Canvas API** for client-side image processing
 
 ## Quick Start
@@ -61,7 +61,7 @@ Then open `http://localhost:8000` (or simply open `index.html` directly).
 - **PWA Installable** — Add to home screen, works offline via Service Worker
 - **100% Client-Side** — No data ever leaves your browser, all processing is local
 - **"Deep Valhalla" Theme** — Dark Slate-950 with Gold-500 and Crimson-600 accents, glassmorphism effects
-- **Browser Notifications** — Get alerted when Pomodoro timer ends, even in another tab
+- **Browser Notifications** — Get alerted when Productive timer ends, even in another tab
 - **Drag & Drop** — Drop images directly into Image Shrink
 - **Color-Coded JWT** — Header (gold), Payload (emerald), Signature (sky) panels with Prism JSON highlighting
 
