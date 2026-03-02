@@ -6,7 +6,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ---- CSS Custom Properties ---- */
+/* Light Theme (default) */
 :root {
+  --valhalla-950: #f8fafc;
+  --valhalla-900: #f1f5f9;
+  --valhalla-800: #e2e8f0;
+  --valhalla-700: #cbd5e1;
+  --valhalla-600: #94a3b8;
+  --valhalla-400: #64748b;
+  --valhalla-200: #1e293b;
+  --gold-500: #eab308;
+  --gold-400: #facc15;
+  --gold-600: #ca8a04;
+  --crimson-600: #dc2626;
+  --crimson-500: #ef4444;
+  --crimson-700: #b91c1c;
+  --emerald-400: #10b981;
+  --sky-400: #0ea5e9;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(148, 163, 184, 0.2);
+  --glass-blur: 20px;
+}
+
+/* Dark Theme */
+.dark {
   --valhalla-950: #020617;
   --valhalla-900: #0f172a;
   --valhalla-800: #1e293b;
@@ -14,17 +37,10 @@
   --valhalla-600: #475569;
   --valhalla-400: #94a3b8;
   --valhalla-200: #e2e8f0;
-  --gold-500: #eab308;
-  --gold-400: #facc15;
-  --gold-600: #ca8a04;
-  --crimson-600: #dc2626;
-  --crimson-500: #ef4444;
-  --crimson-700: #b91c1c;
   --emerald-400: #34d399;
   --sky-400: #38bdf8;
   --glass-bg: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(148, 163, 184, 0.1);
-  --glass-blur: 20px;
 }
 
 /* ---- Base Reset & Typography ---- */

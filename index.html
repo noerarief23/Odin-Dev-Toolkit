@@ -63,7 +63,7 @@
   <link rel="stylesheet" href="css/valhalla.css">
 </head>
 
-<body class="h-full bg-valhalla-950 text-slate-200 font-sans bg-grid dark" x-data="odinApp()" x-init="init()">
+<body class="h-full bg-valhalla-950 font-sans bg-grid" :class="darkMode ? 'dark text-slate-200' : 'text-slate-800'" x-data="odinApp()" x-init="init()">
 
   <!-- ============================================================
        MOBILE SIDEBAR OVERLAY
@@ -269,8 +269,18 @@
     </nav>
 
     <!-- Sidebar Footer -->
-    <div class="px-5 py-4 border-t border-slate-800/50">
-      <p class="text-[10px] text-slate-600 text-center">100% Client-Side &bull; Offline Ready</p>
+    <div class="px-5 py-4 border-t border-slate-800/50 dark:border-slate-700/50">
+      <div class="flex items-center justify-between gap-2">
+        <p class="text-[10px] text-slate-600 dark:text-slate-500">Client-Side &bull; Offline</p>
+        <button 
+          @click="toggleTheme()" 
+          class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" 
+          :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+          title="Toggle theme"
+        >
+          <i :data-lucide="darkMode ? 'sun' : 'moon'" class="w-4 h-4 text-gold-500"></i>
+        </button>
+      </div>
     </div>
   </aside>
 

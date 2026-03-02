@@ -9,6 +9,29 @@
 const Odin = {};
 
 /* ================================================================
+   Odin.Theme — Theme preference persistence
+   ================================================================ */
+Odin.Theme = {
+  _key: 'odin_theme_preference',
+
+  load() {
+    try {
+      const saved = localStorage.getItem(this._key);
+      // Default to dark mode if no preference saved
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true; // default to dark mode
+    }
+  },
+
+  save(isDark) {
+    try {
+      localStorage.setItem(this._key, JSON.stringify(isDark));
+    } catch { /* quota exceeded — silently ignore */ }
+  }
+};
+
+/* ================================================================
    Odin.Storage — SessionStorage persistence for "Sticky Input"
    ================================================================ */
 Odin.Storage = {
@@ -1811,6 +1834,9 @@ Odin.Base64 = {
    ================================================================ */
 function odinApp() {
   return {
+    // ---- Theme ----
+    darkMode: Odin.Theme.load(),
+
     // ---- Navigation ----
     activeTool: Odin.Storage.get('active_tool', 'pomodoro'),
     sidebarOpen: false,
@@ -1950,6 +1976,9 @@ function odinApp() {
 
     // ---- Init ----
     init() {
+      // Apply saved theme
+      this.applyTheme();
+
       // Restore flags
       const flags = this.regexFlags;
       this.regexFlagG = flags.includes('g');
@@ -2009,6 +2038,26 @@ function odinApp() {
         if (typeof lucide !== 'undefined') lucide.createIcons();
         if (tool === 'qr' && this.qrText) this.generateQR();
       });
+    },
+
+    // ---- Theme Toggle ----
+    toggleTheme() {
+      this.darkMode = !this.darkMode;
+      this.applyTheme();
+      Odin.Theme.save(this.darkMode);
+      
+      // Re-initialize icons after theme change
+      this.$nextTick(() => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
+    },
+
+    applyTheme() {
+      if (this.darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     },
 
     // ---- Productive Timer Methods ----
