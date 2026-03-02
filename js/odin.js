@@ -2285,7 +2285,7 @@ function odinApp() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'pomodoro-log-' + Odin.Pomodoro.todayKey() + '.md';
+      a.download = 'productive_timer_log-' + Odin.Pomodoro.todayKey() + '.md';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
