@@ -63,7 +63,7 @@
   <link rel="stylesheet" href="css/valhalla.css">
 </head>
 
-<body class="h-full bg-valhalla-950 font-sans bg-grid" :class="darkMode ? 'dark text-slate-200' : 'text-slate-800'" x-data="odinApp()" x-init="init()">
+<body class="h-full font-sans bg-grid" :class="darkMode ? 'dark bg-valhalla-950 text-slate-200' : 'bg-slate-50 text-slate-800'" x-data="odinApp()" x-init="init()">
 
   <!-- ============================================================
        MOBILE SIDEBAR OVERLAY
@@ -679,7 +679,7 @@
                         @click="selectPattern(p)"
                         class="pattern-item"
                       >
-                        <div class="text-sm text-slate-200 font-medium" x-text="p.name"></div>
+                        <div class="text-sm text-slate-800 dark:text-slate-200 font-medium" x-text="p.name"></div>
                         <div class="text-xs text-slate-500 font-mono truncate" x-text="p.pattern"></div>
                       </div>
                     </template>
@@ -762,7 +762,7 @@
                     <div class="glass rounded-lg px-3 py-2 text-xs font-mono">
                       <div class="flex items-center gap-2">
                         <span class="text-gold-400 font-semibold" x-text="'#' + (idx + 1)"></span>
-                        <span class="text-slate-200" x-text="m.fullMatch"></span>
+                        <span class="text-slate-800 dark:text-slate-200" x-text="m.fullMatch"></span>
                         <span class="text-slate-600 dark:text-slate-500" x-text="'@' + m.index"></span>
                       </div>
                       <template x-if="m.groups.length > 0">
@@ -1198,7 +1198,7 @@
               <!-- Lowercase -->
               <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwLowercase = !pwLowercase; generatePassword()">
                 <div>
-                  <div class="text-sm font-medium text-slate-200">Lowercase</div>
+                  <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Lowercase</div>
                   <div class="text-xs text-slate-500 font-mono">a-z</div>
                 </div>
                 <div class="toggle-track" :class="pwLowercase ? 'active' : ''">
@@ -1209,7 +1209,7 @@
               <!-- Uppercase -->
               <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwUppercase = !pwUppercase; generatePassword()">
                 <div>
-                  <div class="text-sm font-medium text-slate-200">Uppercase</div>
+                  <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Uppercase</div>
                   <div class="text-xs text-slate-500 font-mono">A-Z</div>
                 </div>
                 <div class="toggle-track" :class="pwUppercase ? 'active' : ''">
@@ -1220,7 +1220,7 @@
               <!-- Numbers -->
               <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwNumbers = !pwNumbers; generatePassword()">
                 <div>
-                  <div class="text-sm font-medium text-slate-200">Numbers</div>
+                  <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Numbers</div>
                   <div class="text-xs text-slate-500 font-mono">0-9</div>
                 </div>
                 <div class="toggle-track" :class="pwNumbers ? 'active' : ''">
@@ -1231,7 +1231,7 @@
               <!-- Symbols -->
               <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwSymbols = !pwSymbols; generatePassword()">
                 <div>
-                  <div class="text-sm font-medium text-slate-200">Symbols</div>
+                  <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Symbols</div>
                   <div class="text-xs text-slate-500 font-mono">!@#$%...</div>
                 </div>
                 <div class="toggle-track" :class="pwSymbols ? 'active' : ''">
@@ -1726,7 +1726,7 @@ Example:
           <textarea
             x-model="caseOutput"
             readonly
-            class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-900/50"
+            class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
             placeholder="Converted text will appear here..."
           ></textarea>
         </div>
@@ -1956,7 +1956,7 @@ Example:
             <textarea
               x-model="b64Output"
               readonly
-              class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-900/50"
+              class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
               placeholder="Output will appear here..."
             ></textarea>
           </div>
