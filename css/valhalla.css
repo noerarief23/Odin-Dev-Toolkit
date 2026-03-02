@@ -8,13 +8,13 @@
 /* ---- CSS Custom Properties ---- */
 /* Light Theme (default) */
 :root {
-  --valhalla-950: #f8fafc;
-  --valhalla-900: #f1f5f9;
-  --valhalla-800: #e2e8f0;
-  --valhalla-700: #cbd5e1;
-  --valhalla-600: #94a3b8;
-  --valhalla-400: #64748b;
-  --valhalla-200: #1e293b;
+  --valhalla-950: #ffffff;
+  --valhalla-900: #f9fafb;
+  --valhalla-800: #f3f4f6;
+  --valhalla-700: #e5e7eb;
+  --valhalla-600: #9ca3af;
+  --valhalla-400: #6b7280;
+  --valhalla-200: #1f2937;
   --gold-500: #eab308;
   --gold-400: #facc15;
   --gold-600: #ca8a04;
@@ -23,8 +23,8 @@
   --crimson-700: #b91c1c;
   --emerald-400: #10b981;
   --sky-400: #0ea5e9;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(148, 163, 184, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(156, 163, 175, 0.2);
   --glass-blur: 20px;
 }
 
@@ -87,9 +87,14 @@ textarea.code-input,
 
 /* ---- Sidebar ---- */
 .sidebar {
-  background: rgba(2, 6, 23, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.dark .sidebar {
+  background: rgba(2, 6, 23, 0.85);
   border-right: 1px solid rgba(148, 163, 184, 0.08);
 }
 

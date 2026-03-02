@@ -88,129 +88,129 @@
     class="fixed inset-y-0 left-0 z-50 w-64 sidebar flex flex-col transition-transform duration-300 ease-in-out"
   >
     <!-- Logo -->
-    <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-800/50">
+    <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-300 dark:border-slate-800/50">
       <div class="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center">
         <img src="icons/icon-odin.png" alt="Odin" class="w-9 h-9 object-cover">
       </div>
       <div>
         <h1 class="text-sm font-bold text-gold-400 tracking-wide">ODIN</h1>
-        <p class="text-[10px] text-slate-500 tracking-widest uppercase">Dev Toolkit</p>
+        <p class="text-[10px] text-slate-600 dark:text-slate-500 tracking-widest uppercase">Dev Toolkit</p>
       </div>
     </div>
 
     <!-- Nav Links -->
-    <nav class="flex-1 py-4 px-3 space-y-1" role="tablist" aria-label="Tool navigation">
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1" role="tablist" aria-label="Tool navigation">
       <button
         @click="switchTool('pomodoro')"
         :class="activeTool === 'pomodoro' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'pomodoro'"
         aria-label="Productive Timer (Ctrl+1)"
       >
         <i data-lucide="timer" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Productive Timer</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃1</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃1</kbd>
       </button>
 
       <button
         @click="switchTool('regex')"
         :class="activeTool === 'regex' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'regex'"
         aria-label="Regex Tester (Ctrl+2)"
       >
         <i data-lucide="regex" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Regex Tester</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃2</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃2</kbd>
       </button>
 
       <button
         @click="switchTool('qr')"
         :class="activeTool === 'qr' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'qr'"
         aria-label="QR Code Engine (Ctrl+3)"
       >
         <i data-lucide="qr-code" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>QR Code Engine</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃3</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃3</kbd>
       </button>
 
       <button
         @click="switchTool('json')"
         :class="activeTool === 'json' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'json'"
         aria-label="JSON Formatter (Ctrl+4)"
       >
         <i data-lucide="braces" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>JSON Formatter</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃4</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃4</kbd>
       </button>
 
       <button
         @click="switchTool('xml')"
         :class="activeTool === 'xml' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'xml'"
         aria-label="XML Formatter (Ctrl+5)"
       >
         <i data-lucide="file-code" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>XML Formatter</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃5</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃5</kbd>
       </button>
 
       <button
         @click="switchTool('diff')"
         :class="activeTool === 'diff' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'diff'"
         aria-label="Diff Checker (Ctrl+6)"
       >
         <i data-lucide="git-compare" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Diff Checker</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃6</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃6</kbd>
       </button>
 
       <button
         @click="switchTool('password')"
         :class="activeTool === 'password' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'password'"
         aria-label="Password Guard (Ctrl+7)"
       >
         <i data-lucide="shield-check" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Password Guard</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃7</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃7</kbd>
       </button>
 
       <button
         @click="switchTool('modelgen')"
         :class="activeTool === 'modelgen' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'modelgen'"
         aria-label="Model Generator (Ctrl+8)"
       >
         <i data-lucide="file-code-2" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Model Generator</span>
-        <kbd class="ml-auto text-[10px] text-slate-600 hidden xl:inline">⌃8</kbd>
+        <kbd class="ml-auto text-[10px] text-slate-500 dark:text-slate-600 hidden xl:inline">⌃8</kbd>
       </button>
 
       <!-- Divider -->
-      <div class="my-2 border-t border-slate-800/40"></div>
+      <div class="my-2 border-t border-slate-300 dark:border-slate-800/40"></div>
 
       <button
         @click="switchTool('jwt')"
         :class="activeTool === 'jwt' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'jwt'"
         aria-label="JWT Explorer"
@@ -222,7 +222,7 @@
       <button
         @click="switchTool('imgshrink')"
         :class="activeTool === 'imgshrink' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'imgshrink'"
         aria-label="Image Shrink"
@@ -234,7 +234,7 @@
       <button
         @click="switchTool('caseconv')"
         :class="activeTool === 'caseconv' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'caseconv'"
         aria-label="Case Converter"
@@ -246,7 +246,7 @@
       <button
         @click="switchTool('flexgrid')"
         :class="activeTool === 'flexgrid' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'flexgrid'"
         aria-label="Flex/Grid Lab"
@@ -258,7 +258,7 @@
       <button
         @click="switchTool('base64')"
         :class="activeTool === 'base64' ? 'active' : ''"
-        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-slate-200"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
         role="tab"
         :aria-selected="activeTool === 'base64'"
         aria-label="Base64 Codec"
