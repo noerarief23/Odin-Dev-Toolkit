@@ -127,7 +127,7 @@ textarea.code-input,
 /* ---- Buttons ---- */
 .btn-gold {
   background: linear-gradient(135deg, var(--gold-600), var(--gold-500));
-  color: var(--valhalla-950);
+  color: #1f2937;
   font-weight: 600;
   border: none;
   border-radius: 0.5rem;
@@ -200,7 +200,7 @@ textarea.code-input,
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid var(--valhalla-300);
   border-radius: 0.5rem;
-  color: var(--valhalla-900);
+  color: #1f2937;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   transition: all 0.2s ease;
@@ -750,7 +750,7 @@ code[class*="language-"] {
 }
 
 .pomo-mode-btn:hover {
-  color: var(--valhalla-700);
+  color: #374151;
   background: rgba(148, 163, 184, 0.08);
 }
 
