@@ -79,9 +79,14 @@ textarea.code-input,
 }
 
 .glass-strong {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.dark .glass-strong {
+  background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(148, 163, 184, 0.15);
 }
 

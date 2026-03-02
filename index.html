@@ -291,7 +291,7 @@
 
     <!-- Top Bar (Mobile) -->
     <header class="lg:hidden sticky top-0 z-30 glass-strong px-4 py-3 flex items-center gap-3">
-      <button @click="sidebarOpen = !sidebarOpen" class="p-1.5 rounded-lg hover:bg-slate-800 transition" aria-label="Toggle sidebar">
+      <button @click="sidebarOpen = !sidebarOpen" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition" aria-label="Toggle sidebar">
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
       <h2 class="text-sm font-semibold text-gold-400">Odin Dev Toolkit</h2>
@@ -312,15 +312,15 @@
         <!-- Header -->
         <div class="mb-6 flex items-start justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <i data-lucide="timer" class="w-6 h-6 text-gold-500"></i>
               Productive Timer
             </h2>
-            <p class="text-sm text-slate-400 mt-1">Focus timer using the Pomodoro Technique — stay productive, one session at a time.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Focus timer using the Pomodoro Technique — stay productive, one session at a time.</p>
           </div>
           <button
             @click="pomoOpenSettings()"
-            class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            class="p-2 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
             title="Timer Settings"
           >
             <i data-lucide="settings" class="w-5 h-5"></i>
@@ -341,33 +341,33 @@
           @keydown.escape.window="pomoShowSettings = false"
         >
           <div class="glass-strong rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
-            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <i data-lucide="clock" class="w-5 h-5 text-gold-500"></i>
               Timer Durations
             </h3>
             <div class="space-y-4">
               <div>
-                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Focus (minutes)</label>
+                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Focus (minutes)</label>
                 <input type="number" x-model.number="pomoSettingFocus" min="1" max="120"
-                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold-500 focus:outline-none">
+                  class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-gold-500 focus:outline-none">
               </div>
               <div>
-                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Short Break (minutes)</label>
+                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Short Break (minutes)</label>
                 <input type="number" x-model.number="pomoSettingShort" min="1" max="120"
-                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-400 focus:outline-none">
+                  class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-emerald-400 focus:outline-none">
               </div>
               <div>
-                <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Long Break (minutes)</label>
+                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Long Break (minutes)</label>
                 <input type="number" x-model.number="pomoSettingLong" min="1" max="120"
-                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-sky-400 focus:outline-none">
+                  class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-sky-400 focus:outline-none">
               </div>
             </div>
             <div class="flex items-center justify-between mt-6">
-              <button @click="pomoResetSettings()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              <button @click="pomoResetSettings()" class="text-xs text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
                 Reset to defaults
               </button>
               <div class="flex gap-2">
-                <button @click="pomoShowSettings = false" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition-colors">
+                <button @click="pomoShowSettings = false" class="px-4 py-2 text-sm rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
                   Cancel
                 </button>
                 <button @click="pomoSaveSettings()" class="px-4 py-2 text-sm rounded-lg bg-gold-500 text-black font-medium hover:bg-gold-400 transition-colors">
@@ -454,7 +454,7 @@
                 <!-- Timer Text (overlaid) -->
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                   <span
-                    class="pomo-time text-5xl sm:text-6xl font-bold text-white"
+                    class="pomo-time text-5xl sm:text-6xl font-bold text-slate-900 dark:text-white"
                     :class="{
                       'text-gold-500':    pomoMode === 'focus'  && pomoRunning,
                       'text-emerald-400': pomoMode === 'short'  && pomoRunning,
@@ -644,11 +644,11 @@
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="regex" class="w-6 h-6 text-gold-500"></i>
             Regex Tester
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Real-time matching with color-coded groups</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Real-time matching with color-coded groups</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -795,11 +795,11 @@
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="qr-code" class="w-6 h-6 text-gold-500"></i>
             QR Code Engine
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Generate QR codes instantly and download as PNG</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Generate QR codes instantly and download as PNG</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -874,11 +874,11 @@
         <div class="mb-6">
           <div class="flex items-start justify-between flex-wrap gap-3">
             <div>
-              <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+              <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <i data-lucide="braces" class="w-6 h-6 text-gold-500"></i>
                 JSON Formatter
               </h2>
-              <p class="text-sm text-slate-400 mt-1">Beautify, minify, and validate JSON with instant feedback</p>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Beautify, minify, and validate JSON with instant feedback</p>
             </div>
 
             <!-- Validation Badge -->
@@ -969,11 +969,11 @@
         <div class="mb-6">
           <div class="flex items-start justify-between flex-wrap gap-3">
             <div>
-              <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+              <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <i data-lucide="file-code" class="w-6 h-6 text-gold-500"></i>
                 XML Formatter
               </h2>
-              <p class="text-sm text-slate-400 mt-1">Beautify, minify, and validate XML with instant feedback</p>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Beautify, minify, and validate XML with instant feedback</p>
             </div>
 
             <div class="flex items-center gap-2">
@@ -1058,11 +1058,11 @@
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="git-compare" class="w-6 h-6 text-gold-500"></i>
             Diff Checker (JSON/XML)
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Bandingkan dua JSON atau XML secara real-time dan lihat perbedaannya</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Bandingkan dua JSON atau XML secara real-time dan lihat perbedaannya</p>
         </div>
 
         <div class="flex items-center gap-2 mb-4">
@@ -1139,11 +1139,11 @@
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="shield-check" class="w-6 h-6 text-gold-500"></i>
             Odin Password Guard
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Cryptographically secure password generation with entropy analysis</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Cryptographically secure password generation with entropy analysis</p>
         </div>
 
         <div class="max-w-2xl space-y-6">
@@ -1276,11 +1276,11 @@
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="file-code-2" class="w-6 h-6 text-gold-500"></i>
             Multi-Language Model Generator
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Convert JSON to C# classes, Go structs, Python dataclasses, and PHP DTOs</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Convert JSON to C# classes, Go structs, Python dataclasses, and PHP DTOs</p>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -1423,11 +1423,11 @@ Example:
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="key" class="w-6 h-6 text-gold-500"></i>
             JWT Explorer
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Local-only JWT decoder &mdash; nothing leaves your browser</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Local-only JWT decoder &mdash; nothing leaves your browser</p>
         </div>
 
         <!-- JWT Input -->
@@ -1521,11 +1521,11 @@ Example:
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="image-down" class="w-6 h-6 text-gold-500"></i>
             Image Shrink
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Resize &amp; compress images locally using Canvas API &mdash; no uploads</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Resize &amp; compress images locally using Canvas API &mdash; no uploads</p>
         </div>
 
         <!-- Drop Zone -->
@@ -1555,15 +1555,15 @@ Example:
               <div class="space-y-3">
                 <div class="text-sm">
                   <span class="text-slate-500">File:</span>
-                  <span class="text-white font-medium ml-1" x-text="imgFileName"></span>
+                  <span class="text-slate-900 dark:text-white font-medium ml-1" x-text="imgFileName"></span>
                 </div>
                 <div class="text-sm">
                   <span class="text-slate-500">Original size:</span>
-                  <span class="text-white font-medium ml-1" x-text="Odin.ImageShrink.fileSizeLabel(imgOriginalSize)"></span>
+                  <span class="text-slate-900 dark:text-white font-medium ml-1" x-text="Odin.ImageShrink.fileSizeLabel(imgOriginalSize)"></span>
                 </div>
                 <div class="text-sm">
                   <span class="text-slate-500">Dimensions:</span>
-                  <span class="text-white font-medium ml-1" x-text="imgWidth + ' × ' + imgHeight + ' px'"></span>
+                  <span class="text-slate-900 dark:text-white font-medium ml-1" x-text="imgWidth + ' × ' + imgHeight + ' px'"></span>
                 </div>
                 <div class="text-sm">
                   <span class="text-slate-500">New dimensions:</span>
@@ -1643,7 +1643,7 @@ Example:
               <div class="glass rounded-xl p-4">
                 <div class="flex items-center gap-3 text-sm">
                   <span class="text-slate-500">Output:</span>
-                  <span class="text-white font-medium" x-text="Odin.ImageShrink.fileSizeLabel(imgResultSize)"></span>
+                  <span class="text-slate-900 dark:text-white font-medium" x-text="Odin.ImageShrink.fileSizeLabel(imgResultSize)"></span>
                   <span class="text-slate-600">|</span>
                   <span
                     :class="imgResultSize < imgOriginalSize ? 'text-emerald-400' : 'text-red-400'"
@@ -1669,11 +1669,11 @@ Example:
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="case-sensitive" class="w-6 h-6 text-gold-500"></i>
             Case Converter
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Transform text between UPPERCASE, lowercase, camelCase, PascalCase, snake_case &amp; more</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Transform text between UPPERCASE, lowercase, camelCase, PascalCase, snake_case &amp; more</p>
         </div>
 
         <!-- Mode Selector -->
@@ -1745,11 +1745,11 @@ Example:
         x-init="$watch('flexGridMode', () => fgUpdateCSS()); $watch('fgFlexDirection', () => fgUpdateCSS()); $watch('fgJustifyContent', () => fgUpdateCSS()); $watch('fgAlignItems', () => fgUpdateCSS()); $watch('fgFlexWrap', () => fgUpdateCSS()); $watch('fgGap', () => fgUpdateCSS()); $watch('fgGridGap', () => fgUpdateCSS()); $watch('fgGridJustifyItems', () => fgUpdateCSS()); $watch('fgGridAlignItems', () => fgUpdateCSS()); $watch('fgItemCount', () => fgUpdateCSS());"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="layout-grid" class="w-6 h-6 text-gold-500"></i>
             Flex/Grid Lab
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Visual playground to experiment with CSS Flexbox &amp; Grid properties</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Visual playground to experiment with CSS Flexbox &amp; Grid properties</p>
         </div>
 
         <!-- Mode Tabs -->
@@ -1898,11 +1898,11 @@ Example:
         class="tool-panel"
       >
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="binary" class="w-6 h-6 text-gold-500"></i>
             Base64 Codec
           </h2>
-          <p class="text-sm text-slate-400 mt-1">Encode &amp; decode text or files to Base64 strings &mdash; fully offline</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Encode &amp; decode text or files to Base64 strings &mdash; fully offline</p>
         </div>
 
         <!-- Mode Tabs -->
@@ -2059,14 +2059,14 @@ Example:
     >
       <div class="flex items-center gap-2 mb-1">
         <i data-lucide="party-popper" class="w-5 h-5 text-gold-500"></i>
-        <h3 class="text-lg font-bold text-white">Session Complete!</h3>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Session Complete!</h3>
       </div>
-      <p class="text-sm text-slate-400 mb-4">What did you actually accomplish?</p>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">What did you actually accomplish?</p>
 
       <!-- Show the plan -->
       <div class="mb-3" x-show="pomoTodoText.trim()">
-        <span class="text-[10px] text-slate-600 uppercase">Your Plan</span>
-        <p class="text-sm text-slate-300 mt-0.5" x-text="pomoTodoText"></p>
+        <span class="text-[10px] text-slate-500 dark:text-slate-600 uppercase">Your Plan</span>
+        <p class="text-sm text-slate-700 dark:text-slate-300 mt-0.5" x-text="pomoTodoText"></p>
       </div>
 
       <label for="pomo-actual-input" class="text-[11px] text-slate-500 uppercase tracking-wider mb-1.5 block">Actual Result</label>
