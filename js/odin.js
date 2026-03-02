@@ -1571,6 +1571,14 @@ Odin.Pomodoro = {
     return log[today] || [];
   },
 
+  /** Clear all session entries for today */
+  clearTodayLog() {
+    const log = this.loadLog();
+    const today = this.todayKey();
+    log[today] = [];
+    this.saveLog(log);
+  },
+
   /** Export today's log as Markdown text */
   exportTodayMarkdown() {
     const entries = this.getTodayLog();
@@ -1853,7 +1861,7 @@ function odinApp() {
     pomoPaused: false,
     pomoInterval: null,
     pomoEndTimestamp: null,
-    pomoDailySessions: Odin.Pomodoro.getDailySessions(),
+    pomoDailySessions: Odin.Pomodoro.getTodayLog().filter(e => e.mode === 'focus').length,
     pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
     pomoShowSettings: false,       // show settings modal
     pomoSettingFocus: 25,          // editable: minutes
@@ -2010,8 +2018,8 @@ function odinApp() {
         if (this.qrText) this.generateQR();
       });
 
-      // Reset daily sessions if stale
-      this.pomoDailySessions = Odin.Pomodoro.getDailySessions();
+      // Sync daily session count from actual log (single source of truth)
+      this.pomoDailySessions = this.pomoSessionLog.filter(e => e.mode === 'focus').length;
 
       // Auto-cleanup old session logs (>30 days)
       Odin.Pomodoro.cleanupOldLogs();
@@ -2177,10 +2185,7 @@ function odinApp() {
               : 'Break is over. Ready to focus?'
           );
 
-          // Increment sessions if focus mode
-          if (this.pomoMode === 'focus') {
-            this.pomoDailySessions = Odin.Pomodoro.incrementDailySessions();
-          }
+          // pomoDailySessions is synced from the log in pomoSaveSession
 
           // Show actual-input prompt for focus sessions, or auto-log breaks
           if (this.pomoMode === 'focus') {
@@ -2272,6 +2277,7 @@ function odinApp() {
         completedAt: new Date().toISOString()
       };
       this.pomoSessionLog = Odin.Pomodoro.addSessionEntry(entry);
+      this.pomoDailySessions = this.pomoSessionLog.filter(e => e.mode === 'focus').length;
       this.pomoTodoText = '';
       this.pomoActualText = '';
       this.pomoShowActualPrompt = false;
@@ -2309,6 +2315,18 @@ function odinApp() {
     /** Delete a session from today's log */
     pomoDeleteSession(id) {
       this.pomoSessionLog = Odin.Pomodoro.deleteSessionEntry(id);
+      this.pomoDailySessions = this.pomoSessionLog.filter(e => e.mode === 'focus').length;
+    },
+
+    /** Reset all sessions for today */
+    pomoResetAllSessions() {
+      if (!confirm('Reset all sessions for today? This will clear the session log and counter.')) return;
+      Odin.Pomodoro.clearTodayLog();
+      this.pomoSessionLog = [];
+      this.pomoDailySessions = 0;
+      this.pomoSessionCount = 0;
+      localStorage.setItem('odin_pomo_cycle_count', '0');
+      Odin.Toast.show(this, 'Sessions reset!');
     },
 
     /** Confirm switching modes - actualize current session with elapsed time */
