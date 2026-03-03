@@ -1865,6 +1865,57 @@ Odin.URLCodec = {
 
 
 /* ================================================================
+   Odin.Timestamp — Unix Timestamp Converter
+   ================================================================ */
+Odin.Timestamp = {
+  toDate(timestamp) {
+    try {
+      const ts = String(timestamp).trim();
+      if (!ts || !/^\d+$/.test(ts)) throw new Error('Invalid timestamp');
+      
+      const num = parseInt(ts);
+      // Auto-detect: if > 10 digits, assume milliseconds
+      const date = ts.length > 10 ? new Date(num) : new Date(num * 1000);
+      
+      if (isNaN(date.getTime())) throw new Error('Invalid timestamp');
+      
+      return {
+        iso: date.toISOString(),
+        local: date.toLocaleString(),
+        utc: date.toUTCString()
+      };
+    } catch (e) {
+      throw new Error(e.message);
+    }
+  },
+
+  fromDate(dateString) {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) throw new Error('Invalid date');
+      
+      return {
+        unix: Math.floor(date.getTime() / 1000),
+        unixMs: date.getTime()
+      };
+    } catch (e) {
+      throw new Error(e.message);
+    }
+  },
+
+  now() {
+    const date = new Date();
+    return {
+      unix: Math.floor(date.getTime() / 1000),
+      unixMs: date.getTime(),
+      iso: date.toISOString(),
+      local: date.toLocaleString()
+    };
+  }
+};
+
+
+/* ================================================================
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
@@ -2019,6 +2070,22 @@ function odinApp() {
     urlMode: 'encode',
     urlEncodeComponent: false,
 
+    // ---- Timestamp Converter ----
+    tsNowUnix: 0,
+    tsNowUnixMs: 0,
+    tsNowISO: '',
+    tsNowLocal: '',
+    tsInput: '',
+    tsToDateResult: false,
+    tsToDateISO: '',
+    tsToDateLocal: '',
+    tsToDateUTC: '',
+    tsToDateError: '',
+    tsDateInput: '',
+    tsToTimestampResult: false,
+    tsToTimestampUnix: 0,
+    tsToTimestampUnixMs: 0,
+
     // ---- Init ----
     init() {
       // Apply saved theme
@@ -2056,6 +2123,10 @@ function odinApp() {
 
       // Auto-cleanup old session logs (>30 days)
       Odin.Pomodoro.cleanupOldLogs();
+
+      // Initialize timestamp converter
+      this.tsUpdateNow();
+      setInterval(() => { if (this.activeTool === 'timestamp') this.tsUpdateNow(); }, 1000);
 
       // Load Pomodoro cycle counter (reset at midnight)
       const cycleData = localStorage.getItem('odin_pomo_cycle_count');
@@ -3033,6 +3104,45 @@ function odinApp() {
       this.urlMode = mode;
       this.urlInput = '';
       this.urlOutput = '';
+    },
+
+    // ---- Timestamp Converter Methods ----
+    tsUpdateNow() {
+      const now = Odin.Timestamp.now();
+      this.tsNowUnix = now.unix;
+      this.tsNowUnixMs = now.unixMs;
+      this.tsNowISO = now.iso;
+      this.tsNowLocal = now.local;
+    },
+
+    tsConvertToDate() {
+      this.tsToDateResult = false;
+      this.tsToDateError = '';
+      if (!this.tsInput.trim()) return;
+      
+      try {
+        const result = Odin.Timestamp.toDate(this.tsInput);
+        this.tsToDateISO = result.iso;
+        this.tsToDateLocal = result.local;
+        this.tsToDateUTC = result.utc;
+        this.tsToDateResult = true;
+      } catch (e) {
+        this.tsToDateError = e.message;
+      }
+    },
+
+    tsConvertToTimestamp() {
+      this.tsToTimestampResult = false;
+      if (!this.tsDateInput) return;
+      
+      try {
+        const result = Odin.Timestamp.fromDate(this.tsDateInput);
+        this.tsToTimestampUnix = result.unix;
+        this.tsToTimestampUnixMs = result.unixMs;
+        this.tsToTimestampResult = true;
+      } catch (e) {
+        this.tsToTimestampResult = false;
+      }
     },
 
     // ---- Utility ----
