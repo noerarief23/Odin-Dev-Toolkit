@@ -1865,6 +1865,213 @@ Odin.URLCodec = {
 
 
 /* ================================================================
+   Odin.YAML — YAML ↔ JSON Converter + JSONPath
+   ================================================================ */
+Odin.YAML = {
+  toJSON(yamlStr) {
+    try {
+      const lines = yamlStr.trim().split('\n');
+      const result = this._parseYAML(lines, 0).value;
+      return JSON.stringify(result, null, 2);
+    } catch (e) {
+      throw new Error('Invalid YAML: ' + e.message);
+    }
+  },
+
+  toYAML(jsonStr) {
+    try {
+      const obj = JSON.parse(jsonStr);
+      return this._stringifyYAML(obj, 0);
+    } catch (e) {
+      throw new Error('Invalid JSON: ' + e.message);
+    }
+  },
+
+  _parseYAML(lines, startIdx) {
+    const result = {};
+    let i = startIdx;
+    const baseIndent = this._getIndent(lines[i] || '');
+
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim() || line.trim().startsWith('#')) { i++; continue; }
+      
+      const indent = this._getIndent(line);
+      if (indent < baseIndent) break;
+      if (indent > baseIndent) { i++; continue; }
+
+      const trimmed = line.trim();
+      
+      if (trimmed.startsWith('- ')) {
+        const arr = [];
+        while (i < lines.length) {
+          const itemLine = lines[i];
+          const itemIndent = this._getIndent(itemLine);
+          if (itemIndent < baseIndent) break;
+          
+          if (itemLine.trim().startsWith('- ')) {
+            const afterDash = itemLine.trim().substring(2).trim();
+            
+            // Check if it's "- key: value" format (object in array)
+            if (afterDash.includes(':')) {
+              const obj = {};
+              const colonIdx = afterDash.indexOf(':');
+              const key = afterDash.substring(0, colonIdx).trim();
+              const val = afterDash.substring(colonIdx + 1).trim();
+              obj[key] = this._parseValue(val);
+              
+              // Check for more properties on next lines
+              i++;
+              while (i < lines.length) {
+                const nextLine = lines[i];
+                const nextIndent = this._getIndent(nextLine);
+                if (nextIndent <= itemIndent) break;
+                if (nextLine.trim().startsWith('- ')) break;
+                
+                const nextTrimmed = nextLine.trim();
+                const nextColonIdx = nextTrimmed.indexOf(':');
+                if (nextColonIdx > -1) {
+                  const nextKey = nextTrimmed.substring(0, nextColonIdx).trim();
+                  const nextVal = nextTrimmed.substring(nextColonIdx + 1).trim();
+                  obj[nextKey] = this._parseValue(nextVal);
+                }
+                i++;
+              }
+              arr.push(obj);
+            } else if (!afterDash) {
+              // Empty dash, check next line for nested object
+              if (i + 1 < lines.length) {
+                const nextIndent = this._getIndent(lines[i + 1]);
+                if (nextIndent > itemIndent) {
+                  const parsed = this._parseYAML(lines, i + 1);
+                  arr.push(parsed.value);
+                  i = parsed.nextIdx;
+                  continue;
+                }
+              }
+              i++;
+            } else {
+              // Simple value
+              arr.push(this._parseValue(afterDash));
+              i++;
+            }
+          } else {
+            break;
+          }
+        }
+        return { value: arr, nextIdx: i };
+      }
+
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) { i++; continue; }
+
+      const key = trimmed.substring(0, colonIdx).trim();
+      const value = trimmed.substring(colonIdx + 1).trim();
+
+      if (value) {
+        result[key] = this._parseValue(value);
+        i++;
+      } else {
+        const nextIndent = i + 1 < lines.length ? this._getIndent(lines[i + 1]) : 0;
+        if (nextIndent > indent) {
+          const parsed = this._parseYAML(lines, i + 1);
+          result[key] = parsed.value;
+          i = parsed.nextIdx;
+        } else {
+          result[key] = null;
+          i++;
+        }
+      }
+    }
+
+    return { value: result, nextIdx: i };
+  },
+
+  _parseValue(str) {
+    if (str === 'true') return true;
+    if (str === 'false') return false;
+    if (str === 'null') return null;
+    if (/^-?\d+$/.test(str)) return parseInt(str);
+    if (/^-?\d+\.\d+$/.test(str)) return parseFloat(str);
+    return str.replace(/^['"]|['"]$/g, '');
+  },
+
+  _getIndent(line) {
+    return line.length - line.trimStart().length;
+  },
+
+  _stringifyYAML(obj, indent = 0) {
+    const spaces = '  '.repeat(indent);
+    let result = '';
+
+    if (Array.isArray(obj)) {
+      obj.forEach(item => {
+        if (typeof item === 'object' && item !== null) {
+          result += spaces + '-\n';
+          result += this._stringifyYAML(item, indent + 1);
+        } else {
+          result += spaces + '- ' + this._formatValue(item) + '\n';
+        }
+      });
+    } else if (typeof obj === 'object' && obj !== null) {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          result += spaces + key + ':\n';
+          result += this._stringifyYAML(value, indent + 1);
+        } else {
+          result += spaces + key + ': ' + this._formatValue(value) + '\n';
+        }
+      });
+    }
+
+    return result;
+  },
+
+  _formatValue(val) {
+    if (val === null) return 'null';
+    if (typeof val === 'string') return val;
+    return String(val);
+  },
+
+  queryJSONPath(jsonStr, path) {
+    try {
+      const obj = JSON.parse(jsonStr);
+      const result = this._evalPath(obj, path);
+      return JSON.stringify(result, null, 2);
+    } catch (e) {
+      throw new Error('Query error: ' + e.message);
+    }
+  },
+
+  _evalPath(obj, path) {
+    if (!path || path === '$') return obj;
+    
+    const parts = path.replace(/^\$\.?/, '').split(/\.(?![^\[]*\])/);
+    let current = obj;
+
+    for (const part of parts) {
+      if (!part) continue;
+      
+      if (part.includes('[')) {
+        const [key, rest] = part.split('[');
+        if (key) current = current[key];
+        const idx = parseInt(rest.replace(']', ''));
+        current = current[idx];
+      } else if (part === '*') {
+        return Object.values(current);
+      } else {
+        current = current[part];
+      }
+      
+      if (current === undefined) return null;
+    }
+
+    return current;
+  }
+};
+
+
+/* ================================================================
    Odin.Hash — SHA-256 & HMAC Generator
    ================================================================ */
 Odin.Hash = {
@@ -2177,6 +2384,15 @@ function odinApp() {
     hashSecret: '',
     hashOutput: '',
     hashFormat: 'hex',
+
+    // ---- YAML Converter ----
+    yamlMode: 'yaml2json',
+    yamlInput: '',
+    yamlOutput: '',
+    yamlError: '',
+    yamlJsonPath: '',
+    yamlPathResult: '',
+    yamlPathError: '',
 
     // ---- Init ----
     init() {
@@ -3297,6 +3513,43 @@ function odinApp() {
 
     hashCopy() {
       if (this.hashOutput) Odin.Clipboard.copy(this.hashOutput, this);
+    },
+
+    // ---- YAML Converter Methods ----
+    yamlConvert() {
+      this.yamlError = '';
+      this.yamlOutput = '';
+      this.yamlPathResult = '';
+      this.yamlPathError = '';
+      
+      if (!this.yamlInput.trim()) return;
+      
+      try {
+        if (this.yamlMode === 'yaml2json') {
+          this.yamlOutput = Odin.YAML.toJSON(this.yamlInput);
+        } else {
+          this.yamlOutput = Odin.YAML.toYAML(this.yamlInput);
+        }
+      } catch (e) {
+        this.yamlError = e.message;
+      }
+    },
+
+    yamlQueryPath() {
+      this.yamlPathResult = '';
+      this.yamlPathError = '';
+      
+      if (!this.yamlJsonPath.trim() || !this.yamlOutput) return;
+      
+      try {
+        this.yamlPathResult = Odin.YAML.queryJSONPath(this.yamlOutput, this.yamlJsonPath);
+      } catch (e) {
+        this.yamlPathError = e.message;
+      }
+    },
+
+    yamlCopy() {
+      if (this.yamlOutput) Odin.Clipboard.copy(this.yamlOutput, this);
     },
 
     // ---- Utility ----

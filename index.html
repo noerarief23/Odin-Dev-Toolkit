@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: 17 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator, Hash Generator. 100% client-side, offline-ready.">
+  <meta name="description" content="Odin Dev Toolkit: 18 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator, Hash Generator, YAML Converter. 100% client-side, offline-ready.">
   <meta name="keywords" content="developer tools, productive timer, focus timer, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Developer utility suite — 17 essential developer tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 18 essential developer tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -313,6 +313,18 @@
       >
         <i data-lucide="hash" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Hash Generator</span>
+      </button>
+
+      <button
+        @click="switchTool('yaml')"
+        :class="activeTool === 'yaml' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'yaml'"
+        aria-label="YAML Converter"
+      >
+        <i data-lucide="file-json-2" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>YAML Converter</span>
       </button>
     </nav>
 
@@ -2567,6 +2579,118 @@ Example:
               <p><strong class="text-gold-400">SHA-256:</strong> Cryptographic hash function that produces a 256-bit (32-byte) hash value. One-way function, cannot be reversed.</p>
               <p><strong class="text-gold-400">HMAC-SHA256:</strong> Hash-based Message Authentication Code using SHA-256. Requires a secret key to verify data integrity and authenticity.</p>
               <p class="text-xs text-slate-500">All computations are performed locally using the Web Crypto API. No data is sent to any server.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 18: YAML ↔ JSON CONVERTER + JSONPath
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'yaml'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="file-json-2" class="w-6 h-6 text-gold-500"></i>
+            YAML ↔ JSON Converter
+          </h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Convert between YAML and JSON formats with JSONPath query support</p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Mode Tabs -->
+          <div class="flex gap-1.5">
+            <button
+              @click="yamlMode = 'yaml2json'; yamlConvert()"
+              :class="yamlMode === 'yaml2json' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >YAML → JSON</button>
+            <button
+              @click="yamlMode = 'json2yaml'; yamlConvert()"
+              :class="yamlMode === 'json2yaml' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >JSON → YAML</button>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <!-- Input -->
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" x-text="yamlMode === 'yaml2json' ? 'YAML Input' : 'JSON Input'"></label>
+              <textarea
+                x-model="yamlInput"
+                @input.debounce.300ms="yamlConvert()"
+                class="textarea-valhalla code-input h-[28rem]"
+                :placeholder="yamlMode === 'yaml2json' ? 'name: Odin\nversion: 1.0\ntools:\n  - timer\n  - regex' : '{\n  \"name\": \"Odin\",\n  \"version\": 1.0\n}'"
+                spellcheck="false"
+              ></textarea>
+            </div>
+
+            <!-- Output -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300" x-text="yamlMode === 'yaml2json' ? 'JSON Output' : 'YAML Output'"></label>
+                <button @click="yamlCopy()" x-show="yamlOutput" class="btn-outline text-xs py-1 px-2 flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  Copy
+                </button>
+              </div>
+              <div class="code-output h-[28rem] overflow-auto">
+                <template x-if="yamlError">
+                  <div class="error-badge" x-text="yamlError"></div>
+                </template>
+                <template x-if="!yamlError && yamlOutput">
+                  <pre class="m-0 bg-transparent text-sm"><code x-text="yamlOutput"></code></pre>
+                </template>
+                <template x-if="!yamlError && !yamlOutput">
+                  <p class="text-slate-600 italic text-sm">Output will appear here...</p>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- JSONPath Query (only for YAML to JSON) -->
+          <div x-show="yamlMode === 'yaml2json' && yamlOutput && !yamlError" class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">JSONPath Query</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Path Expression</label>
+                <input
+                  type="text"
+                  x-model="yamlJsonPath"
+                  @input.debounce.300ms="yamlQueryPath()"
+                  class="input-valhalla w-full font-mono text-sm"
+                  placeholder="$.name or $.tools[0] or $..version"
+                />
+              </div>
+              <div x-show="yamlPathResult">
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Query Result</label>
+                <div class="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 font-mono text-sm text-slate-800 dark:text-slate-200" x-text="yamlPathResult"></div>
+              </div>
+              <div x-show="yamlPathError" class="error-badge text-xs" x-text="yamlPathError"></div>
+            </div>
+          </div>
+
+          <!-- Quick Examples -->
+          <div class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Quick Examples</h3>
+            <div class="space-y-2">
+              <button
+                @click="yamlMode='yaml2json'; yamlInput='name: Odin\nversion: 1.0\ntools:\n  - timer\n  - regex\n  - qr'; yamlConvert()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> Simple YAML
+              </button>
+              <button
+                @click="yamlMode='json2yaml'; yamlInput=JSON.stringify({name:'Odin',version:1.0,tools:['timer','regex']},null,2); yamlConvert()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> JSON to YAML
+              </button>
             </div>
           </div>
         </div>
