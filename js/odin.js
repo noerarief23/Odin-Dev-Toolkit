@@ -1865,6 +1865,38 @@ Odin.URLCodec = {
 
 
 /* ================================================================
+   Odin.UUID — UUID v4 Generator
+   ================================================================ */
+Odin.UUID = {
+  generate() {
+    // Use crypto.randomUUID if available (modern browsers)
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    
+    // Fallback: manual UUID v4 generation using crypto.getRandomValues
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    
+    // Set version (4) and variant bits
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10
+    
+    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  },
+
+  format(uuid, options = {}) {
+    let result = uuid;
+    if (!options.hyphens) result = result.replace(/-/g, '');
+    if (options.uppercase) result = result.toUpperCase();
+    if (options.braces) result = `{${result}}`;
+    return result;
+  }
+};
+
+
+/* ================================================================
    Odin.Timestamp — Unix Timestamp Converter
    ================================================================ */
 Odin.Timestamp = {
@@ -2086,6 +2118,14 @@ function odinApp() {
     tsToTimestampUnix: 0,
     tsToTimestampUnixMs: 0,
 
+    // ---- UUID Generator ----
+    uuidCurrent: '',
+    uuidBulkCount: 10,
+    uuidBulkList: [],
+    uuidUppercase: false,
+    uuidHyphens: true,
+    uuidBraces: false,
+
     // ---- Init ----
     init() {
       // Apply saved theme
@@ -2127,6 +2167,9 @@ function odinApp() {
       // Initialize timestamp converter
       this.tsUpdateNow();
       setInterval(() => { if (this.activeTool === 'timestamp') this.tsUpdateNow(); }, 1000);
+
+      // Generate initial UUID
+      this.uuidGenerate();
 
       // Load Pomodoro cycle counter (reset at midnight)
       const cycleData = localStorage.getItem('odin_pomo_cycle_count');
@@ -3142,6 +3185,39 @@ function odinApp() {
         this.tsToTimestampResult = true;
       } catch (e) {
         this.tsToTimestampResult = false;
+      }
+    },
+
+    // ---- UUID Generator Methods ----
+    uuidGenerate() {
+      const raw = Odin.UUID.generate();
+      this.uuidCurrent = Odin.UUID.format(raw, {
+        uppercase: this.uuidUppercase,
+        hyphens: this.uuidHyphens,
+        braces: this.uuidBraces
+      });
+    },
+
+    uuidCopy() {
+      if (this.uuidCurrent) Odin.Clipboard.copy(this.uuidCurrent, this);
+    },
+
+    uuidGenerateBulk() {
+      const count = Math.min(Math.max(1, this.uuidBulkCount), 1000);
+      this.uuidBulkList = [];
+      for (let i = 0; i < count; i++) {
+        const raw = Odin.UUID.generate();
+        this.uuidBulkList.push(Odin.UUID.format(raw, {
+          uppercase: this.uuidUppercase,
+          hyphens: this.uuidHyphens,
+          braces: this.uuidBraces
+        }));
+      }
+    },
+
+    uuidCopyBulk() {
+      if (this.uuidBulkList.length > 0) {
+        Odin.Clipboard.copy(this.uuidBulkList.join('\n'), this);
       }
     },
 

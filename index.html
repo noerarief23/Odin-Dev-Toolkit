@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: 15 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter. 100% client-side, offline-ready.">
+  <meta name="description" content="Odin Dev Toolkit: 16 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator. 100% client-side, offline-ready.">
   <meta name="keywords" content="developer tools, productive timer, focus timer, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Developer utility suite — 15 essential developer tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 16 essential developer tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -289,6 +289,18 @@
       >
         <i data-lucide="clock" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Timestamp Converter</span>
+      </button>
+
+      <button
+        @click="switchTool('uuid')"
+        :class="activeTool === 'uuid' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'uuid'"
+        aria-label="UUID Generator"
+      >
+        <i data-lucide="fingerprint" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>UUID Generator</span>
       </button>
     </nav>
 
@@ -2299,6 +2311,117 @@ Example:
                 <span class="text-gold-400">→</span> 2024-01-01 00:00:00 UTC
               </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 16: UUID GENERATOR
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'uuid'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="fingerprint" class="w-6 h-6 text-gold-500"></i>
+            UUID Generator
+          </h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Generate cryptographically secure UUIDs (v4) using Web Crypto API</p>
+        </div>
+
+        <div class="max-w-3xl space-y-6">
+          <!-- Generated UUID Display -->
+          <div class="glass rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Generated UUID</h3>
+              <div class="flex gap-2">
+                <button @click="uuidGenerate()" class="btn-gold flex items-center gap-2 py-2">
+                  <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                  Generate New
+                </button>
+                <button @click="uuidCopy()" class="btn-outline flex items-center gap-2 py-2">
+                  <i data-lucide="copy" class="w-4 h-4"></i>
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-4 font-mono text-lg text-center text-gold-400 select-all" x-text="uuidCurrent || 'Click Generate to create UUID'"></div>
+          </div>
+
+          <!-- Bulk Generator -->
+          <div class="glass rounded-xl p-6">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Bulk Generator</h3>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="flex-1">
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Quantity</label>
+                <input
+                  type="number"
+                  x-model.number="uuidBulkCount"
+                  min="1"
+                  max="1000"
+                  class="input-valhalla w-full"
+                />
+              </div>
+              <div class="flex gap-2 items-end">
+                <button @click="uuidGenerateBulk()" class="btn-gold px-4 py-2">
+                  <i data-lucide="zap" class="w-4 h-4 inline mr-1"></i>
+                  Generate
+                </button>
+                <button @click="uuidCopyBulk()" x-show="uuidBulkList.length > 0" class="btn-outline px-4 py-2">
+                  <i data-lucide="copy" class="w-4 h-4 inline mr-1"></i>
+                  Copy All
+                </button>
+              </div>
+            </div>
+            <div x-show="uuidBulkList.length > 0" class="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-4 max-h-64 overflow-auto">
+              <div class="font-mono text-xs space-y-1">
+                <template x-for="(uuid, idx) in uuidBulkList" :key="idx">
+                  <div class="text-slate-700 dark:text-slate-300 hover:text-gold-400 cursor-pointer" @click="uuidCurrent = uuid; uuidCopy()" x-text="uuid"></div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Format Options -->
+          <div class="glass rounded-xl p-6">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Format Options</h3>
+            <div class="space-y-3">
+              <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="uuidUppercase = !uuidUppercase; uuidGenerate()">
+                <div class="toggle-track" :class="uuidUppercase ? 'active' : ''">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="text-sm text-slate-700 dark:text-slate-300">Uppercase</span>
+              </label>
+              <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="uuidHyphens = !uuidHyphens; uuidGenerate()">
+                <div class="toggle-track" :class="uuidHyphens ? 'active' : ''">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="text-sm text-slate-700 dark:text-slate-300">Include hyphens</span>
+              </label>
+              <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="uuidBraces = !uuidBraces; uuidGenerate()">
+                <div class="toggle-track" :class="uuidBraces ? 'active' : ''">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="text-sm text-slate-700 dark:text-slate-300">Wrap in braces { }</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-gold-500"></i>
+              About UUID v4
+            </h3>
+            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              UUID v4 (Universally Unique Identifier) uses cryptographically secure random numbers. 
+              Each UUID has 122 bits of randomness, making collisions virtually impossible. 
+              Format: <code class="text-gold-400">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</code> where x is any hex digit and y is 8, 9, A, or B.
+            </p>
           </div>
         </div>
       </section>

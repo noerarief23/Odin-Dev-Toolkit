@@ -1,7 +1,7 @@
 {
   "name": "Odin Dev Toolkit",
   "short_name": "Odin",
-  "description": "Developer utility suite — 15 tools: Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter.",
+  "description": "Developer utility suite — 16 tools: Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator.",
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#020617",
