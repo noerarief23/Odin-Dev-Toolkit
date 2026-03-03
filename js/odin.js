@@ -1865,6 +1865,51 @@ Odin.URLCodec = {
 
 
 /* ================================================================
+   Odin.Hash — SHA-256 & HMAC Generator
+   ================================================================ */
+Odin.Hash = {
+  async sha256(text, format = 'hex') {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return this._formatHash(hashBuffer, format);
+  },
+
+  async hmacSha256(text, secret, format = 'hex') {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const messageData = encoder.encode(text);
+    
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign('HMAC', key, messageData);
+    return this._formatHash(signature, format);
+  },
+
+  _formatHash(buffer, format) {
+    const bytes = new Uint8Array(buffer);
+    
+    if (format === 'base64') {
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+    
+    // Default: hex
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+};
+
+
+/* ================================================================
    Odin.UUID — UUID v4 Generator
    ================================================================ */
 Odin.UUID = {
@@ -2125,6 +2170,13 @@ function odinApp() {
     uuidUppercase: false,
     uuidHyphens: true,
     uuidBraces: false,
+
+    // ---- Hash Generator ----
+    hashMode: 'sha256',
+    hashInput: '',
+    hashSecret: '',
+    hashOutput: '',
+    hashFormat: 'hex',
 
     // ---- Init ----
     init() {
@@ -3219,6 +3271,32 @@ function odinApp() {
       if (this.uuidBulkList.length > 0) {
         Odin.Clipboard.copy(this.uuidBulkList.join('\n'), this);
       }
+    },
+
+    // ---- Hash Generator Methods ----
+    async hashCompute() {
+      if (!this.hashInput.trim()) {
+        this.hashOutput = '';
+        return;
+      }
+      
+      try {
+        if (this.hashMode === 'sha256') {
+          this.hashOutput = await Odin.Hash.sha256(this.hashInput, this.hashFormat);
+        } else {
+          if (!this.hashSecret) {
+            this.hashOutput = 'Secret key required for HMAC';
+            return;
+          }
+          this.hashOutput = await Odin.Hash.hmacSha256(this.hashInput, this.hashSecret, this.hashFormat);
+        }
+      } catch (e) {
+        this.hashOutput = 'Error: ' + e.message;
+      }
+    },
+
+    hashCopy() {
+      if (this.hashOutput) Odin.Clipboard.copy(this.hashOutput, this);
     },
 
     // ---- Utility ----

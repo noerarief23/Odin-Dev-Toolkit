@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: 16 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator. 100% client-side, offline-ready.">
+  <meta name="description" content="Odin Dev Toolkit: 17 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator, Hash Generator. 100% client-side, offline-ready.">
   <meta name="keywords" content="developer tools, productive timer, focus timer, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Developer utility suite — 16 essential developer tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 17 essential developer tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -301,6 +301,18 @@
       >
         <i data-lucide="fingerprint" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>UUID Generator</span>
+      </button>
+
+      <button
+        @click="switchTool('hash')"
+        :class="activeTool === 'hash' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'hash'"
+        aria-label="Hash Generator"
+      >
+        <i data-lucide="hash" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>Hash Generator</span>
       </button>
     </nav>
 
@@ -2422,6 +2434,140 @@ Example:
               Each UUID has 122 bits of randomness, making collisions virtually impossible. 
               Format: <code class="text-gold-400">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</code> where x is any hex digit and y is 8, 9, A, or B.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 17: HASH GENERATOR (SHA-256 + HMAC)
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'hash'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="hash" class="w-6 h-6 text-gold-500"></i>
+            Hash Generator
+          </h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Generate SHA-256 hashes and HMAC signatures using Web Crypto API</p>
+        </div>
+
+        <div class="max-w-4xl space-y-6">
+          <!-- Mode Tabs -->
+          <div class="flex gap-1.5">
+            <button
+              @click="hashMode = 'sha256'; hashCompute()"
+              :class="hashMode === 'sha256' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >SHA-256</button>
+            <button
+              @click="hashMode = 'hmac'; hashCompute()"
+              :class="hashMode === 'hmac' ? 'active' : ''"
+              class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+            >HMAC-SHA256</button>
+          </div>
+
+          <!-- Input -->
+          <div class="glass rounded-xl p-5">
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
+            <textarea
+              x-model="hashInput"
+              @input.debounce.300ms="hashCompute()"
+              class="textarea-valhalla w-full h-32 font-mono text-sm"
+              placeholder="Enter text to hash..."
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <!-- HMAC Secret Key -->
+          <div x-show="hashMode === 'hmac'" class="glass rounded-xl p-5">
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Secret Key</label>
+            <input
+              type="text"
+              x-model="hashSecret"
+              @input.debounce.300ms="hashCompute()"
+              class="input-valhalla w-full font-mono text-sm"
+              placeholder="Enter secret key for HMAC..."
+            />
+          </div>
+
+          <!-- Output -->
+          <div class="glass rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <label class="block text-xs text-slate-500 uppercase tracking-wider">Hash Output</label>
+              <div class="flex gap-2">
+                <button
+                  @click="hashCopy()"
+                  x-show="hashOutput"
+                  class="btn-outline text-xs py-1 px-2.5 flex items-center gap-1"
+                >
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-4 min-h-[4rem] flex items-center">
+              <div class="font-mono text-sm text-gold-400 break-all select-all" x-text="hashOutput || 'Hash will appear here...'"></div>
+            </div>
+          </div>
+
+          <!-- Format Options -->
+          <div class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Output Format</h3>
+            <div class="flex gap-2">
+              <button
+                @click="hashFormat = 'hex'; hashCompute()"
+                :class="hashFormat === 'hex' ? 'btn-gold' : 'btn-outline'"
+                class="text-xs py-1.5 px-3"
+              >Hex</button>
+              <button
+                @click="hashFormat = 'base64'; hashCompute()"
+                :class="hashFormat === 'base64' ? 'btn-gold' : 'btn-outline'"
+                class="text-xs py-1.5 px-3"
+              >Base64</button>
+            </div>
+          </div>
+
+          <!-- Quick Examples -->
+          <div class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Quick Examples</h3>
+            <div class="space-y-2">
+              <button
+                @click="hashInput = 'Hello, World!'; hashCompute()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> Hash "Hello, World!"
+              </button>
+              <button
+                @click="hashInput = JSON.stringify({user:'admin',timestamp:Date.now()}, null, 2); hashCompute()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> Hash JSON payload
+              </button>
+              <button
+                @click="hashMode = 'hmac'; hashInput = 'message'; hashSecret = 'secret-key'; hashCompute()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> HMAC example
+              </button>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="glass rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-gold-500"></i>
+              About Hashing
+            </h3>
+            <div class="text-xs text-slate-600 dark:text-slate-400 space-y-2 leading-relaxed">
+              <p><strong class="text-gold-400">SHA-256:</strong> Cryptographic hash function that produces a 256-bit (32-byte) hash value. One-way function, cannot be reversed.</p>
+              <p><strong class="text-gold-400">HMAC-SHA256:</strong> Hash-based Message Authentication Code using SHA-256. Requires a secret key to verify data integrity and authenticity.</p>
+              <p class="text-xs text-slate-500">All computations are performed locally using the Web Crypto API. No data is sent to any server.</p>
+            </div>
           </div>
         </div>
       </section>

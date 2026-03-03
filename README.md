@@ -1,6 +1,6 @@
 # Odin Dev Toolkit
 
-**Developer Utility Suite** — 16 essential tools, 100% client-side, offline-ready PWA.
+**Developer Utility Suite** — 17 essential tools, 100% client-side, offline-ready PWA.
 
 ![Theme: Deep Valhalla](https://img.shields.io/badge/theme-Deep%20Valhalla-020617?style=flat-square&labelColor=020617&color=eab308)
 ![Offline Ready](https://img.shields.io/badge/offline-ready-22c55e?style=flat-square)
@@ -28,6 +28,7 @@
 | 14 | **URL Encoder** | Encode/decode URL strings with percent-encoding (encodeURI/encodeURIComponent) |
 | 15 | **Timestamp Converter** | Convert between Unix timestamps (seconds/milliseconds) and human-readable dates |
 | 16 | **UUID Generator** | Generate cryptographically secure UUIDs (v4) with bulk generation & format options |
+| 17 | **Hash Generator** | Generate SHA-256 hashes and HMAC-SHA256 signatures using Web Crypto API |
 
 ## Tech Stack
 
@@ -71,7 +72,7 @@ Then open `http://localhost:8000` (or simply open `index.html` directly).
 ## Project Structure
 
 ```
-├── index.html              # Main app shell with all 16 tool panels
+├── index.html              # Main app shell with all 17 tool panels
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service worker (cache-first)
 ├── _test.js                # Unit tests (node _test.js)
