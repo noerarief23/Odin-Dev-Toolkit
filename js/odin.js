@@ -1838,6 +1838,33 @@ Odin.Base64 = {
 
 
 /* ================================================================
+   Odin.URLCodec — URL Encode / Decode
+   ================================================================ */
+Odin.URLCodec = {
+  encode(text, useComponent = false) {
+    try {
+      return useComponent ? encodeURIComponent(text) : encodeURI(text);
+    } catch (e) {
+      throw new Error('Encoding failed: ' + e.message);
+    }
+  },
+
+  decode(text) {
+    try {
+      return decodeURIComponent(text);
+    } catch (e) {
+      // Fallback to decodeURI if decodeURIComponent fails
+      try {
+        return decodeURI(text);
+      } catch (e2) {
+        throw new Error('Decoding failed: ' + e2.message);
+      }
+    }
+  }
+};
+
+
+/* ================================================================
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
@@ -1985,6 +2012,12 @@ function odinApp() {
     b64FileName: '',
     b64FileResult: '',
     b64DetectedMime: '',
+
+    // ---- URL Codec ----
+    urlInput: '',
+    urlOutput: '',
+    urlMode: 'encode',
+    urlEncodeComponent: false,
 
     // ---- Init ----
     init() {
@@ -2976,6 +3009,30 @@ function odinApp() {
       this.b64FileResult = '';
       this.b64FileName = '';
       this.b64DetectedMime = '';
+    },
+
+    // ---- URL Codec Methods ----
+    urlConvert() {
+      if (!this.urlInput.trim()) { this.urlOutput = ''; return; }
+      try {
+        if (this.urlMode === 'encode') {
+          this.urlOutput = Odin.URLCodec.encode(this.urlInput, this.urlEncodeComponent);
+        } else {
+          this.urlOutput = Odin.URLCodec.decode(this.urlInput);
+        }
+      } catch (err) {
+        this.urlOutput = 'Error: ' + err.message;
+      }
+    },
+
+    urlCopyOutput() {
+      if (this.urlOutput) Odin.Clipboard.copy(this.urlOutput, this);
+    },
+
+    urlSwitchMode(mode) {
+      this.urlMode = mode;
+      this.urlInput = '';
+      this.urlOutput = '';
     },
 
     // ---- Utility ----

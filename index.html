@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odin Dev Toolkit</title>
-  <meta name="description" content="Odin Dev Toolkit: 13 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec. 100% client-side, offline-ready.">
+  <meta name="description" content="Odin Dev Toolkit: 14 developer tools — Productive Timer, Regex Tester, QR Code, JSON/XML Formatter, Diff Checker, Password Guard, Model Generator, JWT Explorer, Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder. 100% client-side, offline-ready.">
   <meta name="keywords" content="developer tools, productive timer, focus timer, regex tester, qr code generator, json formatter, xml formatter, diff checker, password generator, model generator, odin">
   <meta name="author" content="Odin Dev Toolkit">
   <meta name="theme-color" content="#020617">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Odin Dev Toolkit">
-  <meta property="og:description" content="Developer utility suite — 13 essential developer tools, 100% client-side.">
+  <meta property="og:description" content="Developer utility suite — 14 essential developer tools, 100% client-side.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="icons/icon-odin.png">
 
@@ -265,6 +265,18 @@
       >
         <i data-lucide="binary" class="link-icon w-4 h-4 flex-shrink-0"></i>
         <span>Base64 Codec</span>
+      </button>
+
+      <button
+        @click="switchTool('urlcodec')"
+        :class="activeTool === 'urlcodec' ? 'active' : ''"
+        class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        role="tab"
+        :aria-selected="activeTool === 'urlcodec'"
+        aria-label="URL Encoder"
+      >
+        <i data-lucide="link" class="link-icon w-4 h-4 flex-shrink-0"></i>
+        <span>URL Encoder</span>
       </button>
     </nav>
 
@@ -2034,6 +2046,111 @@ Example:
               <template x-if="b64DetectedMime">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-sky-500/15 text-sky-400 border border-sky-500/30" x-text="b64DetectedMime"></span>
               </template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TOOL 14: URL ENCODER / DECODER
+           ============================================================ -->
+      <section
+        x-show="activeTool === 'urlcodec'"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="tool-panel"
+      >
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="link" class="w-6 h-6 text-gold-500"></i>
+            URL Encoder / Decoder
+          </h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Encode &amp; decode URL strings with percent-encoding — fully offline</p>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex gap-1.5 mb-5">
+          <button
+            @click="urlSwitchMode('encode')"
+            :class="urlMode === 'encode' ? 'active' : ''"
+            class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+          >Encode</button>
+          <button
+            @click="urlSwitchMode('decode')"
+            :class="urlMode === 'decode' ? 'active' : ''"
+            class="tab-btn px-4 py-2 text-sm rounded-lg font-semibold"
+          >Decode</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="urlMode === 'encode' ? 'Plain URL / Text' : 'Encoded URL'"></label>
+            <textarea
+              x-model="urlInput"
+              @input.debounce.300ms="urlConvert()"
+              class="textarea-valhalla w-full h-36 font-mono text-sm"
+              :placeholder="urlMode === 'encode' ? 'Enter URL or text to encode...\n\nExample:\nhttps://example.com/search?q=hello world&lang=en' : 'Paste encoded URL to decode...\n\nExample:\nhttps://example.com/search?q=hello%20world&lang=en'"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs text-slate-500 uppercase tracking-wider" x-text="urlMode === 'encode' ? 'Encoded Output' : 'Decoded Output'"></label>
+              <button
+                @click="urlCopyOutput()"
+                x-show="urlOutput"
+                class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
+              >
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy
+              </button>
+            </div>
+            <textarea
+              x-model="urlOutput"
+              readonly
+              class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
+              placeholder="Output will appear here..."
+            ></textarea>
+          </div>
+
+          <!-- Encoding Options -->
+          <div x-show="urlMode === 'encode'" class="glass rounded-xl p-4">
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">Encoding Options</p>
+            <label class="flex items-center gap-2.5 cursor-pointer" @click.prevent="urlEncodeComponent = !urlEncodeComponent; urlConvert()">
+              <div class="toggle-track flex-shrink-0" :class="urlEncodeComponent ? 'active' : ''" style="width:36px;height:20px">
+                <div class="toggle-thumb" style="width:16px;height:16px"></div>
+              </div>
+              <span class="text-sm text-slate-700 dark:text-slate-300">Use <code class="text-gold-400 text-xs">encodeURIComponent</code> <span class="text-slate-500 text-xs">(encode all special chars)</span></span>
+            </label>
+            <p class="text-xs text-slate-500 dark:text-slate-600 mt-2 ml-11">
+              When OFF: uses <code class="text-xs">encodeURI</code> (preserves URL structure)<br>
+              When ON: uses <code class="text-xs">encodeURIComponent</code> (encodes everything including /, ?, &amp;)
+            </p>
+          </div>
+
+          <!-- Quick Examples -->
+          <div class="glass rounded-xl p-4">
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Examples</p>
+            <div class="space-y-2">
+              <button
+                @click="urlInput = 'https://example.com/search?q=hello world&lang=en'; urlConvert()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> URL with spaces
+              </button>
+              <button
+                @click="urlInput = 'name=John Doe&email=john@example.com&message=Hello, World!'; urlConvert()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> Query parameters
+              </button>
+              <button
+                @click="urlInput = 'https://example.com/path/文档/资料.pdf'; urlConvert()"
+                class="btn-outline text-xs py-1.5 px-3 w-full text-left"
+              >
+                <span class="text-gold-400">→</span> URL with Unicode
+              </button>
             </div>
           </div>
         </div>
