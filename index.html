@@ -1131,7 +1131,7 @@
             <i data-lucide="git-compare" class="w-6 h-6 text-gold-500"></i>
             Diff Checker (JSON/XML)
           </h2>
-          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Bandingkan dua JSON atau XML secara real-time dan lihat perbedaannya</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Compare two JSON or XML inputs in real-time and view the differences</p>
         </div>
 
         <div class="flex items-center gap-2 mb-4">
@@ -1188,7 +1188,10 @@
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Differences</label>
           <div class="code-output h-[22rem] overflow-auto diff-output">
             <template x-if="!diffResult.html">
-              <p class="text-slate-600 italic text-sm">Masukkan Input A dan Input B untuk melihat perbedaan...</p>
+              <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400">
+                <i data-lucide="git-compare" class="w-12 h-12 mb-3 opacity-20"></i>
+                <p class="text-sm">Enter Input A and Input B to see differences</p>
+              </div>
             </template>
             <template x-if="diffResult.html">
               <div x-html="diffResult.html"></div>
