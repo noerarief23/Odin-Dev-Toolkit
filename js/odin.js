@@ -106,6 +106,35 @@ Odin.Utils = {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  },
+
+  /**
+   * Generates a newline-separated string of line numbers (1..N).
+   * Highly optimized: uses indexOf for fast counting and caches results to prevent UI blocking.
+   */
+  _lineNumCache: new Map(),
+  generateLineNumbers(text) {
+    if (typeof text !== 'string' || !text) return '1';
+    let count = 1;
+    let pos = text.indexOf('\n');
+    while (pos !== -1) {
+      count++;
+      pos = text.indexOf('\n', pos + 1);
+    }
+
+    if (this._lineNumCache.has(count)) {
+      return this._lineNumCache.get(count);
+    }
+
+    const res = new Array(count);
+    for (let i = 0; i < count; i++) res[i] = i + 1;
+    const str = res.join('\n');
+
+    // Keep cache bounded
+    if (this._lineNumCache.size > 50) this._lineNumCache.clear();
+    this._lineNumCache.set(count, str);
+
+    return str;
   }
 };
 
@@ -2928,14 +2957,11 @@ function odinApp() {
     },
 
     getJsonLineNumbers() {
-      const lineCount = Math.max(1, (this.jsonInput.match(/\n/g) || []).length + 1);
-      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+      return Odin.Utils.generateLineNumbers(this.jsonInput);
     },
 
     getJsonOutputLineNumbers() {
-      const source = this.jsonOutput || '';
-      const lineCount = Math.max(1, (source.match(/\n/g) || []).length + 1);
-      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+      return Odin.Utils.generateLineNumbers(this.jsonOutput || '');
     },
 
     syncJsonLineNumbers() {
@@ -3010,14 +3036,11 @@ function odinApp() {
     },
 
     getXmlLineNumbers() {
-      const lineCount = Math.max(1, (this.xmlInput.match(/\n/g) || []).length + 1);
-      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+      return Odin.Utils.generateLineNumbers(this.xmlInput);
     },
 
     getXmlOutputLineNumbers() {
-      const source = this.xmlOutput || '';
-      const lineCount = Math.max(1, (source.match(/\n/g) || []).length + 1);
-      return Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+      return Odin.Utils.generateLineNumbers(this.xmlOutput || '');
     },
 
     syncXmlLineNumbers() {
