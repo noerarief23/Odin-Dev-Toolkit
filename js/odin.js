@@ -336,7 +336,7 @@ Odin.QRCode = {
       container.appendChild(canvas);
       this._instance = canvas;
     } catch (e) {
-      container.innerHTML = `<span class="text-red-400 text-sm">Error: ${e.message}</span>`;
+      container.innerHTML = `<span class="text-red-400 text-sm">Error: ${Odin.Utils.escapeHtml(e.message || e)}</span>`;
     }
   },
 
