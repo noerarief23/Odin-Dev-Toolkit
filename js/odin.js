@@ -437,7 +437,16 @@ Odin.JsonFormatter = {
     if (posMatch) {
       const pos = parseInt(posMatch[1]);
       const upToPos = input.substring(0, pos);
-      line = (upToPos.match(/\n/g) || []).length + 1;
+
+      // Fast line counting using indexOf instead of Regex to prevent main-thread blocking
+      let count = 1;
+      let nlPos = upToPos.indexOf('\n');
+      while (nlPos !== -1) {
+        count++;
+        nlPos = upToPos.indexOf('\n', nlPos + 1);
+      }
+
+      line = count;
       col = pos - upToPos.lastIndexOf('\n');
     }
 
