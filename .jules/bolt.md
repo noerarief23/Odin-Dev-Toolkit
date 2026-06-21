@@ -1,3 +1,7 @@
 ## 2024-05-18 - String Manipulation Performance
 **Learning:** In Javascript, using \`text.indexOf('\\n')\` in a loop to count occurrences is significantly faster (up to ~3-4x) than using the \`text.match(/\\n/g).length\` Regex method, especially for very large strings (e.g., 50k+ lines). Additionally, constructing long string sequences (like line numbers) using \`Array.from().join()\` has high memory allocation overhead; memoizing these repetitive string operations with an LRU cache significantly prevents main-thread blocking operations.
 **Action:** Always prefer \`indexOf\` loops over Regex when counting single characters in long strings. Implement LRU caches for repetitive string allocations (like sequential line numbers) to improve code editor performance in frontend applications.
+
+## 2024-05-18 - Buffer to Base64 Performance
+**Learning:** Using a single character concatenation loop (`binary += String.fromCharCode(bytes[i])`) to convert an ArrayBuffer to a binary string before `btoa` encoding is extremely slow for large files (e.g. 5MB) and blocks the main thread. Directly using `String.fromCharCode.apply(null, bytes)` causes "Maximum Call Stack Size Exceeded" for large arrays. Chunking the array (e.g. using 32KB chunks `0x8000`) and applying `String.fromCharCode.apply` per chunk provides an massive speedup (~4x-10x) while avoiding call stack limits.
+**Action:** When converting large ArrayBuffers/Uint8Arrays to strings, always chunk the data and use `String.fromCharCode.apply` rather than iterating and appending characters individually.
