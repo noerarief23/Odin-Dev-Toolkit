@@ -1695,7 +1695,8 @@ Example:
                 class="btn-gold px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
                 :disabled="imgProcessing"
               >
-                <i data-lucide="zap" class="w-4 h-4"></i>
+                <i x-show="!imgProcessing" data-lucide="zap" class="w-4 h-4"></i>
+                <i x-show="imgProcessing" data-lucide="loader-2" class="w-4 h-4 animate-spin" style="display: none;"></i>
                 <span x-text="imgProcessing ? 'Processing...' : 'Shrink Image'"></span>
               </button>
               <button
