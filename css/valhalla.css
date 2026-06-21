@@ -137,6 +137,14 @@ textarea.code-input,
   box-shadow: 0 2px 8px rgba(234, 179, 8, 0.2);
 }
 
+
+.btn-gold:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  pointer-events: none;
+}
+
 .btn-gold:hover {
   box-shadow: 0 4px 20px rgba(234, 179, 8, 0.35);
   transform: translateY(-1px);
