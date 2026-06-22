@@ -438,7 +438,15 @@ Odin.JsonFormatter = {
     if (posMatch) {
       const pos = parseInt(posMatch[1]);
       const upToPos = input.substring(0, pos);
-      line = (upToPos.match(/\n/g) || []).length + 1;
+
+      // ⚡ Bolt: Fast line counting using indexOf instead of regex
+      line = 1;
+      let newLinePos = upToPos.indexOf('\n');
+      while (newLinePos !== -1) {
+        line++;
+        newLinePos = upToPos.indexOf('\n', newLinePos + 1);
+      }
+
       col = pos - upToPos.lastIndexOf('\n');
     }
 
@@ -1840,7 +1848,13 @@ Odin.Base64 = {
   encodeArrayBuffer(buffer) {
     const bytes = new Uint8Array(buffer);
     let binary = '';
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    // ⚡ Bolt: Use chunking with String.fromCharCode.apply to drastically speed up
+    // conversion of large buffers and prevent Maximum Call Stack Size Exceeded errors.
+    const len = bytes.byteLength;
+    const chunkSize = 0x8000; // 32KB chunks
+    for (let i = 0; i < len; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
     return btoa(binary);
   },
 
