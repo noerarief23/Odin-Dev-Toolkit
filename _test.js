@@ -94,8 +94,8 @@ vm.runInThisContext(odinCode, { filename: 'odin.js' });
 // ================================================================
 
 describe('Odin.Utils', () => {
-  it('escapeHtml escapes &, <, >, "', () => {
-    assertEqual(Odin.Utils.escapeHtml('<b>"Tom & Jerry"</b>'), '&lt;b&gt;&quot;Tom &amp; Jerry&quot;&lt;/b&gt;');
+  it('escapeHtml escapes &, <, >, ", \'', () => {
+    assertEqual(Odin.Utils.escapeHtml('<b>"Tom & Jerry\'s"</b>'), '&lt;b&gt;&quot;Tom &amp; Jerry&#39;s&quot;&lt;/b&gt;');
   });
 
   it('escapeHtml returns empty string for falsy input', () => {
