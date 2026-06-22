@@ -728,7 +728,7 @@
             <!-- Pattern Input -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Pattern</label>
+                <label for="regex-pattern" class="text-sm font-medium text-slate-700 dark:text-slate-300">Pattern</label>
                 <!-- Common Patterns Dropdown -->
                 <div class="relative">
                   <button
@@ -758,6 +758,7 @@
                 </div>
               </div>
               <input
+                id="regex-pattern"
                 type="text"
                 x-model="regexPattern"
                 @input.debounce.150ms="runRegex()"
@@ -786,8 +787,9 @@
 
             <!-- Test String -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Test String</label>
+              <label for="regex-test-string" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Test String</label>
               <textarea
+                id="regex-test-string"
                 x-model="regexTestString"
                 @input.debounce.150ms="runRegex()"
                 class="textarea-valhalla code-input h-48"
@@ -877,8 +879,9 @@
           <!-- Controls -->
           <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data / URL</label>
+              <label for="qr-data-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data / URL</label>
               <textarea
+                id="qr-data-input"
                 x-model="qrText"
                 @input.debounce.300ms="generateQR()"
                 class="textarea-valhalla h-28"
@@ -888,10 +891,11 @@
 
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Size</label>
+                <label for="qr-size-input" class="text-sm font-medium text-slate-700 dark:text-slate-300">Size</label>
                 <span class="text-sm font-mono text-gold-400" x-text="qrSize + 'px'"></span>
               </div>
               <input
+                id="qr-size-input"
                 type="range"
                 x-model="qrSize"
                 @input.debounce.200ms="generateQR()"
@@ -1251,10 +1255,11 @@
             <!-- Length Slider -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Password Length</label>
+                <label for="pw-length-input" class="text-sm font-medium text-slate-700 dark:text-slate-300">Password Length</label>
                 <span class="text-sm font-mono text-gold-600 dark:text-gold-400 bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded" x-text="pwLength"></span>
               </div>
               <input
+                id="pw-length-input"
                 type="range"
                 x-model="pwLength"
                 @input="generatePassword()"
