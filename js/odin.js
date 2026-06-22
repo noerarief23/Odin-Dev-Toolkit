@@ -2727,7 +2727,7 @@ function odinApp() {
     /** Save a completed session to the log */
     pomoSaveSession(actual) {
       const entry = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        id: Odin.UUID.generate(),
         todo: this.pomoTodoText.trim() || '',
         actual: (actual || '').trim(),
         mode: this.pomoMode,

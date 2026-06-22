@@ -1,3 +1,7 @@
+## 2025-02-18 - Cryptographically Secure Random ID Generation
+**Vulnerability:** Pseudo-random ID generation using `Math.random()` and `Date.now()` within the Pomodoro tracker component (`pomoSaveSession`).
+**Learning:** Even for client-side non-sensitive features like Pomodoro IDs, using `Math.random()` creates predictable patterns. It is important to utilize available Web Crypto API wrappers consistently across the entire toolkit when generating unique identifiers to maintain a secure baseline.
+**Prevention:** Always use `crypto.randomUUID()` or Web Crypto API based functions (`Odin.UUID.generate()`) instead of `Math.random()` for any form of unique ID generation or token creation.
 ## 2024-05-24 - DOM XSS via Unsafe innerHTML Injection in Error Handlers
 **Vulnerability:** Cross-Site Scripting (XSS) via `innerHTML` when displaying error messages from third-party libraries (e.g., `qrcode-generator`).
 **Learning:** This codebase frequently uses `innerHTML` for DOM manipulation. When handling exceptions from external libraries, the error message itself might contain reflected user input. Directly injecting this error message into the DOM creates an XSS vulnerability, even if the primary input was perceived as "safe" or just destined for a functional component like a QR code generator.
