@@ -408,18 +408,18 @@
             </h3>
             <div class="space-y-4">
               <div>
-                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Focus (minutes)</label>
-                <input type="number" x-model.number="pomoSettingFocus" min="1" max="120"
+                <label for="pomo-setting-focus" class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Focus (minutes)</label>
+                <input id="pomo-setting-focus" type="number" x-model.number="pomoSettingFocus" min="1" max="120"
                   class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-gold-500 focus:outline-none">
               </div>
               <div>
-                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Short Break (minutes)</label>
-                <input type="number" x-model.number="pomoSettingShort" min="1" max="120"
+                <label for="pomo-setting-short" class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Short Break (minutes)</label>
+                <input id="pomo-setting-short" type="number" x-model.number="pomoSettingShort" min="1" max="120"
                   class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-emerald-400 focus:outline-none">
               </div>
               <div>
-                <label class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Long Break (minutes)</label>
-                <input type="number" x-model.number="pomoSettingLong" min="1" max="120"
+                <label for="pomo-setting-long" class="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">Long Break (minutes)</label>
+                <input id="pomo-setting-long" type="number" x-model.number="pomoSettingLong" min="1" max="120"
                   class="w-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:border-sky-400 focus:outline-none">
               </div>
             </div>
