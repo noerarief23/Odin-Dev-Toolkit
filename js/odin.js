@@ -1015,8 +1015,9 @@ Odin.ModelGen = {
     try {
       parsed = JSON.parse(jsonString);
     } catch (e) {
-      const errMsg = `// Error parsing JSON: ${e.message}`;
-      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: e.message };
+      const safeMsg = Odin.Utils.escapeHtml(e.message);
+      const errMsg = `// Error parsing JSON: ${safeMsg}`;
+      return { csharp: errMsg, go: errMsg, python: errMsg, php: errMsg, error: safeMsg };
     }
 
     // Determine root structure

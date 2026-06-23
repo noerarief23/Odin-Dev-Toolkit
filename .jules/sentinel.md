@@ -19,3 +19,8 @@
 **Vulnerability:** The custom `Odin.Utils.escapeHtml` function failed to sanitize single quotes (`'`), leaving potential vectors for attribute-based Cross-Site Scripting (XSS).
 **Learning:** Custom HTML sanitization functions often overlook single quotes because double quotes are more common for attributes. However, if rendered output ever makes its way into single-quoted HTML attributes, it creates an XSS vulnerability.
 **Prevention:** Always use comprehensive standard library escaping, or if implementing custom escaping, ensure that all critical HTML control characters (`&`, `<`, `>`, `"`, `'`) are correctly converted to their safe entity equivalents (`&#39;` for `'`).
+
+## 2024-05-24 - Unescaped XSS via Exception Messages
+**Vulnerability:** Cross-Site Scripting (XSS) due to rendering unescaped error messages (`e.message`) via Alpine.js `x-html` directives.
+**Learning:** Error messages thrown during data parsing (like `JSON.parse`) can reflect untrusted user input directly into the `e.message` string. Using this error string dynamically in the DOM (e.g. via innerHTML or x-html) creates an XSS vulnerability.
+**Prevention:** Always wrap variables containing error messages with an HTML escaping utility (e.g., `Odin.Utils.escapeHtml`) before inserting them into an HTML-rendering context.
