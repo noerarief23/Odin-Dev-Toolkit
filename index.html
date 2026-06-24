@@ -1891,20 +1891,20 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">gap: <span class="text-gold-400" x-text="fgGap + 'px'"></span></label>
-                <input type="range" min="0" max="40" step="2" x-model="fgGap" class="slider-gold w-full">
+                <label for="fg-flex-gap-input" class="fg-label">gap: <span class="text-gold-400" x-text="fgGap + 'px'"></span></label>
+                <input id="fg-flex-gap-input" type="range" min="0" max="40" step="2" x-model="fgGap" class="slider-gold w-full">
               </div>
             </div>
 
             <!-- Grid Controls -->
             <div x-show="flexGridMode === 'grid'" class="space-y-3">
               <div>
-                <label class="fg-label">grid-template-columns</label>
-                <input type="text" x-model="fgGridCols" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="1fr 1fr 1fr">
+                <label for="fg-grid-cols-input" class="fg-label">grid-template-columns</label>
+                <input id="fg-grid-cols-input" type="text" x-model="fgGridCols" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="1fr 1fr 1fr">
               </div>
               <div>
-                <label class="fg-label">grid-template-rows</label>
-                <input type="text" x-model="fgGridRows" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="auto">
+                <label for="fg-grid-rows-input" class="fg-label">grid-template-rows</label>
+                <input id="fg-grid-rows-input" type="text" x-model="fgGridRows" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="auto">
               </div>
               <div>
                 <label class="fg-label">justify-items</label>
@@ -1925,8 +1925,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">gap: <span class="text-gold-400" x-text="fgGridGap + 'px'"></span></label>
-                <input type="range" min="0" max="40" step="2" x-model="fgGridGap" class="slider-gold w-full">
+                <label for="fg-grid-gap-input" class="fg-label">gap: <span class="text-gold-400" x-text="fgGridGap + 'px'"></span></label>
+                <input id="fg-grid-gap-input" type="range" min="0" max="40" step="2" x-model="fgGridGap" class="slider-gold w-full">
               </div>
             </div>
 
@@ -1934,9 +1934,9 @@ Example:
             <div>
               <label class="fg-label">Items: <span class="text-gold-400" x-text="fgItemCount"></span></label>
               <div class="flex items-center gap-2">
-                <button @click="fgRemoveItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">−</button>
+                <button @click="fgRemoveItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center" aria-label="Remove item">−</button>
                 <div class="flex-1 h-1 rounded bg-slate-300 dark:bg-slate-700"></div>
-                <button @click="fgAddItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center">+</button>
+                <button @click="fgAddItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center" aria-label="Add item">+</button>
               </div>
             </div>
           </div>
