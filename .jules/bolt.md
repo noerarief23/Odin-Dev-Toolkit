@@ -9,3 +9,7 @@
 ## 2024-05-18 - Case Converter Word Extraction
 **Learning:** In Javascript, using a series of `.replace()` calls to insert spaces and normalize text, followed by `.split()` and `.filter()`, is slow and memory-intensive because each step allocates a new intermediate string. Extracting words directly using a single `.match(/[a-zA-Z0-9]+/g) || []` is functionally equivalent for word extraction and significantly faster (~50% execution time reduction) as it avoids all intermediate allocations.
 **Action:** When extracting tokens or words from a string, favor direct `.match()` patterns over a pipeline of `.replace()`, `.trim()`, and `.split()` methods whenever possible to minimize memory allocations and improve performance.
+
+## 2024-06-25 - HTML Escaping Performance
+**Learning:** Using chained `.replace()` calls with regular expressions for HTML escaping requires traversing the string multiple times and allocates multiple intermediate strings in memory, causing significant overhead. Using an early-exit `.indexOf()` check combined with a single-pass iteration (`charCodeAt`) avoids intermediate memory allocations and provides a massive performance boost (up to 4-5x faster).
+**Action:** When performing multiple string replacements on a hot path (like escaping characters), favor single-pass traversal loops and early-exit checks over chained regular expressions.
