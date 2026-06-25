@@ -14,3 +14,7 @@
 ## 2024-06-21 - Input Accessibility Labels
 **Learning:** Found that numerous `<input>` elements (e.g., in Pomodoro settings, sliders) lacked `id` attributes associating them with their preceding `<label>` elements, or lacked `aria-label` entirely.
 **Action:** Always ensure inputs have explicitly associated labels via `id` and `for` attributes, or at least `aria-label`s for screen reader support.
+
+## 2024-07-25 - Explicit Labels for Alpine Inputs
+**Learning:** Found that numerous `<input>` elements (e.g., in Image Shrink and Case Converter) lacked `id` attributes associating them with their preceding `<label>` elements. Also, custom toggle switches (`.toggle-track`) are currently implemented as `<div>` elements inside `<label>`s without actual underlying `<input type="checkbox">` elements, making them inaccessible.
+**Action:** Always ensure inputs have explicitly associated labels via `id` and `for` attributes. Future work should convert `.toggle-track` elements to native checkboxes or use `role="switch"` and `tabindex` for keyboard accessibility.
