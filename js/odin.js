@@ -841,6 +841,8 @@ Odin.PasswordGuard = {
   },
 
   generate(length, options) {
+    length = Math.max(1, Math.min(2048, parseInt(length) || 16));
+
     let pool = '';
     const activeSets = [];
     if (options.lowercase) { pool += this.charsets.lowercase; activeSets.push(this.charsets.lowercase); }
