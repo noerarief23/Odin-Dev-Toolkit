@@ -99,14 +99,48 @@ Odin.Clipboard = {
    Odin.Utils — Shared utility helpers
    ================================================================ */
 Odin.Utils = {
+  /**
+   * High-performance HTML escaping.
+   * Uses an early-exit indexOf check to skip clean strings,
+   * and a single-pass loop to avoid the memory overhead of
+   * multiple regex .replace() allocations.
+   */
   escapeHtml(str) {
     if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    str = String(str);
+
+    if (str.indexOf('&') === -1 && str.indexOf('<') === -1 &&
+        str.indexOf('>') === -1 && str.indexOf('"') === -1 &&
+        str.indexOf("'") === -1) {
+      return str;
+    }
+
+    let out = '';
+    let lastIndex = 0;
+
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      let escape = '';
+
+      if (char === 38) escape = '&amp;';
+      else if (char === 60) escape = '&lt;';
+      else if (char === 62) escape = '&gt;';
+      else if (char === 34) escape = '&quot;';
+      else if (char === 39) escape = '&#39;';
+      else continue;
+
+      if (lastIndex !== i) {
+        out += str.substring(lastIndex, i);
+      }
+      out += escape;
+      lastIndex = i + 1;
+    }
+
+    if (lastIndex !== str.length) {
+      out += str.substring(lastIndex);
+    }
+
+    return out;
   },
 
   /**
