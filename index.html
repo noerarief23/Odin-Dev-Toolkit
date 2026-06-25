@@ -997,10 +997,11 @@
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <!-- Input -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
+            <label for="json-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="jsonGutter" class="json-gutter" x-text="getJsonLineNumbers()"></pre>
               <textarea
+                id="json-input"
                 x-ref="jsonInput"
                 x-model="jsonInput"
                 @input="syncJsonLineNumbers()"
@@ -1089,10 +1090,11 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
+            <label for="xml-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
             <div class="json-editor h-[28rem]">
               <pre x-ref="xmlGutter" class="json-gutter" x-text="getXmlLineNumbers()"></pre>
               <textarea
+                id="xml-input"
                 x-ref="xmlInput"
                 x-model="xmlInput"
                 @input="syncXmlLineNumbers()"
@@ -1168,8 +1170,9 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input A</label>
+            <label for="diff-left-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input A</label>
             <textarea
+              id="diff-left-input"
               x-model="diffLeftInput"
               @input.debounce.300ms="runDiffCheck()"
               class="textarea-valhalla code-input h-[18rem]"
@@ -1179,8 +1182,9 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input B</label>
+            <label for="diff-right-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input B</label>
             <textarea
+              id="diff-right-input"
               x-model="diffRightInput"
               @input.debounce.300ms="runDiffCheck()"
               class="textarea-valhalla code-input h-[18rem]"
