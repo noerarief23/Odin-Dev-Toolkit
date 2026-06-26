@@ -1690,9 +1690,14 @@ Odin.JWT = {
     let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4) b64 += '=';
     try {
-      return decodeURIComponent(
-        atob(b64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-      );
+      // ⚡ Bolt: Use Uint8Array and TextDecoder instead of mapping char-by-char with decodeURIComponent
+      // to avoid intermediate memory allocations and significantly speed up decoding.
+      const raw = atob(b64);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
     } catch (_) {
       return atob(b64);
     }
