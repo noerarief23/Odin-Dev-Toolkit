@@ -426,6 +426,11 @@ input[type="range"].slider-gold::-moz-range-thumb {
   transform: translateX(20px);
 }
 
+input[type="checkbox"]:focus-visible + .toggle-track {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
+}
+
 /* ---- Entropy Bar ---- */
 .entropy-bar-bg {
   width: 100%;
