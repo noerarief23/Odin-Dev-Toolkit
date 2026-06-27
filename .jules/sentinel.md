@@ -24,3 +24,8 @@
 **Vulnerability:** Cross-Site Scripting (XSS) due to rendering unescaped error messages (`e.message`) via Alpine.js `x-html` directives.
 **Learning:** Error messages thrown during data parsing (like `JSON.parse`) can reflect untrusted user input directly into the `e.message` string. Using this error string dynamically in the DOM (e.g. via innerHTML or x-html) creates an XSS vulnerability.
 **Prevention:** Always wrap variables containing error messages with an HTML escaping utility (e.g., `Odin.Utils.escapeHtml`) before inserting them into an HTML-rendering context.
+
+## 2024-05-24 - Prevent Persistent Client-Side DoS from Unbounded Numeric Storage
+**Vulnerability:** Unbounded numeric parameters (`pwLength`, `qrSize`) were retrieved from `sessionStorage` and passed directly into memory-allocating functions (like `new Uint32Array(length)` or Canvas sizing). A malicious or malformed large value in storage could cause a persistent client-side Denial of Service (DoS) by consistently crashing or freezing the app on load for that user.
+**Learning:** Even entirely local, client-side tools that retrieve configurations from Web Storage must treat those stored values as untrusted user input, especially when used for memory allocation or expensive iterations.
+**Prevention:** Always validate and tightly bound numeric inputs loaded from storage (e.g., using `Math.max(MIN, Math.min(MAX, val))`) before applying them to application state or passing them to generation logic.

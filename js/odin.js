@@ -2936,9 +2936,10 @@ function odinApp() {
 
     // ---- QR Code Methods ----
     generateQR() {
+      this.qrSize = Math.max(100, Math.min(1000, parseInt(this.qrSize) || 256));
       Odin.Storage.set('qr_text', this.qrText);
       Odin.Storage.set('qr_size', this.qrSize);
-      Odin.QRCode.generate(this.qrText, parseInt(this.qrSize), 'qr-preview');
+      Odin.QRCode.generate(this.qrText, this.qrSize, 'qr-preview');
     },
 
     downloadQR() {
@@ -3132,7 +3133,8 @@ function odinApp() {
 
     // ---- Password Guard Methods ----
     generatePassword() {
-      this.pwResult = Odin.PasswordGuard.generate(parseInt(this.pwLength), {
+      this.pwLength = Math.max(4, Math.min(128, parseInt(this.pwLength) || 16));
+      this.pwResult = Odin.PasswordGuard.generate(this.pwLength, {
         lowercase: this.pwLowercase,
         uppercase: this.pwUppercase,
         numbers: this.pwNumbers,
