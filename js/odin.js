@@ -1690,9 +1690,13 @@ Odin.JWT = {
     let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4) b64 += '=';
     try {
-      return decodeURIComponent(
-        atob(b64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-      );
+      // ⚡ Bolt: Use Uint8Array and TextDecoder instead of mapping each char
+      // to a hex string and using decodeURIComponent. This avoids massive
+      // intermediate memory allocations and significantly improves main-thread performance.
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     } catch (_) {
       return atob(b64);
     }
