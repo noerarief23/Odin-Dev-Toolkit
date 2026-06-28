@@ -1276,7 +1276,8 @@
             <!-- Character Toggles -->
             <div class="grid grid-cols-2 gap-3">
               <!-- Lowercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwLowercase = !pwLowercase; generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" class="sr-only" x-model="pwLowercase" @change="generatePassword()">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Lowercase</div>
                   <div class="text-xs text-slate-500 font-mono">a-z</div>
@@ -1287,7 +1288,8 @@
               </label>
 
               <!-- Uppercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwUppercase = !pwUppercase; generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" class="sr-only" x-model="pwUppercase" @change="generatePassword()">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Uppercase</div>
                   <div class="text-xs text-slate-500 font-mono">A-Z</div>
@@ -1298,7 +1300,8 @@
               </label>
 
               <!-- Numbers -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwNumbers = !pwNumbers; generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" class="sr-only" x-model="pwNumbers" @change="generatePassword()">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Numbers</div>
                   <div class="text-xs text-slate-500 font-mono">0-9</div>
@@ -1309,7 +1312,8 @@
               </label>
 
               <!-- Symbols -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" @click.prevent="pwSymbols = !pwSymbols; generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" class="sr-only" x-model="pwSymbols" @change="generatePassword()">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Symbols</div>
                   <div class="text-xs text-slate-500 font-mono">!@#$%...</div>

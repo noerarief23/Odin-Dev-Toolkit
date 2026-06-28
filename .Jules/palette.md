@@ -14,3 +14,6 @@
 ## 2024-06-21 - Input Accessibility Labels
 **Learning:** Found that numerous `<input>` elements (e.g., in Pomodoro settings, sliders) lacked `id` attributes associating them with their preceding `<label>` elements, or lacked `aria-label` entirely.
 **Action:** Always ensure inputs have explicitly associated labels via `id` and `for` attributes, or at least `aria-label`s for screen reader support.
+## 2026-06-28 - Keyboard Accessible Toggle Switches
+**Learning:** Custom toggle switches built with a `<label>` containing a `<div>` track and using Alpine `@click.prevent` break keyboard navigation because they lack a focusable, semantic input element.
+**Action:** When building custom toggle switches in Alpine.js, embed a native visually hidden `<input type="checkbox" class="sr-only">`, bind state directly to it with `x-model`, and use `input[type="checkbox"]:focus-visible ~ .toggle-track` to maintain native keyboard accessibility and screen reader support.
