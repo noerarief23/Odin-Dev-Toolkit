@@ -13,3 +13,7 @@
 ## 2024-06-25 - HTML Escaping Performance
 **Learning:** Using chained `.replace()` calls with regular expressions for HTML escaping requires traversing the string multiple times and allocates multiple intermediate strings in memory, causing significant overhead. Using an early-exit `.indexOf()` check combined with a single-pass iteration (`charCodeAt`) avoids intermediate memory allocations and provides a massive performance boost (up to 4-5x faster).
 **Action:** When performing multiple string replacements on a hot path (like escaping characters), favor single-pass traversal loops and early-exit checks over chained regular expressions.
+
+## 2024-05-18 - JWT Base64 decoding Performance
+**Learning:** Using `decodeURIComponent` and an array mapping over every character in a `split('')` call to parse Base64 into UTF-8 strings is a major bottleneck because it creates a significant amount of intermediate arrays, strings, and causes a large amount of GC pressure. Converting the Base64 to a `Uint8Array` directly and decoding with `new TextDecoder('utf-8', { fatal: true })` bypasses all these issues and uses performant underlying mechanisms without changing error semantics.
+**Action:** When parsing a Base64-encoded JWT payload or header, avoid array mapping with `%XX` replacement. Use the more modern, faster `TextDecoder` and a typed array instance instead.
