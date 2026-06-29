@@ -17,3 +17,6 @@
 ## 2024-07-26 - JWT Base64 Decoding Performance
 **Learning:** In Javascript, mapping each character of a large Base64 decoded string to a URI component hex string via `.split('').map().join('')` before calling `decodeURIComponent` causes massive intermediate memory allocations and blocks the main thread. Using a `Uint8Array` initialized from `atob` and directly decoding it using `new TextDecoder().decode()` completely bypasses these intermediate allocations and provides a >20x speedup for large JWT payloads.
 **Action:** When decoding large Base64-encoded strings (especially JSON payloads like in JWTs), construct a `Uint8Array` from the binary string and decode it with `TextDecoder` rather than concatenating escaped characters for `decodeURIComponent`.
+## 2025-01-20 - JWT Base64 Decoding Fallback Edge Case
+**Learning:** When optimizing Base64 decoding in JWT payloads by swapping `decodeURIComponent` for `new TextDecoder()`, you must pass the `{ fatal: true }` option. Otherwise, `TextDecoder` will silently replace invalid characters instead of throwing an error, breaking the fallback behavior intended for invalid inputs.
+**Action:** Always verify error-throwing behavior when replacing built-in parsers with `TextDecoder`. Use `{ fatal: true }` to maintain parity with `decodeURIComponent`'s URIError.
