@@ -3294,6 +3294,8 @@ function odinApp() {
         img.onload = () => {
           this.imgWidth = img.naturalWidth;
           this.imgHeight = img.naturalHeight;
+          // Validate and bound inputs to prevent client-side DoS risks
+          this.imgScale = Math.max(1, Math.min(100, this.imgScale));
           this.imgNewWidth = Math.round(img.naturalWidth * this.imgScale / 100);
           this.imgNewHeight = Math.round(img.naturalHeight * this.imgScale / 100);
         };
@@ -3303,6 +3305,8 @@ function odinApp() {
     },
 
     imgUpdateDimensions() {
+      // Validate and bound inputs to prevent client-side DoS risks
+      this.imgScale = Math.max(1, Math.min(100, this.imgScale));
       this.imgNewWidth = Math.round(this.imgWidth * this.imgScale / 100);
       this.imgNewHeight = Math.round(this.imgHeight * this.imgScale / 100);
     },
@@ -3311,6 +3315,10 @@ function odinApp() {
       if (!this.imgFile) return;
       this.imgProcessing = true;
       try {
+        // Validate and bound inputs to prevent client-side DoS risks
+        this.imgScale = Math.max(1, Math.min(100, this.imgScale));
+        this.imgQuality = Math.max(0.1, Math.min(1.0, this.imgQuality));
+
         const result = await Odin.ImageShrink.processImage(
           this.imgFile, this.imgScale, this.imgFormat, this.imgQuality
         );
