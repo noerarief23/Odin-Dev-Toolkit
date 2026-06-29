@@ -1280,48 +1280,48 @@
             <!-- Character Toggles -->
             <div class="grid grid-cols-2 gap-3">
               <!-- Lowercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwLowercase" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Lowercase</div>
                   <div class="text-xs text-slate-500 font-mono">a-z</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwLowercase" @change="generatePassword()">
                 <div class="toggle-track" :class="pwLowercase ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Uppercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwUppercase" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Uppercase</div>
                   <div class="text-xs text-slate-500 font-mono">A-Z</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwUppercase" @change="generatePassword()">
                 <div class="toggle-track" :class="pwUppercase ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Numbers -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwNumbers" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Numbers</div>
                   <div class="text-xs text-slate-500 font-mono">0-9</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwNumbers" @change="generatePassword()">
                 <div class="toggle-track" :class="pwNumbers ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Symbols -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwSymbols" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Symbols</div>
                   <div class="text-xs text-slate-500 font-mono">!@#$%...</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwSymbols" @change="generatePassword()">
                 <div class="toggle-track" :class="pwSymbols ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>

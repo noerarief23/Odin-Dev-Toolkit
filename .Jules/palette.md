@@ -14,6 +14,9 @@
 ## 2024-06-21 - Input Accessibility Labels
 **Learning:** Found that numerous `<input>` elements (e.g., in Pomodoro settings, sliders) lacked `id` attributes associating them with their preceding `<label>` elements, or lacked `aria-label` entirely.
 **Action:** Always ensure inputs have explicitly associated labels via `id` and `for` attributes, or at least `aria-label`s for screen reader support.
+## 2024-06-27 - Keyboard Accessible Custom Toggles
+**Learning:** Found that custom toggle switches using `div` inside `label` and `@click.prevent` lose keyboard focusability since they have no underlying native input element. Adding a visually hidden `<input type="checkbox" class="sr-only">` restores natural tab order.
+**Action:** Always include a native hidden checkbox and bind it directly with `x-model` when building custom toggle switches in Alpine.js, and use `:focus-visible + .toggle-track` in CSS to provide keyboard focus styling.
 ## 2026-06-27 - Keyboard Accessibility for Custom Toggles
 **Learning:** Custom UI controls built with purely visual elements (like styled `<div>` elements wrapped in `<label>`) inherently fail WCAG keyboard accessibility standards, as they cannot receive focus or be activated via standard keyboard interactions (Spacebar/Enter).
 **Action:** When creating custom toggles or checkboxes, always include a visually hidden (e.g., `.sr-only`) native `<input type="checkbox">` element. Bind state management directly to this input's `change` event (or via framework bindings like Alpine's `x-model`), avoiding `click.prevent` on the parent label. Use CSS sibling combinators (e.g., `input[type="checkbox"]:focus-visible ~ .custom-ui`) to style the visible components when the hidden input receives keyboard focus, ensuring sighted keyboard users maintain context.
