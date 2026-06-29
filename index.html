@@ -1526,8 +1526,9 @@ Example:
 
         <!-- JWT Input -->
         <div class="mb-6">
-          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste JWT Token</label>
+          <label for="jwt-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste JWT Token</label>
           <textarea
+            id="jwt-input"
             x-model="jwtInput"
             @input.debounce.300ms="decodeJWT()"
             class="textarea-valhalla w-full h-28 font-mono text-sm"
@@ -1871,8 +1872,8 @@ Example:
             <!-- Flexbox Controls -->
             <div x-show="flexGridMode === 'flex'" class="space-y-3">
               <div>
-                <label class="fg-label">flex-direction</label>
-                <select x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
+                <label for="fg-flex-direction" class="fg-label">flex-direction</label>
+                <select id="fg-flex-direction" x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
                   <option value="row">row</option>
                   <option value="row-reverse">row-reverse</option>
                   <option value="column">column</option>
@@ -2164,8 +2165,9 @@ Example:
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="urlMode === 'encode' ? 'Plain URL / Text' : 'Encoded URL'"></label>
+            <label for="url-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="urlMode === 'encode' ? 'Plain URL / Text' : 'Encoded URL'"></label>
             <textarea
+              id="url-input"
               x-model="urlInput"
               @input.debounce.300ms="urlConvert()"
               class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -2176,7 +2178,7 @@ Example:
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs text-slate-500 uppercase tracking-wider" x-text="urlMode === 'encode' ? 'Encoded Output' : 'Decoded Output'"></label>
+              <label for="url-output" class="block text-xs text-slate-500 uppercase tracking-wider" x-text="urlMode === 'encode' ? 'Encoded Output' : 'Decoded Output'"></label>
               <button
                 @click="urlCopyOutput()"
                 x-show="urlOutput"
@@ -2186,6 +2188,7 @@ Example:
               </button>
             </div>
             <textarea
+              id="url-output"
               x-model="urlOutput"
               readonly
               class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
