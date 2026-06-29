@@ -28,3 +28,8 @@
 **Vulnerability:** Client-Side Denial of Service (DoS) due to unbounded array allocation in `Odin.PasswordGuard.generate(length, options)`.
 **Learning:** If an input used for sizing memory allocations (e.g., `new Uint32Array(length)`) is read directly from unvalidated sources (like `sessionStorage` or URL parameters), an attacker or user error can trigger massive memory allocation, hanging or crashing the browser tab.
 **Prevention:** Always validate and tightly bound numeric inputs used for iterations or memory allocations (e.g., using `Math.max(MIN, Math.min(MAX, parseInt(val)))`).
+
+## 2024-05-24 - Prevent Persistent Client-Side DoS from Unbounded Numeric Storage
+**Vulnerability:** Unbounded numeric parameters (`pwLength`, `qrSize`) were retrieved from `sessionStorage` and passed directly into memory-allocating functions (like `new Uint32Array(length)` or Canvas sizing). A malicious or malformed large value in storage could cause a persistent client-side Denial of Service (DoS) by consistently crashing or freezing the app on load for that user.
+**Learning:** Even entirely local, client-side tools that retrieve configurations from Web Storage must treat those stored values as untrusted user input, especially when used for memory allocation or expensive iterations.
+**Prevention:** Always validate and tightly bound numeric inputs loaded from storage (e.g., using `Math.max(MIN, Math.min(MAX, val))`) before applying them to application state or passing them to generation logic.
