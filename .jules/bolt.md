@@ -14,6 +14,9 @@
 **Learning:** Using chained `.replace()` calls with regular expressions for HTML escaping requires traversing the string multiple times and allocates multiple intermediate strings in memory, causing significant overhead. Using an early-exit `.indexOf()` check combined with a single-pass iteration (`charCodeAt`) avoids intermediate memory allocations and provides a massive performance boost (up to 4-5x faster).
 **Action:** When performing multiple string replacements on a hot path (like escaping characters), favor single-pass traversal loops and early-exit checks over chained regular expressions.
 
+## 2024-06-25 - Array Buffer Encoding Fix
+**Learning:** We previously learned to use `String.fromCharCode.apply` with chunks for encoding `Uint8Array` to a binary string, as documented in memory. When implementing this, using `.slice()` is generally safer and more compatible than `.subarray()`, because `.slice()` works on both standard JavaScript arrays and TypedArrays, whereas `.subarray()` is exclusive to TypedArrays and `.byteLength` is exclusive to ArrayBuffers/TypedArrays.
+**Action:** When applying the chunking optimization for arrays, favor `bytes.length` and `bytes.slice()` to ensure compatibility if a regular Array of numbers is passed instead of a strict TypedArray.
 ## 2025-01-20 - JWT Base64 Decoding Fallback Edge Case
 **Learning:** When optimizing Base64 decoding in JWT payloads by swapping `decodeURIComponent` for `new TextDecoder()`, you must pass the `{ fatal: true }` option. Otherwise, `TextDecoder` will silently replace invalid characters instead of throwing an error, breaking the fallback behavior intended for invalid inputs.
 **Action:** Always verify error-throwing behavior when replacing built-in parsers with `TextDecoder`. Use `{ fatal: true }` to maintain parity with `decodeURIComponent`'s URIError.

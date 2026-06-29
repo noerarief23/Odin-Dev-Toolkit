@@ -2189,8 +2189,12 @@ Odin.Hash = {
     
     if (format === 'base64') {
       let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
+      // ⚡ Bolt: Use chunking with String.fromCharCode.apply to drastically speed up
+      // conversion of large buffers and prevent Maximum Call Stack Size Exceeded errors.
+      const len = bytes.length;
+      const chunkSize = 0x8000; // 32KB chunks
+      for (let i = 0; i < len; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.slice(i, i + chunkSize));
       }
       return btoa(binary);
     }
