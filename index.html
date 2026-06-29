@@ -1668,10 +1668,11 @@ Example:
 
             <!-- Scale Slider -->
             <div>
-              <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+              <label for="img-scale-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
                 Scale: <span class="text-gold-400 font-semibold" x-text="imgScale + '%'"></span>
               </label>
               <input
+                id="img-scale-input"
                 type="range" min="1" max="100" step="1"
                 x-model.number="imgScale"
                 @input="imgUpdateDimensions()"
@@ -1697,10 +1698,11 @@ Example:
                 </div>
               </div>
               <div x-show="imgFormat === 'image/webp'" class="flex-1 min-w-[180px]">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+                <label for="img-quality-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
                   Quality: <span class="text-gold-400 font-semibold" x-text="Math.round(imgQuality * 100) + '%'"></span>
                 </label>
                 <input
+                  id="img-quality-input"
                   type="range" min="0.1" max="1" step="0.05"
                   x-model.number="imgQuality"
                   class="slider-gold w-full"
@@ -1796,8 +1798,9 @@ Example:
 
         <!-- Input -->
         <div class="mb-4">
-          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
+          <label for="case-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
           <textarea
+            id="case-input"
             x-model="caseInput"
             @input.debounce.200ms="convertCase()"
             class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -1809,7 +1812,7 @@ Example:
         <!-- Output -->
         <div class="mb-4">
           <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider">Output</label>
+            <label for="case-output" class="block text-xs text-slate-500 uppercase tracking-wider">Output</label>
             <button
               @click="copyCaseOutput()"
               x-show="caseOutput"
@@ -1819,6 +1822,7 @@ Example:
             </button>
           </div>
           <textarea
+            id="case-output"
             x-model="caseOutput"
             readonly
             class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
