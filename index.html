@@ -1871,8 +1871,8 @@ Example:
             <!-- Flexbox Controls -->
             <div x-show="flexGridMode === 'flex'" class="space-y-3">
               <div>
-                <label class="fg-label">flex-direction</label>
-                <select x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
+                <label for="fg-flex-direction" class="fg-label">flex-direction</label>
+                <select id="fg-flex-direction" x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
                   <option value="row">row</option>
                   <option value="row-reverse">row-reverse</option>
                   <option value="column">column</option>
@@ -1880,8 +1880,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">justify-content</label>
-                <select x-model="fgJustifyContent" class="input-valhalla w-full text-sm">
+                <label for="fg-justify-content" class="fg-label">justify-content</label>
+                <select id="fg-justify-content" x-model="fgJustifyContent" class="input-valhalla w-full text-sm">
                   <option value="flex-start">flex-start</option>
                   <option value="flex-end">flex-end</option>
                   <option value="center">center</option>
@@ -1891,8 +1891,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">align-items</label>
-                <select x-model="fgAlignItems" class="input-valhalla w-full text-sm">
+                <label for="fg-align-items" class="fg-label">align-items</label>
+                <select id="fg-align-items" x-model="fgAlignItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="flex-start">flex-start</option>
                   <option value="flex-end">flex-end</option>
@@ -1901,8 +1901,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">flex-wrap</label>
-                <select x-model="fgFlexWrap" class="input-valhalla w-full text-sm">
+                <label for="fg-flex-wrap" class="fg-label">flex-wrap</label>
+                <select id="fg-flex-wrap" x-model="fgFlexWrap" class="input-valhalla w-full text-sm">
                   <option value="nowrap">nowrap</option>
                   <option value="wrap">wrap</option>
                   <option value="wrap-reverse">wrap-reverse</option>
@@ -1925,8 +1925,8 @@ Example:
                 <input id="fg-grid-rows-input" type="text" x-model="fgGridRows" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="auto">
               </div>
               <div>
-                <label class="fg-label">justify-items</label>
-                <select x-model="fgGridJustifyItems" class="input-valhalla w-full text-sm">
+                <label for="fg-grid-justify-items" class="fg-label">justify-items</label>
+                <select id="fg-grid-justify-items" x-model="fgGridJustifyItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="start">start</option>
                   <option value="end">end</option>
@@ -1934,8 +1934,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">align-items</label>
-                <select x-model="fgGridAlignItems" class="input-valhalla w-full text-sm">
+                <label for="fg-grid-align-items" class="fg-label">align-items</label>
+                <select id="fg-grid-align-items" x-model="fgGridAlignItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="start">start</option>
                   <option value="end">end</option>
