@@ -20,3 +20,6 @@
 ## 2025-01-20 - JWT Base64 Decoding Fallback Edge Case
 **Learning:** When optimizing Base64 decoding in JWT payloads by swapping `decodeURIComponent` for `new TextDecoder()`, you must pass the `{ fatal: true }` option. Otherwise, `TextDecoder` will silently replace invalid characters instead of throwing an error, breaking the fallback behavior intended for invalid inputs.
 **Action:** Always verify error-throwing behavior when replacing built-in parsers with `TextDecoder`. Use `{ fatal: true }` to maintain parity with `decodeURIComponent`'s URIError.
+## 2024-05-24 - Case Conversion Token Extraction Optimization
+**Learning:** Using multiple intermediate `.replace()` calls to insert spaces before splitting/matching tokens creates large intermediate string allocations that heavily block the main thread and impact performance.
+**Action:** Favor direct `.match()` patterns like `/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g` to extract tokens in a single pass without intermediate allocations.
