@@ -27,3 +27,7 @@
 ## 2026-06-28 - Keyboard Accessible Toggle Switches
 **Learning:** Custom toggle switches built with a `<label>` containing a `<div>` track and using Alpine `@click.prevent` break keyboard navigation because they lack a focusable, semantic input element.
 **Action:** When building custom toggle switches in Alpine.js, embed a native visually hidden `<input type="checkbox" class="sr-only">`, bind state directly to it with `x-model`, and use `input[type="checkbox"]:focus-visible ~ .toggle-track` to maintain native keyboard accessibility and screen reader support.
+
+## 2024-07-28 - Explicit Form Input Bindings for Alpine Components
+**Learning:** Found multiple instances where form inputs (`<textarea>`, `<select>`) within complex Alpine.js tools (like JWT Explorer, URL Encoder, Flex/Grid Lab) lacked explicit `id` bindings to their corresponding `<label>` `for` attributes. This breaks click-to-focus and negatively impacts screen reader context.
+**Action:** Always verify that every `<label>` has a `for` attribute and the corresponding input has a matching `id` attribute, especially when adding new tools or settings panels.
