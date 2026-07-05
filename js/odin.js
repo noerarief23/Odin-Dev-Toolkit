@@ -99,6 +99,27 @@ Odin.Clipboard = {
    Odin.Utils — Shared utility helpers
    ================================================================ */
 Odin.Utils = {
+  // ⚡ Bolt: Precomputed lookup map for extremely fast byte-to-hex conversion
+  _hexMap: (function() {
+    const map = [];
+    for (let i = 0; i < 256; i++) {
+      map[i] = (i < 16 ? '0' : '') + i.toString(16);
+    }
+    return map;
+  })(),
+
+  /**
+   * High-performance byte array to hex string converter.
+   * Avoids heavy Array.from closures and intermediate array allocations.
+   */
+  bytesToHex(bytes) {
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+      hex += this._hexMap[bytes[i]];
+    }
+    return hex;
+  },
+
   /**
    * High-performance HTML escaping.
    * Uses an early-exit indexOf check to skip clean strings,
@@ -1719,7 +1740,10 @@ Odin.JWT = {
     catch (_) { throw new Error('Invalid JWT payload: not valid Base64/JSON'); }
 
     const sigBytes = atob(parts[2].replace(/-/g, '+').replace(/_/g, '/'));
-    const sigHex = Array.from(sigBytes, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+    let sigHex = '';
+    for (let i = 0; i < sigBytes.length; i++) {
+      sigHex += Odin.Utils._hexMap[sigBytes.charCodeAt(i)];
+    }
 
     return { header, payload, signature: sigHex };
   },
@@ -1906,7 +1930,10 @@ Odin.Base64 = {
   detectMime(b64) {
     try {
       const raw = atob(b64.substring(0, 16));
-      const hex = Array.from(raw, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      let hex = '';
+      for (let i = 0; i < raw.length; i++) {
+        hex += Odin.Utils._hexMap[raw.charCodeAt(i)];
+      }
       if (hex.startsWith('89504e47')) return 'image/png';
       if (hex.startsWith('ffd8ff'))   return 'image/jpeg';
       if (hex.startsWith('47494638')) return 'image/gif';
@@ -2197,7 +2224,7 @@ Odin.Hash = {
     }
     
     // Default: hex
-    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    return Odin.Utils.bytesToHex(bytes);
   }
 };
 
@@ -2220,7 +2247,7 @@ Odin.UUID = {
     bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
     bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10
     
-    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    const hex = Odin.Utils.bytesToHex(bytes);
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
   },
 

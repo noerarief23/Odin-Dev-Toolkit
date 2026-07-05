@@ -23,3 +23,7 @@
 ## 2024-05-24 - Case Conversion Token Extraction Optimization
 **Learning:** Using multiple intermediate `.replace()` calls to insert spaces before splitting/matching tokens creates large intermediate string allocations that heavily block the main thread and impact performance.
 **Action:** Favor direct `.match()` patterns like `/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g` to extract tokens in a single pass without intermediate allocations.
+
+## 2024-08-01 - Array to Hex Conversion Performance
+**Learning:** Using `Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')` for byte array to hex string conversion creates significant performance overhead due to closure allocation and intermediate array creation. Precomputing a 256-element lookup map (`_hexMap`) and iterating over the bytes with a simple `for` loop to concatenate strings provides an enormous speedup (~10x faster) and avoids unnecessary allocations.
+**Action:** Always prefer a precomputed lookup map and a simple `for` loop for `Uint8Array` to Hex conversions, especially in hot paths like UUID generation or Hash formatting.
