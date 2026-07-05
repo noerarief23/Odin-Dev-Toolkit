@@ -21,7 +21,7 @@
 | 7 | **Password Guard** | Secure generation with entropy meter (uses `crypto.getRandomValues`) |
 | 8 | **Model Generator** | JSON → C#, Go, Python & PHP classes/structs/dataclasses |
 | 9 | **JWT Explorer** | Local-only JWT decoder with color-coded Header, Payload & Signature panels |
-| 10 | **Image Shrink** | Resize & compress images via Canvas API, export as WebP or PNG — no uploads |
+| 10 | **Image Shrink** | Resize & compress images via Canvas API, export as WebP, JPEG, or PNG — no uploads |
 | 11 | **Case Converter** | Transform text to UPPERCASE, lowercase, camelCase, PascalCase, snake_case, kebab-case & Title Case |
 | 12 | **Flex/Grid Lab** | Interactive visual playground for CSS Flexbox & Grid with live preview & code generation |
 | 13 | **Base64 Codec** | Encode/decode text & files to Base64 with MIME type detection |
@@ -33,7 +33,7 @@
 
 ## Tech Stack
 
-- **HTML5** + **Tailwind CSS** (Play CDN)
+- **HTML5** + **Tailwind CSS** (Local Standalone)
 - **Alpine.js** for reactive state management
 - **Prism.js** for syntax highlighting (JSON, XML/Markup, C#, Go, Python, PHP)
 - **Lucide Icons**

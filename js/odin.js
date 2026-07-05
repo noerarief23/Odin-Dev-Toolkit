@@ -1,8 +1,8 @@
 /* ================================================================
    Odin Dev Toolkit — Core Logic
-   13 tools: Pomodoro, Regex, QR Code, JSON/XML Formatter,
+   18 tools: Pomodoro, Regex, QR Code, JSON/XML Formatter,
    Diff Checker, Password Guard, Model Generator, JWT Explorer,
-   Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec
+   Image Shrink, Case Converter, Flex/Grid Lab, Base64 Codec, URL Encoder, Timestamp Converter, UUID Generator, Hash Generator, YAML Converter
    ================================================================ */
 
 // ---- Namespace ----
