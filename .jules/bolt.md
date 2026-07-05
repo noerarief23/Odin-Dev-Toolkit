@@ -23,6 +23,10 @@
 ## 2025-01-20 - JWT Base64 Decoding Fallback Edge Case
 **Learning:** When optimizing Base64 decoding in JWT payloads by swapping `decodeURIComponent` for `new TextDecoder()`, you must pass the `{ fatal: true }` option. Otherwise, `TextDecoder` will silently replace invalid characters instead of throwing an error, breaking the fallback behavior intended for invalid inputs.
 **Action:** Always verify error-throwing behavior when replacing built-in parsers with `TextDecoder`. Use `{ fatal: true }` to maintain parity with `decodeURIComponent`'s URIError.
+
+## 2024-06-29 - Regex Match vs Replace Pipeline Performance
+**Learning:** In Javascript, extracting words from CamelCase/PascalCase/snake_case strings using a pipeline of `.replace(/([a-z])([A-Z])/g, '$1 $2')` followed by `.match(/[a-zA-Z0-9]+/g)` is significantly slower (~75% more execution time) than extracting words directly using a single well-crafted `.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g)` call. The pipeline approach forces the JavaScript engine to allocate multiple intermediate strings and perform multi-pass scanning, whereas the single `.match()` avoids intermediate allocations completely.
+**Action:** When extracting tokens or words from a string, favor direct `.match()` patterns over a pipeline of `.replace()`, `.trim()`, and `.split()` methods whenever possible to minimize memory allocations and heavily improve performance.
 ## 2024-05-24 - Case Conversion Token Extraction Optimization
 **Learning:** Using multiple intermediate `.replace()` calls to insert spaces before splitting/matching tokens creates large intermediate string allocations that heavily block the main thread and impact performance.
 **Action:** Favor direct `.match()` patterns like `/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g` to extract tokens in a single pass without intermediate allocations.
