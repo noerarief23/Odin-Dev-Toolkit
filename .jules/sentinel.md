@@ -24,6 +24,10 @@
 **Vulnerability:** Cross-Site Scripting (XSS) due to rendering unescaped error messages (`e.message`) via Alpine.js `x-html` directives.
 **Learning:** Error messages thrown during data parsing (like `JSON.parse`) can reflect untrusted user input directly into the `e.message` string. Using this error string dynamically in the DOM (e.g. via innerHTML or x-html) creates an XSS vulnerability.
 **Prevention:** Always wrap variables containing error messages with an HTML escaping utility (e.g., `Odin.Utils.escapeHtml`) before inserting them into an HTML-rendering context.
+## $(date +%Y-%m-%d) - Unbounded Array and Canvas Allocation
+**Vulnerability:** Client-Side Denial of Service (DoS) due to unbounded Web Storage parameters parsed into numeric values (`pwLength` and `qrSize`).
+**Learning:** Even in entirely local, client-side PWAs, values retrieved from Web Storage (like `sessionStorage` or `localStorage`) must be treated as untrusted user input. If these values are used to dynamically size arrays (e.g., `new Uint32Array(length)`) or DOM elements (e.g., Canvas dimensions), an attacker who can manipulate local storage can crash the application or exhaust system memory.
+**Prevention:** Always validate and tightly bound these values (e.g., via `Math.max(MIN, Math.min(MAX, val))`) before using them in operations prone to Denial of Service, such as memory allocation or Canvas sizing.
 ## $(date +%Y-%m-%d) - Unbounded Array Allocation Client-Side DoS
 **Vulnerability:** Client-Side Denial of Service (DoS) due to unbounded array allocation in `Odin.PasswordGuard.generate(length, options)`.
 **Learning:** If an input used for sizing memory allocations (e.g., `new Uint32Array(length)`) is read directly from unvalidated sources (like `sessionStorage` or URL parameters), an attacker or user error can trigger massive memory allocation, hanging or crashing the browser tab.
@@ -33,3 +37,8 @@
 **Vulnerability:** Unbounded numeric parameters (`pwLength`, `qrSize`) were retrieved from `sessionStorage` and passed directly into memory-allocating functions (like `new Uint32Array(length)` or Canvas sizing). A malicious or malformed large value in storage could cause a persistent client-side Denial of Service (DoS) by consistently crashing or freezing the app on load for that user.
 **Learning:** Even entirely local, client-side tools that retrieve configurations from Web Storage must treat those stored values as untrusted user input, especially when used for memory allocation or expensive iterations.
 **Prevention:** Always validate and tightly bound numeric inputs loaded from storage (e.g., using `Math.max(MIN, Math.min(MAX, val))`) before applying them to application state or passing them to generation logic.
+
+## 2024-10-24 - [Fix Canvas API DoS via Unbounded Inputs]
+**Vulnerability:** Unbounded numeric inputs (`imgScale` and `imgQuality`) in the Image Shrink tool allowed users to set extremely large canvas sizes, triggering massive memory allocations in the browser and causing client-side Denial of Service (DoS) / tab crashes.
+**Learning:** Client-side features using HTML5 Canvas or generating objects dynamically based on user input for iterations or dimensions are susceptible to client-side DoS if those inputs are not strictly validated and bounded. Memory allocations via Canvas size configuration can quickly overwhelm browser limits.
+**Prevention:** Always validate and bound inputs derived from untrusted user actions using `Math.max(MIN, Math.min(MAX, value))` or similar clamping functions, especially before using them in operations prone to memory allocation, such as Array construction, loop iterations, or Canvas sizing.
