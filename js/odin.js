@@ -99,6 +99,27 @@ Odin.Clipboard = {
    Odin.Utils — Shared utility helpers
    ================================================================ */
 Odin.Utils = {
+  // Precomputed hex map for fast byte-to-hex string conversion
+  _hexMap: Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, '0')),
+
+  /**
+   * Fast byte array/string to hex string conversion.
+   * Avoids the heavy closure allocation and array creation overhead of Array.from(bytes, ...).join('')
+   */
+  bytesToHex(bytes) {
+    let hex = '';
+    if (typeof bytes === 'string') {
+      for (let i = 0; i < bytes.length; i++) {
+        hex += this._hexMap[bytes.charCodeAt(i)];
+      }
+    } else {
+      for (let i = 0; i < bytes.length; i++) {
+        hex += this._hexMap[bytes[i]];
+      }
+    }
+    return hex;
+  },
+
   /**
    * High-performance HTML escaping.
    * Uses an early-exit indexOf check to skip clean strings,
@@ -357,6 +378,9 @@ Odin.QRCode = {
   _container: null,
 
   generate(text, size, containerId) {
+    // 🛡️ Sentinel: Enforce safe bounding limits on numeric inputs to prevent DoS
+    size = Math.max(64, Math.min(2048, size || 256));
+
     const container = document.getElementById(containerId);
     if (!container) return;
     this._container = container;
@@ -841,6 +865,9 @@ Odin.PasswordGuard = {
   },
 
   generate(length, options) {
+    // 🛡️ Sentinel: Enforce safe bounding limits on numeric inputs to prevent DoS
+    length = Math.max(4, Math.min(1024, length || 16));
+
     let pool = '';
     const activeSets = [];
     if (options.lowercase) { pool += this.charsets.lowercase; activeSets.push(this.charsets.lowercase); }
@@ -1717,7 +1744,7 @@ Odin.JWT = {
     catch (_) { throw new Error('Invalid JWT payload: not valid Base64/JSON'); }
 
     const sigBytes = atob(parts[2].replace(/-/g, '+').replace(/_/g, '/'));
-    const sigHex = Array.from(sigBytes, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+    const sigHex = Odin.Utils.bytesToHex(sigBytes);
 
     return { header, payload, signature: sigHex };
   },
@@ -1792,10 +1819,7 @@ Odin.CaseConverter = {
   _splitWords(text) {
     // ⚡ Bolt: Use .match instead of multiple intermediate replacements and splitting.
     // This avoids large string allocations and reduces execution time by ~50%.
-    return text
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
-      .match(/[a-zA-Z0-9]+/g) || [];
+    return text.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) || [];
   },
 
   toUpperCase(text) { return text.toUpperCase(); },
@@ -1907,7 +1931,7 @@ Odin.Base64 = {
   detectMime(b64) {
     try {
       const raw = atob(b64.substring(0, 16));
-      const hex = Array.from(raw, c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+      const hex = Odin.Utils.bytesToHex(raw);
       if (hex.startsWith('89504e47')) return 'image/png';
       if (hex.startsWith('ffd8ff'))   return 'image/jpeg';
       if (hex.startsWith('47494638')) return 'image/gif';
@@ -2187,14 +2211,18 @@ Odin.Hash = {
     
     if (format === 'base64') {
       let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
+      // ⚡ Bolt: Use chunking with String.fromCharCode.apply to drastically speed up
+      // conversion of large buffers and prevent Maximum Call Stack Size Exceeded errors.
+      const len = bytes.length;
+      const chunkSize = 0x8000; // 32KB chunks
+      for (let i = 0; i < len; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.slice(i, i + chunkSize));
       }
       return btoa(binary);
     }
     
     // Default: hex
-    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    return Odin.Utils.bytesToHex(bytes);
   }
 };
 
@@ -2217,7 +2245,7 @@ Odin.UUID = {
     bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
     bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10
     
-    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    const hex = Odin.Utils.bytesToHex(bytes);
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
   },
 
@@ -3288,6 +3316,8 @@ function odinApp() {
         img.onload = () => {
           this.imgWidth = img.naturalWidth;
           this.imgHeight = img.naturalHeight;
+          // Validate and bound inputs to prevent client-side DoS risks
+          this.imgScale = Math.max(1, Math.min(100, this.imgScale));
           this.imgNewWidth = Math.round(img.naturalWidth * this.imgScale / 100);
           this.imgNewHeight = Math.round(img.naturalHeight * this.imgScale / 100);
         };
@@ -3297,6 +3327,8 @@ function odinApp() {
     },
 
     imgUpdateDimensions() {
+      // Validate and bound inputs to prevent client-side DoS risks
+      this.imgScale = Math.max(1, Math.min(100, this.imgScale));
       this.imgNewWidth = Math.round(this.imgWidth * this.imgScale / 100);
       this.imgNewHeight = Math.round(this.imgHeight * this.imgScale / 100);
     },
@@ -3305,6 +3337,10 @@ function odinApp() {
       if (!this.imgFile) return;
       this.imgProcessing = true;
       try {
+        // Validate and bound inputs to prevent client-side DoS risks
+        this.imgScale = Math.max(1, Math.min(100, this.imgScale));
+        this.imgQuality = Math.max(0.1, Math.min(1.0, this.imgQuality));
+
         const result = await Odin.ImageShrink.processImage(
           this.imgFile, this.imgScale, this.imgFormat, this.imgQuality
         );

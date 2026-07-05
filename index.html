@@ -820,7 +820,7 @@
 
             <!-- Highlighted Output -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Highlighted Matches</label>
+              <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Highlighted Matches</div>
               <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words">
                 <template x-if="!regexResult.html"><span class="text-slate-400 dark:text-slate-600 italic">Results will appear here...</span></template>
                 <span x-show="regexResult.html" x-html="regexResult.html"></span>
@@ -830,7 +830,7 @@
             <!-- Match Details -->
             <template x-if="regexResult.matches.length > 0">
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Match Details</label>
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Match Details</div>
                 <div class="space-y-2 max-h-48 overflow-auto">
                   <template x-for="(m, idx) in regexResult.matches" :key="idx">
                     <div class="glass rounded-lg px-3 py-2 text-xs font-mono">
@@ -1017,7 +1017,8 @@
 
           <!-- Output -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</label>
+            <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
+            <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
             <div class="json-editor h-[28rem]">
               <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
               <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
@@ -1109,7 +1110,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</label>
+            <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
             <div class="json-editor h-[28rem]">
               <pre x-ref="xmlOutputGutter" class="json-gutter" x-text="getXmlOutputLineNumbers()"></pre>
               <div x-ref="xmlOutputPane" @scroll="syncXmlOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
@@ -1196,7 +1197,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Differences</label>
+          <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Differences</div>
           <div class="code-output h-[22rem] overflow-auto diff-output">
             <template x-if="!diffResult.html">
               <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400">
@@ -1280,48 +1281,48 @@
             <!-- Character Toggles -->
             <div class="grid grid-cols-2 gap-3">
               <!-- Lowercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwLowercase" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Lowercase</div>
                   <div class="text-xs text-slate-500 font-mono">a-z</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwLowercase" @change="generatePassword()">
                 <div class="toggle-track" :class="pwLowercase ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Uppercase -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwUppercase" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Uppercase</div>
                   <div class="text-xs text-slate-500 font-mono">A-Z</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwUppercase" @change="generatePassword()">
                 <div class="toggle-track" :class="pwUppercase ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Numbers -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwNumbers" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Numbers</div>
                   <div class="text-xs text-slate-500 font-mono">0-9</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwNumbers" @change="generatePassword()">
                 <div class="toggle-track" :class="pwNumbers ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
               </label>
 
               <!-- Symbols -->
-              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer" >
-                <input type="checkbox" class="sr-only" x-model="pwSymbols" @change="generatePassword()">
+              <label class="flex items-center justify-between glass rounded-lg px-3 py-2.5 cursor-pointer">
                 <div>
                   <div class="text-sm font-medium text-slate-800 dark:text-slate-200">Symbols</div>
                   <div class="text-xs text-slate-500 font-mono">!@#$%...</div>
                 </div>
+                <input type="checkbox" class="sr-only" x-model="pwSymbols" @change="generatePassword()">
                 <div class="toggle-track" :class="pwSymbols ? 'active' : ''">
                   <div class="toggle-thumb"></div>
                 </div>
@@ -1375,7 +1376,7 @@
           <!-- JSON Input -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Input JSON</label>
+              <label for="model-json-input" class="text-sm font-medium text-slate-700 dark:text-slate-300">Input JSON</label>
               <button
                 @click="modelJsonInput = JSON.stringify({id:1,name:'Odin',email:'odin@valhalla.com',created_at:'2024-01-15T10:30:00',is_active:true,score:98.5,address:{street:'Bifrost Bridge',city:'Asgard',zip_code:'00001'},tags:['developer','toolkit'],items:[{product_name:'Mjolnir',price:999.99,quantity:1}]}, null, 2); generateModels()"
                 class="btn-outline text-xs py-1 px-2"
@@ -1384,6 +1385,7 @@
               </button>
             </div>
             <textarea
+              id="model-json-input"
               x-model="modelJsonInput"
               @input.debounce.400ms="generateModels()"
               class="textarea-valhalla code-input h-[26rem]"
@@ -1526,8 +1528,9 @@ Example:
 
         <!-- JWT Input -->
         <div class="mb-6">
-          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste JWT Token</label>
+          <label for="jwt-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste JWT Token</label>
           <textarea
+            id="jwt-input"
             x-model="jwtInput"
             @input.debounce.300ms="decodeJWT()"
             class="textarea-valhalla w-full h-28 font-mono text-sm"
@@ -1668,10 +1671,11 @@ Example:
 
             <!-- Scale Slider -->
             <div>
-              <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+              <label for="img-scale-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
                 Scale: <span class="text-gold-400 font-semibold" x-text="imgScale + '%'"></span>
               </label>
               <input
+                id="img-scale-input"
                 type="range" min="1" max="100" step="1"
                 x-model.number="imgScale"
                 @input="imgUpdateDimensions()"
@@ -1682,7 +1686,7 @@ Example:
             <!-- Format + Quality -->
             <div class="flex flex-wrap items-end gap-4">
               <div>
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Format</label>
+                <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Format</div>
                 <div class="flex gap-1">
                   <button
                     @click="imgFormat = 'image/webp'"
@@ -1697,10 +1701,11 @@ Example:
                 </div>
               </div>
               <div x-show="imgFormat === 'image/webp'" class="flex-1 min-w-[180px]">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
+                <label for="img-quality-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">
                   Quality: <span class="text-gold-400 font-semibold" x-text="Math.round(imgQuality * 100) + '%'"></span>
                 </label>
                 <input
+                  id="img-quality-input"
                   type="range" min="0.1" max="1" step="0.05"
                   x-model.number="imgQuality"
                   class="slider-gold w-full"
@@ -1773,7 +1778,7 @@ Example:
 
         <!-- Mode Selector -->
         <div class="mb-4">
-          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Conversion Mode</label>
+          <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Conversion Mode</div>
           <div class="flex flex-wrap gap-1.5">
             <template x-for="m in [
               {key:'upper', label:'UPPER'},
@@ -1796,8 +1801,9 @@ Example:
 
         <!-- Input -->
         <div class="mb-4">
-          <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
+          <label for="case-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
           <textarea
+            id="case-input"
             x-model="caseInput"
             @input.debounce.200ms="convertCase()"
             class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -1809,7 +1815,7 @@ Example:
         <!-- Output -->
         <div class="mb-4">
           <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider">Output</label>
+            <label for="case-output" class="block text-xs text-slate-500 uppercase tracking-wider">Output</label>
             <button
               @click="copyCaseOutput()"
               x-show="caseOutput"
@@ -1819,6 +1825,7 @@ Example:
             </button>
           </div>
           <textarea
+            id="case-output"
             x-model="caseOutput"
             readonly
             class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
@@ -1867,8 +1874,8 @@ Example:
             <!-- Flexbox Controls -->
             <div x-show="flexGridMode === 'flex'" class="space-y-3">
               <div>
-                <label class="fg-label">flex-direction</label>
-                <select x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
+                <label for="fg-flex-direction" class="fg-label">flex-direction</label>
+                <select id="fg-flex-direction" x-model="fgFlexDirection" class="input-valhalla w-full text-sm">
                   <option value="row">row</option>
                   <option value="row-reverse">row-reverse</option>
                   <option value="column">column</option>
@@ -1876,8 +1883,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">justify-content</label>
-                <select x-model="fgJustifyContent" class="input-valhalla w-full text-sm">
+                <label for="fg-justify-content" class="fg-label">justify-content</label>
+                <select id="fg-justify-content" x-model="fgJustifyContent" class="input-valhalla w-full text-sm">
                   <option value="flex-start">flex-start</option>
                   <option value="flex-end">flex-end</option>
                   <option value="center">center</option>
@@ -1887,8 +1894,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">align-items</label>
-                <select x-model="fgAlignItems" class="input-valhalla w-full text-sm">
+                <label for="fg-align-items" class="fg-label">align-items</label>
+                <select id="fg-align-items" x-model="fgAlignItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="flex-start">flex-start</option>
                   <option value="flex-end">flex-end</option>
@@ -1897,8 +1904,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">flex-wrap</label>
-                <select x-model="fgFlexWrap" class="input-valhalla w-full text-sm">
+                <label for="fg-flex-wrap" class="fg-label">flex-wrap</label>
+                <select id="fg-flex-wrap" x-model="fgFlexWrap" class="input-valhalla w-full text-sm">
                   <option value="nowrap">nowrap</option>
                   <option value="wrap">wrap</option>
                   <option value="wrap-reverse">wrap-reverse</option>
@@ -1921,8 +1928,8 @@ Example:
                 <input id="fg-grid-rows-input" type="text" x-model="fgGridRows" @input.debounce.300ms="fgUpdateCSS()" class="input-valhalla w-full text-sm font-mono" placeholder="auto">
               </div>
               <div>
-                <label class="fg-label">justify-items</label>
-                <select x-model="fgGridJustifyItems" class="input-valhalla w-full text-sm">
+                <label for="fg-grid-justify-items" class="fg-label">justify-items</label>
+                <select id="fg-grid-justify-items" x-model="fgGridJustifyItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="start">start</option>
                   <option value="end">end</option>
@@ -1930,8 +1937,8 @@ Example:
                 </select>
               </div>
               <div>
-                <label class="fg-label">align-items</label>
-                <select x-model="fgGridAlignItems" class="input-valhalla w-full text-sm">
+                <label for="fg-grid-align-items" class="fg-label">align-items</label>
+                <select id="fg-grid-align-items" x-model="fgGridAlignItems" class="input-valhalla w-full text-sm">
                   <option value="stretch">stretch</option>
                   <option value="start">start</option>
                   <option value="end">end</option>
@@ -1946,7 +1953,7 @@ Example:
 
             <!-- Item Count (shared) -->
             <div>
-              <label class="fg-label">Items: <span class="text-gold-400" x-text="fgItemCount"></span></label>
+              <div class="fg-label">Items: <span class="text-gold-400" x-text="fgItemCount"></span></div>
               <div class="flex items-center gap-2">
                 <button @click="fgRemoveItem()" class="btn-outline w-8 h-8 rounded-lg text-sm flex items-center justify-center" aria-label="Remove item">−</button>
                 <div class="flex-1 h-1 rounded bg-slate-300 dark:bg-slate-700"></div>
@@ -1966,7 +1973,7 @@ Example:
             <!-- Generated CSS -->
             <div>
               <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider">Generated CSS</label>
+                <div class="block text-xs text-slate-500 uppercase tracking-wider">Generated CSS</div>
                 <button
                   @click="fgCopyCSS()"
                   x-show="fgGeneratedCSS"
@@ -2028,8 +2035,9 @@ Example:
         <!-- Text Mode -->
         <div x-show="!b64FileMode" class="space-y-4">
           <div>
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="b64Mode === 'encode' ? 'Plain Text' : 'Base64 String'"></label>
+            <label for="b64-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="b64Mode === 'encode' ? 'Plain Text' : 'Base64 String'"></label>
             <textarea
+              id="b64-input"
               x-model="b64Input"
               @input.debounce.300ms="b64Convert()"
               class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -2040,7 +2048,7 @@ Example:
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs text-slate-500 uppercase tracking-wider" x-text="b64Mode === 'encode' ? 'Base64 Output' : 'Decoded Text'"></label>
+              <div class="block text-xs text-slate-500 uppercase tracking-wider" x-text="b64Mode === 'encode' ? 'Base64 Output' : 'Decoded Text'"></div>
               <button
                 @click="b64CopyOutput()"
                 x-show="b64Output"
@@ -2073,7 +2081,7 @@ Example:
         <div x-show="b64FileMode" class="space-y-4">
           <!-- Encode File -->
           <div x-show="b64Mode === 'encode'">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Select File to Encode</label>
+            <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Select File to Encode</div>
             <div class="flex items-center gap-3">
               <label class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
                 <i data-lucide="file-up" class="w-4 h-4"></i>
@@ -2086,7 +2094,7 @@ Example:
             <template x-if="b64FileResult">
               <div class="mt-4">
                 <div class="flex items-center justify-between mb-1.5">
-                  <label class="block text-xs text-slate-500 uppercase tracking-wider">Base64 Output</label>
+                  <div class="block text-xs text-slate-500 uppercase tracking-wider">Base64 Output</div>
                   <button
                     @click="b64CopyOutput()"
                     class="text-xs text-slate-500 hover:text-gold-400 transition-colors flex items-center gap-1"
@@ -2101,7 +2109,7 @@ Example:
 
           <!-- Decode File -->
           <div x-show="b64Mode === 'decode'">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste Base64 String</label>
+            <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste Base64 String</div>
             <textarea
               x-model="b64Input"
               class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -2160,8 +2168,9 @@ Example:
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="urlMode === 'encode' ? 'Plain URL / Text' : 'Encoded URL'"></label>
+            <label for="url-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5" x-text="urlMode === 'encode' ? 'Plain URL / Text' : 'Encoded URL'"></label>
             <textarea
+              id="url-input"
               x-model="urlInput"
               @input.debounce.300ms="urlConvert()"
               class="textarea-valhalla w-full h-36 font-mono text-sm"
@@ -2172,7 +2181,7 @@ Example:
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs text-slate-500 uppercase tracking-wider" x-text="urlMode === 'encode' ? 'Encoded Output' : 'Decoded Output'"></label>
+              <label for="url-output" class="block text-xs text-slate-500 uppercase tracking-wider" x-text="urlMode === 'encode' ? 'Encoded Output' : 'Decoded Output'"></label>
               <button
                 @click="urlCopyOutput()"
                 x-show="urlOutput"
@@ -2182,6 +2191,7 @@ Example:
               </button>
             </div>
             <textarea
+              id="url-output"
               x-model="urlOutput"
               readonly
               class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
@@ -2285,8 +2295,9 @@ Example:
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Timestamp → Date</h3>
             <div class="space-y-3">
               <div>
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Unix Timestamp</label>
+                <label for="ts-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Unix Timestamp</label>
                 <input
+                  id="ts-input"
                   type="text"
                   x-model="tsInput"
                   @input.debounce.300ms="tsConvertToDate()"
@@ -2295,7 +2306,7 @@ Example:
                 />
               </div>
               <div x-show="tsToDateResult">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Result</label>
+                <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Result</div>
                 <div class="space-y-1.5">
                   <div class="text-xs text-slate-600 dark:text-slate-500">ISO 8601</div>
                   <div class="text-sm font-mono text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/50 rounded px-2 py-1.5" x-text="tsToDateISO"></div>
@@ -2314,8 +2325,9 @@ Example:
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Date → Timestamp</h3>
             <div class="space-y-3">
               <div>
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Date & Time</label>
+                <label for="ts-date-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Date & Time</label>
                 <input
+                  id="ts-date-input"
                   type="datetime-local"
                   x-model="tsDateInput"
                   @input="tsConvertToTimestamp()"
@@ -2323,7 +2335,7 @@ Example:
                 />
               </div>
               <div x-show="tsToTimestampResult">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Result</label>
+                <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Result</div>
                 <div class="space-y-1.5">
                   <div class="text-xs text-slate-600 dark:text-slate-500">Unix (seconds)</div>
                   <div class="text-sm font-mono text-gold-400 bg-slate-100 dark:bg-slate-900/50 rounded px-2 py-1.5" x-text="tsToTimestampUnix"></div>
@@ -2409,8 +2421,9 @@ Example:
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Bulk Generator</h3>
             <div class="flex items-center gap-3 mb-4">
               <div class="flex-1">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Quantity</label>
+                <label for="uuid-bulk-count" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Quantity</label>
                 <input
+                  id="uuid-bulk-count"
                   type="number"
                   x-model.number="uuidBulkCount"
                   min="1"
@@ -2516,8 +2529,9 @@ Example:
 
           <!-- Input -->
           <div class="glass rounded-xl p-5">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
+            <label for="hash-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Input Text</label>
             <textarea
+              id="hash-input"
               x-model="hashInput"
               @input.debounce.300ms="hashCompute()"
               class="textarea-valhalla w-full h-32 font-mono text-sm"
@@ -2528,8 +2542,9 @@ Example:
 
           <!-- HMAC Secret Key -->
           <div x-show="hashMode === 'hmac'" class="glass rounded-xl p-5">
-            <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Secret Key</label>
+            <label for="hash-secret" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Secret Key</label>
             <input
+              id="hash-secret"
               type="text"
               x-model="hashSecret"
               @input.debounce.300ms="hashCompute()"
@@ -2541,7 +2556,7 @@ Example:
           <!-- Output -->
           <div class="glass rounded-xl p-5">
             <div class="flex items-center justify-between mb-3">
-              <label class="block text-xs text-slate-500 uppercase tracking-wider">Hash Output</label>
+              <div class="block text-xs text-slate-500 uppercase tracking-wider">Hash Output</div>
               <div class="flex gap-2">
                 <button
                   @click="hashCopy()"
@@ -2651,8 +2666,9 @@ Example:
           <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <!-- Input -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" x-text="yamlMode === 'yaml2json' ? 'YAML Input' : 'JSON Input'"></label>
+              <label for="yaml-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" x-text="yamlMode === 'yaml2json' ? 'YAML Input' : 'JSON Input'"></label>
               <textarea
+                id="yaml-input"
                 x-model="yamlInput"
                 @input.debounce.300ms="yamlConvert()"
                 class="textarea-valhalla code-input h-[28rem]"
@@ -2664,7 +2680,7 @@ Example:
             <!-- Output -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300" x-text="yamlMode === 'yaml2json' ? 'JSON Output' : 'YAML Output'"></label>
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300" x-text="yamlMode === 'yaml2json' ? 'JSON Output' : 'YAML Output'"></div>
                 <button @click="yamlCopy()" x-show="yamlOutput" class="btn-outline text-xs py-1 px-2 flex items-center gap-1">
                   <i data-lucide="copy" class="w-3 h-3"></i>
                   Copy
@@ -2689,8 +2705,9 @@ Example:
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">JSONPath Query</h3>
             <div class="space-y-3">
               <div>
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Path Expression</label>
+                <label for="yaml-jsonpath" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Path Expression</label>
                 <input
+                  id="yaml-jsonpath"
                   type="text"
                   x-model="yamlJsonPath"
                   @input.debounce.300ms="yamlQueryPath()"
@@ -2699,7 +2716,7 @@ Example:
                 />
               </div>
               <div x-show="yamlPathResult">
-                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Query Result</label>
+                <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Query Result</div>
                 <div class="bg-slate-100 dark:bg-slate-900/50 rounded-lg p-3 font-mono text-sm text-slate-800 dark:text-slate-200" x-text="yamlPathResult"></div>
               </div>
               <div x-show="yamlPathError" class="error-badge text-xs" x-text="yamlPathError"></div>
