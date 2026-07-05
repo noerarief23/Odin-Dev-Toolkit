@@ -1718,14 +1718,14 @@ Odin.JWT = {
     while (b64.length % 4) b64 += '=';
     const binary = atob(b64);
     try {
-      // ⚡ Bolt: Constructing a Uint8Array and using TextDecoder is ~10x faster
-      // than splitting the string, mapping to hex, and using decodeURIComponent.
-      // This heavily reduces intermediate memory allocations and avoids main-thread blocking.
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+      // ⚡ Bolt: Use Uint8Array and TextDecoder instead of mapping char-by-char with decodeURIComponent
+      // to avoid intermediate memory allocations and significantly speed up decoding.
+      const raw = atob(b64);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
       }
-      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+      return new TextDecoder().decode(bytes);
     } catch (_) {
       return binary;
     }
