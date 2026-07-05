@@ -99,23 +99,23 @@ Odin.Clipboard = {
    Odin.Utils — Shared utility helpers
    ================================================================ */
 Odin.Utils = {
-  // ⚡ Bolt: Precomputed lookup map for extremely fast byte-to-hex conversion
-  _hexMap: (function() {
-    const map = [];
-    for (let i = 0; i < 256; i++) {
-      map[i] = (i < 16 ? '0' : '') + i.toString(16);
-    }
-    return map;
-  })(),
+  // Precomputed hex map for fast byte-to-hex string conversion
+  _hexMap: Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, '0')),
 
   /**
-   * High-performance byte array to hex string converter.
-   * Avoids heavy Array.from closures and intermediate array allocations.
+   * Fast byte array/string to hex string conversion.
+   * Avoids the heavy closure allocation and array creation overhead of Array.from(bytes, ...).join('')
    */
   bytesToHex(bytes) {
     let hex = '';
-    for (let i = 0; i < bytes.length; i++) {
-      hex += this._hexMap[bytes[i]];
+    if (typeof bytes === 'string') {
+      for (let i = 0; i < bytes.length; i++) {
+        hex += this._hexMap[bytes.charCodeAt(i)];
+      }
+    } else {
+      for (let i = 0; i < bytes.length; i++) {
+        hex += this._hexMap[bytes[i]];
+      }
     }
     return hex;
   },
@@ -1740,10 +1740,7 @@ Odin.JWT = {
     catch (_) { throw new Error('Invalid JWT payload: not valid Base64/JSON'); }
 
     const sigBytes = atob(parts[2].replace(/-/g, '+').replace(/_/g, '/'));
-    let sigHex = '';
-    for (let i = 0; i < sigBytes.length; i++) {
-      sigHex += Odin.Utils._hexMap[sigBytes.charCodeAt(i)];
-    }
+    const sigHex = Odin.Utils.bytesToHex(sigBytes);
 
     return { header, payload, signature: sigHex };
   },
@@ -1930,10 +1927,7 @@ Odin.Base64 = {
   detectMime(b64) {
     try {
       const raw = atob(b64.substring(0, 16));
-      let hex = '';
-      for (let i = 0; i < raw.length; i++) {
-        hex += Odin.Utils._hexMap[raw.charCodeAt(i)];
-      }
+      const hex = Odin.Utils.bytesToHex(raw);
       if (hex.startsWith('89504e47')) return 'image/png';
       if (hex.startsWith('ffd8ff'))   return 'image/jpeg';
       if (hex.startsWith('47494638')) return 'image/gif';
