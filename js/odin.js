@@ -357,6 +357,9 @@ Odin.QRCode = {
   _container: null,
 
   generate(text, size, containerId) {
+    // 🛡️ Sentinel: Enforce safe bounding limits on numeric inputs to prevent DoS
+    size = Math.max(64, Math.min(2048, size || 256));
+
     const container = document.getElementById(containerId);
     if (!container) return;
     this._container = container;
@@ -841,6 +844,9 @@ Odin.PasswordGuard = {
   },
 
   generate(length, options) {
+    // 🛡️ Sentinel: Enforce safe bounding limits on numeric inputs to prevent DoS
+    length = Math.max(4, Math.min(1024, length || 16));
+
     let pool = '';
     const activeSets = [];
     if (options.lowercase) { pool += this.charsets.lowercase; activeSets.push(this.charsets.lowercase); }
