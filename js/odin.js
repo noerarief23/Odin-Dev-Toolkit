@@ -886,7 +886,10 @@ Odin.PasswordGuard = {
 
       for (const set of activeSets) {
         const hasChar = chars.some(c => set.includes(c));
-        if (!hasChar) {
+        if (hasChar) {
+          // Record one of its positions so we don't overwrite it later
+          usedPositions.add(chars.findIndex(c => set.includes(c)));
+        } else {
           // Pick a random position that hasn't been force-set yet
           let pos;
           do {
