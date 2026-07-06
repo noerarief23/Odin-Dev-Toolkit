@@ -40,3 +40,7 @@
 ## 2024-05-25 - Object Iteration Performance
 **Learning:** When iterating over object properties in performance-critical code paths (like merging arrays of large objects), using `Object.entries()` creates significant memory garbage because it dynamically allocates an array of `[key, value]` arrays.
 **Action:** Prefer a traditional `for...in` loop combined with an `Object.prototype.hasOwnProperty.call()` check over `Object.entries()` to avoid intermediate array allocations and massively reduce execution time (~2x speedup for large objects).
+
+## 2024-07-06 - [Avoid closure and intermediate array allocation in tight iterations]
+**Learning:** Using `Array.prototype.forEach` and `Object.entries().forEach()` inside heavily recursive serialization logic (like JSON to YAML conversion) causes noticeable performance bottlenecks due to intermediate array allocations (`[key, value]`) and callback function closure overhead.
+**Action:** When writing performance-sensitive iterative code, use traditional `for` loops for arrays and `for...in` loops (with `hasOwnProperty.call()`) for objects to dramatically reduce memory pressure and execution time.
