@@ -165,6 +165,26 @@ Odin.Utils = {
   },
 
   /**
+   * Sanitizes Prism output to prevent XSS.
+   * Escapes un-tokenized `<` and `>` characters while preserving Prism's `<span>` tags.
+   */
+  sanitizePrismHtml(html) {
+    if (typeof html !== 'string') return '';
+    // Prevent XSS bypasses: only allow Prism's specific <span class="..."> tags.
+    // Anything else, including <span onmouseover="...">, is treated as text and escaped.
+    const parts = html.split(/(<span class="token [a-zA-Z0-9_ -]+">|<\/span>)/gi);
+    let result = '';
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 2 === 0) {
+        result += parts[i].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      } else {
+        result += parts[i];
+      }
+    }
+    return result;
+  },
+
+  /**
    * Generates a newline-separated string of line numbers (1..N).
    * Highly optimized: uses indexOf for fast counting and caches results to prevent UI blocking.
    */
@@ -478,7 +498,8 @@ Odin.JsonFormatter = {
     if (!code) return '';
     try {
       if (typeof Prism !== 'undefined' && Prism.languages && Prism.languages.json) {
-        return Prism.highlight(code, Prism.languages.json, 'json');
+        const html = Prism.highlight(code, Prism.languages.json, 'json');
+        return Odin.Utils.sanitizePrismHtml(html);
       }
     } catch (e) {
       console.warn('Prism highlight failed:', e);
@@ -560,7 +581,8 @@ Odin.XmlFormatter = {
     if (!code) return '';
     try {
       if (typeof Prism !== 'undefined' && Prism.languages && Prism.languages.markup) {
-        return Prism.highlight(code, Prism.languages.markup, 'markup');
+        const html = Prism.highlight(code, Prism.languages.markup, 'markup');
+        return Odin.Utils.sanitizePrismHtml(html);
       }
     } catch (e) {
       console.warn('XML Prism highlight failed:', e);
@@ -1412,16 +1434,18 @@ Odin.ModelGen = {
     if (!lang) return Odin.Utils.escapeHtml(code);
 
     try {
-      const highlighted = Prism.highlight(code, lang, language);
+      let highlighted = Prism.highlight(code, lang, language);
       if (typeof highlighted !== 'string') {
         return Odin.Utils.escapeHtml(code);
       }
+
+      highlighted = Odin.Utils.sanitizePrismHtml(highlighted);
 
       // Guard for PHP edge-cases where Prism may return raw, unsafe markup
       // (e.g. "<?php" can be swallowed by innerHTML parsing and appear blank).
       if (language === 'php') {
         const looksUnhighlighted = highlighted === code || !highlighted.includes('token');
-        const hasUnsafePhpTag = highlighted.includes('<?php') || highlighted.includes('<?');
+        const hasUnsafePhpTag = highlighted.includes('&lt;?php') || highlighted.includes('&lt;?');
         if (looksUnhighlighted || hasUnsafePhpTag) {
           return Odin.Utils.escapeHtml(code);
         }
@@ -3284,7 +3308,8 @@ function odinApp() {
       try {
         const raw = JSON.stringify(obj, null, 2);
         if (typeof Prism !== 'undefined') {
-          return Prism.highlight(raw, Prism.languages.json, 'json');
+          const html = Prism.highlight(raw, Prism.languages.json, 'json');
+          return Odin.Utils.sanitizePrismHtml(html);
         }
         return Odin.Utils.escapeHtml(raw);
       } catch (_) { return ''; }
