@@ -2144,24 +2144,30 @@ Odin.YAML = {
     const spaces = '  '.repeat(indent);
     let result = '';
 
+    // ⚡ Bolt: Use traditional for loops instead of forEach and Object.entries
+    // to avoid intermediate array allocations and closure overhead, improving YAML conversion performance.
     if (Array.isArray(obj)) {
-      obj.forEach(item => {
+      for (let i = 0; i < obj.length; i++) {
+        const item = obj[i];
         if (typeof item === 'object' && item !== null) {
           result += spaces + '-\n';
           result += this._stringifyYAML(item, indent + 1);
         } else {
           result += spaces + '- ' + this._formatValue(item) + '\n';
         }
-      });
+      }
     } else if (typeof obj === 'object' && obj !== null) {
-      Object.entries(obj).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null) {
-          result += spaces + key + ':\n';
-          result += this._stringifyYAML(value, indent + 1);
-        } else {
-          result += spaces + key + ': ' + this._formatValue(value) + '\n';
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+          if (typeof value === 'object' && value !== null) {
+            result += spaces + key + ':\n';
+            result += this._stringifyYAML(value, indent + 1);
+          } else {
+            result += spaces + key + ': ' + this._formatValue(value) + '\n';
+          }
         }
-      });
+      }
     }
 
     return result;
