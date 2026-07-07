@@ -2188,6 +2188,8 @@ Odin.YAML = {
 
   _evalPath(obj, path) {
     if (!path || path === '$') return obj;
+    // 🛡️ Sentinel: Cap path length to prevent ReDoS from catastrophic backtracking in split()
+    if (path.length > 1000) throw new Error("JSONPath too long");
     
     const parts = path.replace(/^\$\.?/, '').split(/\.(?![^\[]*\])/);
     let current = obj;
