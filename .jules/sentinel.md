@@ -54,3 +54,8 @@
 **Vulnerability:** PrismJS `.highlight()` does not escape characters that do not match the target language grammar. When the raw output is directly assigned to `innerHTML` or `x-html`, any un-tokenized HTML tags (like `<img onerror=alert(1)>` in JSON or XML input) will be rendered and executed, leading to XSS.
 **Learning:** Syntax highlighters are designed to apply styling, not to sanitize HTML. While matched tokens are safely encoded, leftover unrecognized characters bypass standard encoding mechanisms.
 **Prevention:** Always sanitize the output of PrismJS before injecting it into the DOM. A safe approach is to split the output by `/(<\/?span[^>]*>)/i` and manually escape `<` and `>` in the text portions, preserving the `<span>` tags.
+
+## 2025-02-18 - ReDoS via Unbounded RegExp Split with Negative Lookahead
+**Vulnerability:** Regular Expression Denial of Service (ReDoS) in the YAML tool's JSONPath parsing (`Odin.YAML._evalPath`) due to `.split(/\.(?![^\[]*\])/)` combined with unbounded input length.
+**Learning:** Using complex regular expressions containing lookaheads/lookbehinds, especially on untrusted unbounded input, can lead to catastrophic backtracking. The execution time of `path.split(/\.(?![^\[]*\])/)` grows exponentially on inputs like `.a.a.a.a...[`.
+**Prevention:** Implement defense-in-depth by explicitly bounding the length of string inputs passed to complex regular expressions (e.g. `if (path.length > 1000) throw ...`) to prevent browser tab freezes and DoS.
