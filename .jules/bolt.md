@@ -44,3 +44,7 @@
 ## 2024-07-06 - [Avoid closure and intermediate array allocation in tight iterations]
 **Learning:** Using `Array.prototype.forEach` and `Object.entries().forEach()` inside heavily recursive serialization logic (like JSON to YAML conversion) causes noticeable performance bottlenecks due to intermediate array allocations (`[key, value]`) and callback function closure overhead.
 **Action:** When writing performance-sensitive iterative code, use traditional `for` loops for arrays and `for...in` loops (with `hasOwnProperty.call()`) for objects to dramatically reduce memory pressure and execution time.
+
+## 2024-05-18 - Case Conversion Delegation
+**Learning:** `Odin.ModelGen` previously duplicated the case conversion logic from `Odin.CaseConverter`, but used an older, slower method involving multiple `replace().split()` calls. Using a single `match()` regex as seen in `Odin.CaseConverter` significantly reduces intermediate string allocations.
+**Action:** Always delegate case conversion utilities to the highly optimized `Odin.CaseConverter` rather than reimplementing them, improving both performance and code reuse.
