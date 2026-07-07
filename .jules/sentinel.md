@@ -24,6 +24,10 @@
 **Vulnerability:** Cross-Site Scripting (XSS) due to rendering unescaped error messages (`e.message`) via Alpine.js `x-html` directives.
 **Learning:** Error messages thrown during data parsing (like `JSON.parse`) can reflect untrusted user input directly into the `e.message` string. Using this error string dynamically in the DOM (e.g. via innerHTML or x-html) creates an XSS vulnerability.
 **Prevention:** Always wrap variables containing error messages with an HTML escaping utility (e.g., `Odin.Utils.escapeHtml`) before inserting them into an HTML-rendering context.
+## 2026-07-06 - Incomplete ReDoS Protection via Execution Timeouts
+**Vulnerability:** Regular Expression Denial of Service (ReDoS) despite timeout protection loops.
+**Learning:** When evaluating regular expressions in JavaScript, loop-level timeout checks (e.g., checking `Date.now()` between `matchAll` iterations) do not fully protect against ReDoS because catastrophic backtracking on a single match can still hang the main thread indefinitely.
+**Prevention:** Provide defense-in-depth by explicitly capping the length of both the regex pattern (e.g., 500 chars) and the test string (e.g., 50,000 chars) before execution.
 ## 2026-06-24 - Prism.js Partial Escaping XSS Vulnerability
 **Vulnerability:** XSS via unescaped HTML characters in `Prism.highlight` output.
 **Learning:** Prism tokenizes input and returns HTML `<span>` tags, but it *does not* automatically HTML-escape characters that fail to match any grammar tokens. Attempting to escape the string *before* passing it to Prism breaks tokenization. Therefore, the raw output of `Prism.highlight` must be sanitized post-generation.
