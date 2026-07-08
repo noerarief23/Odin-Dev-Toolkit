@@ -1063,12 +1063,18 @@ Odin.ModelGen = {
 
     const properties = [];
 
-    for (const [key, value] of Object.entries(obj)) {
-      const schema = this.parseSchema(key, value, classes, className);
-      properties.push({
-        originalKey: key,
-        schema
-      });
+    // ⚡ Bolt: Use a traditional for..in loop instead of Object.entries
+    // to avoid intermediate array allocations ([key, value]) for every property,
+    // reducing memory overhead and heavily improving performance for large JSON objects.
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const schema = this.parseSchema(key, value, classes, className);
+        properties.push({
+          originalKey: key,
+          schema
+        });
+      }
     }
 
     classes.push({ name: className, properties });
