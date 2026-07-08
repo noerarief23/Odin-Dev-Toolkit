@@ -1807,8 +1807,17 @@ Odin.ImageShrink = {
         const img = new Image();
         img.onload = () => {
           const scale = scalePercent / 100;
-          const w = Math.round(img.naturalWidth * scale);
-          const h = Math.round(img.naturalHeight * scale);
+          let w = Math.round(img.naturalWidth * scale);
+          let h = Math.round(img.naturalHeight * scale);
+
+          // 🛡️ Sentinel: Bound max dimensions to prevent Canvas memory allocation DoS
+          const MAX_DIMENSION = 16384;
+          if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+            const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+
           const canvas = document.createElement('canvas');
           canvas.width = w;
           canvas.height = h;
