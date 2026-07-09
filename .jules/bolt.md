@@ -48,3 +48,7 @@
 ## 2024-05-18 - Case Conversion Delegation
 **Learning:** `Odin.ModelGen` previously duplicated the case conversion logic from `Odin.CaseConverter`, but used an older, slower method involving multiple `replace().split()` calls. Using a single `match()` regex as seen in `Odin.CaseConverter` significantly reduces intermediate string allocations.
 **Action:** Always delegate case conversion utilities to the highly optimized `Odin.CaseConverter` rather than reimplementing them, improving both performance and code reuse.
+
+## 2025-01-20 - Object Entries Memory Allocation in JSON Parsing
+**Learning:** Using `Object.entries()` inside recursive parsing logic (such as generating code from large JSON objects in `Odin.ModelGen._parseObject`) causes significant performance bottlenecks because it dynamically allocates a new intermediate array `[key, value]` for every property iterated. For large schemas or deep objects, this creates severe memory garbage and execution overhead.
+**Action:** Always replace `Object.entries()` with a traditional `for...in` loop and an explicit `Object.prototype.hasOwnProperty.call(obj, key)` check in performance-critical iteration paths to eliminate the intermediate array allocations and improve execution speed.
