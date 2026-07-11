@@ -59,3 +59,7 @@
 ## 2026-07-09 - Prism HTML Sanitization Optimization
 **Learning:** Using chained `.replace(/</g, '&lt;').replace(/>/g, '&gt;')` calls inside loops for sanitizing Prism HTML string fragments creates massive performance overhead due to intermediate string and regex allocations. Using an early-exit `indexOf` check to avoid the string splitting step altogether if there are no angle brackets, combined with a single-pass string iteration (`charCodeAt`) for the replacement logic, dramatically speeds up sanitization (often ~40-50% faster) and prevents UI blocking on large code snippets.
 **Action:** When performing HTML escaping or replacements within high-frequency loops, favor early-exit checks and single-pass iteration loops over chained `.replace()` regexes to minimize string allocations and overhead.
+
+## 2024-05-18 - Render Diff HTML String Builder
+**Learning:** In Javascript, using `Array.prototype.map().join('')` to generate HTML strings creates unnecessary intermediate array allocations, closures, and takes more execution time. Using a traditional `for` loop and string concatenation is much faster.
+**Action:** When rendering large lists of UI elements or strings, favor traditional `for` loops with string concatenation (`+=`) over array `.map().join('')` for improved performance.
