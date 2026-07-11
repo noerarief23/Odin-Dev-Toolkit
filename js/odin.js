@@ -716,15 +716,24 @@ Odin.DiffChecker = {
 
   _sortObject(value) {
     if (Array.isArray(value)) {
-      return value.map((item) => this._sortObject(item));
+      // ⚡ Bolt: Use a pre-allocated array and traditional for loop instead of .map()
+      // to avoid closure overhead and intermediate allocations.
+      const arr = new Array(value.length);
+      for (let i = 0; i < value.length; i++) {
+        arr[i] = this._sortObject(value[i]);
+      }
+      return arr;
     }
     if (value && typeof value === 'object') {
-      return Object.keys(value)
-        .sort()
-        .reduce((acc, key) => {
-          acc[key] = this._sortObject(value[key]);
-          return acc;
-        }, {});
+      // ⚡ Bolt: Use a traditional for loop instead of .reduce()
+      // to avoid closure allocation overhead and speed up recursive object sorting.
+      const keys = Object.keys(value).sort();
+      const obj = {};
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        obj[key] = this._sortObject(value[key]);
+      }
+      return obj;
     }
     return value;
   },
