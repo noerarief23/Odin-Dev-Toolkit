@@ -35,6 +35,10 @@
 ## 2026-07-04 - Semantic Tags for Output Headers
 **Learning:** Found multiple instances where `<label>` tags were used incorrectly for static, non-interactive section headers (like 'Formatted Output' or 'Highlighted Matches'). While visually fine, this is semantically incorrect and confusing for screen readers, as `<label>` should only be used to label form controls.
 **Action:** When creating text headers for non-interactive content or read-only outputs, use semantically correct `<div>` (or heading) tags instead of `<label>`. Retain the existing visual utility classes (e.g., Tailwind text styles) to preserve the design while improving accessibility semantics.
+
+## 2024-07-29 - Screen Reader Announcements for Dynamic Toasts
+**Learning:** Found that the custom toast notification system in the application was purely visual. When a user triggers an action that displays a toast (e.g., "Copied!"), screen readers would not announce this because the container lacked live region attributes.
+**Action:** Always add `aria-live="polite"` and `role="status"` to container elements for non-interruptive dynamic notifications (like toasts or inline success messages) to ensure screen reader users receive the same feedback as sighted users.
 ## 2024-07-28 - Explicit Form Input Bindings for Alpine Components
 **Learning:** Found multiple instances where form inputs (`<textarea>`, `<select>`) within complex Alpine.js tools (like JWT Explorer, URL Encoder, Flex/Grid Lab) lacked explicit `id` bindings to their corresponding `<label>` `for` attributes. This breaks click-to-focus and negatively impacts screen reader context.
 **Action:** Always verify that every `<label>` has a `for` attribute and the corresponding input has a matching `id` attribute, especially when adding new tools or settings panels.
