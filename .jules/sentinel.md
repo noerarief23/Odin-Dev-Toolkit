@@ -64,3 +64,8 @@
 **Vulnerability:** Unbounded target image dimensions in `Odin.ImageShrink.processImage` allowed maliciously large image processing that could exceed safe Canvas allocations and cause client-side Denial of Service (DoS).
 **Learning:** Even though the image inputs `imgScale` and `imgQuality` were validated against bounds, the logic scaled the source image's `naturalWidth` and `naturalHeight` by `scale`. If a source image had an extremely large dimension (e.g., decompression bombs or artificially large resolution), setting `canvas.width` and `canvas.height` to the scaled unbounded dimensions would exceed safe bounds and crash memory/tabs.
 **Prevention:** Always explicitly bound resulting target dimensions directly before Canvas allocation, using a maximum acceptable limit (e.g., 16384 pixels) to scale the aspect ratio down safely.
+
+## 2025-02-19 - Ensure Strict UTF-8 Decoding for Base64 Strings
+**Vulnerability:** Silent substitution of invalid UTF-8 sequences in JWT payload decoding due to missing `{ fatal: true }` option in `TextDecoder`.
+**Learning:** By default, `TextDecoder` silently replaces invalid UTF-8 byte sequences with the replacement character (`\uFFFD`). This swallows encoding errors and allows malformed UTF-8 payloads to be processed without throwing an exception, potentially masking manipulation or leading to unexpected application states downstream.
+**Prevention:** Always pass `{ fatal: true }` as the second argument when using `new TextDecoder('utf-8', ...)` to decode untrusted data, ensuring that invalid byte sequences explicitly throw errors and are handled correctly by `catch` blocks.
