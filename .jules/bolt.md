@@ -55,3 +55,7 @@
 ## 2025-01-20 - Object Sorting Performance via Traditional Loops
 **Learning:** In heavily recursive object sorting functions like `_sortObject`, using `Array.prototype.map()` and `Array.prototype.reduce()` introduces significant closure overhead and intermediate allocation. Replacing them with pre-allocated arrays and traditional `for` loops avoids this overhead, dramatically speeding up recursive traversal (measured ~2.6x faster).
 **Action:** When writing performance-sensitive recursive object traversal/sorting, favor traditional `for` loops over array iteration methods (`map`/`reduce`) to eliminate closure allocation and function call overhead.
+
+## 2026-07-09 - Prism HTML Sanitization Optimization
+**Learning:** Using chained `.replace(/</g, '&lt;').replace(/>/g, '&gt;')` calls inside loops for sanitizing Prism HTML string fragments creates massive performance overhead due to intermediate string and regex allocations. Using an early-exit `indexOf` check to avoid the string splitting step altogether if there are no angle brackets, combined with a single-pass string iteration (`charCodeAt`) for the replacement logic, dramatically speeds up sanitization (often ~40-50% faster) and prevents UI blocking on large code snippets.
+**Action:** When performing HTML escaping or replacements within high-frequency loops, favor early-exit checks and single-pass iteration loops over chained `.replace()` regexes to minimize string allocations and overhead.

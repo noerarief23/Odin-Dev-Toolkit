@@ -170,13 +170,37 @@ Odin.Utils = {
    */
   sanitizePrismHtml(html) {
     if (typeof html !== 'string') return '';
+    // ⚡ Bolt: Early exit if no angle brackets to avoid split overhead
+    if (html.indexOf('<') === -1 && html.indexOf('>') === -1) return html;
+
     // Prevent XSS bypasses: only allow Prism's specific <span class="..."> tags.
     // Anything else, including <span onmouseover="...">, is treated as text and escaped.
     const parts = html.split(/(<span class="token [a-zA-Z0-9_ -]+">|<\/span>)/gi);
     let result = '';
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 0) {
-        result += parts[i].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        // ⚡ Bolt: Fast-path with indexOf and single-pass loop instead of chained .replace() allocations
+        const str = parts[i];
+        if (str.indexOf('<') === -1 && str.indexOf('>') === -1) {
+          result += str;
+        } else {
+          let out = '';
+          let lastIndex = 0;
+          for (let j = 0; j < str.length; j++) {
+            const char = str.charCodeAt(j);
+            if (char === 60) { // '<'
+              out += str.substring(lastIndex, j) + '&lt;';
+              lastIndex = j + 1;
+            } else if (char === 62) { // '>'
+              out += str.substring(lastIndex, j) + '&gt;';
+              lastIndex = j + 1;
+            }
+          }
+          if (lastIndex !== str.length) {
+            out += str.substring(lastIndex);
+          }
+          result += out;
+        }
       } else {
         result += parts[i];
       }

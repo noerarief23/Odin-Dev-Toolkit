@@ -772,16 +772,16 @@
             <!-- Flags -->
             <div class="flex items-center gap-4">
               <span class="text-sm text-slate-600 dark:text-slate-400">Flags:</span>
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagG" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
+              <label class="flex items-center gap-1.5 cursor-pointer" for="regex-flag-g">
+                <input id="regex-flag-g" type="checkbox" x-model="regexFlagG" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagG ? 'text-gold-400' : 'text-slate-500'">g</span>
               </label>
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagI" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
+              <label class="flex items-center gap-1.5 cursor-pointer" for="regex-flag-i">
+                <input id="regex-flag-i" type="checkbox" x-model="regexFlagI" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagI ? 'text-gold-400' : 'text-slate-500'">i</span>
               </label>
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" x-model="regexFlagM" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
+              <label class="flex items-center gap-1.5 cursor-pointer" for="regex-flag-m">
+                <input id="regex-flag-m" type="checkbox" x-model="regexFlagM" @change="runRegex()" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-gold-500 focus:ring-gold-500 bg-white dark:bg-slate-800">
                 <span class="text-sm font-mono" :class="regexFlagM ? 'text-gold-400' : 'text-slate-500'">m</span>
               </label>
             </div>
@@ -822,7 +822,10 @@
             <div>
               <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Highlighted Matches</div>
               <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg p-4 min-h-[12rem] max-h-[20rem] overflow-auto font-mono text-sm leading-relaxed whitespace-pre-wrap break-words">
-                <template x-if="!regexResult.html"><span class="text-slate-400 dark:text-slate-600 italic">Results will appear here...</span></template>
+                <template x-if="!regexResult.html"><div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="regex" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Results will appear here...</p>
+                </div></template>
                 <span x-show="regexResult.html" x-html="regexResult.html"></span>
               </div>
             </div>
@@ -1018,12 +1021,14 @@
           <!-- Output -->
           <div>
             <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
-            <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
             <div class="json-editor h-[28rem]">
               <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
               <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
                 <template x-if="!jsonOutputHtml">
-                  <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
+                  <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="braces" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Output appears after Beautify or Minify...</p>
+                </div>
                 </template>
                 <template x-if="jsonOutputHtml">
                   <pre class="m-0 bg-transparent"><code class="language-json" x-html="jsonOutputHtml"></code></pre>
@@ -1115,7 +1120,10 @@
               <pre x-ref="xmlOutputGutter" class="json-gutter" x-text="getXmlOutputLineNumbers()"></pre>
               <div x-ref="xmlOutputPane" @scroll="syncXmlOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
                 <template x-if="!xmlOutputHtml">
-                  <p class="text-slate-600 italic text-sm">Output appears after Beautify or Minify...</p>
+                  <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="file-code" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Output appears after Beautify or Minify...</p>
+                </div>
                 </template>
                 <template x-if="xmlOutputHtml">
                   <pre class="m-0 bg-transparent"><code class="language-markup" x-html="xmlOutputHtml"></code></pre>
@@ -1482,25 +1490,37 @@ Example:
 
             <!-- C# Output -->
             <div x-show="modelActiveTab === 'csharp'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <template x-if="!modelOutputHtml.csharp"><p class="text-slate-600 italic text-sm">Generated C# code will appear here...</p></template>
+              <template x-if="!modelOutputHtml.csharp"><div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="file-code-2" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Generated C# code will appear here...</p>
+                </div></template>
               <template x-if="modelOutputHtml.csharp"><pre class="m-0 bg-transparent"><code class="language-csharp" x-html="modelOutputHtml.csharp"></code></pre></template>
             </div>
 
             <!-- Go Output -->
             <div x-show="modelActiveTab === 'go'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <template x-if="!modelOutputHtml.go"><p class="text-slate-600 italic text-sm">Generated Go code will appear here...</p></template>
+              <template x-if="!modelOutputHtml.go"><div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="file-code-2" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Generated Go code will appear here...</p>
+                </div></template>
               <template x-if="modelOutputHtml.go"><pre class="m-0 bg-transparent"><code class="language-go" x-html="modelOutputHtml.go"></code></pre></template>
             </div>
 
             <!-- Python Output -->
             <div x-show="modelActiveTab === 'python'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <template x-if="!modelOutputHtml.python"><p class="text-slate-600 italic text-sm">Generated Python code will appear here...</p></template>
+              <template x-if="!modelOutputHtml.python"><div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="file-code-2" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Generated Python code will appear here...</p>
+                </div></template>
               <template x-if="modelOutputHtml.python"><pre class="m-0 bg-transparent"><code class="language-python" x-html="modelOutputHtml.python"></code></pre></template>
             </div>
 
             <!-- PHP Output -->
             <div x-show="modelActiveTab === 'php'" class="code-output h-[32rem] overflow-auto rounded-t-none">
-              <template x-if="!modelOutputHtml.php"><p class="text-slate-600 italic text-sm">Generated PHP code will appear here...</p></template>
+              <template x-if="!modelOutputHtml.php"><div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                  <i data-lucide="file-code-2" class="w-10 h-10 mb-2 opacity-20"></i>
+                  <p class="text-sm">Generated PHP code will appear here...</p>
+                </div></template>
               <template x-if="modelOutputHtml.php"><pre class="m-0 bg-transparent"><code class="language-php" x-html="modelOutputHtml.php"></code></pre></template>
             </div>
           </div>
@@ -1541,8 +1561,8 @@ Example:
 
         <!-- Error -->
         <template x-if="jwtError">
-          <div class="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-            <i data-lucide="alert-triangle" class="w-4 h-4 inline-block mr-1"></i>
+          <div class="mb-4 px-4 py-3 rounded-lg error-badge flex items-center gap-1.5 text-sm">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
             <span x-text="jwtError"></span>
           </div>
         </template>
@@ -2083,10 +2103,10 @@ Example:
           <div x-show="b64Mode === 'encode'">
             <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Select File to Encode</div>
             <div class="flex items-center gap-3">
-              <label class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2">
+              <label class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2" for="b64-file-input">
                 <i data-lucide="file-up" class="w-4 h-4"></i>
                 Choose File
-                <input type="file" @change="b64HandleFile($event)" class="hidden">
+                <input id="b64-file-input" type="file" @change="b64HandleFile($event)" class="hidden">
               </label>
               <span class="text-sm text-slate-600 dark:text-slate-400" x-text="b64FileName || 'No file selected'"></span>
             </div>
@@ -2109,8 +2129,9 @@ Example:
 
           <!-- Decode File -->
           <div x-show="b64Mode === 'decode'">
-            <div class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste Base64 String</div>
+            <label for="b64-file-decode-input" class="block text-xs text-slate-500 uppercase tracking-wider mb-1.5">Paste Base64 String</label>
             <textarea
+              id="b64-file-decode-input"
               x-model="b64Input"
               class="textarea-valhalla w-full h-36 font-mono text-sm"
               placeholder="Paste Base64-encoded file data here..."
@@ -2694,7 +2715,10 @@ Example:
                   <pre class="m-0 bg-transparent text-sm"><code x-text="yamlOutput"></code></pre>
                 </template>
                 <template x-if="!yamlError && !yamlOutput">
-                  <p class="text-slate-600 italic text-sm">Output will appear here...</p>
+                  <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                    <i data-lucide="file-json-2" class="w-12 h-12 mb-3 opacity-20"></i>
+                    <p class="text-sm">Output will appear here...</p>
+                  </div>
                 </template>
               </div>
             </div>
@@ -2929,7 +2953,7 @@ Example:
   <!-- ============================================================
        TOAST NOTIFICATION
        ============================================================ -->
-  <div class="toast-container">
+  <div class="toast-container" aria-live="polite" role="status">
     <div
       x-show="toast.visible"
       x-transition:enter="transition ease-out duration-300"
