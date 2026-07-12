@@ -59,3 +59,7 @@
 ## 2026-07-09 - Prism HTML Sanitization Optimization
 **Learning:** Using chained `.replace(/</g, '&lt;').replace(/>/g, '&gt;')` calls inside loops for sanitizing Prism HTML string fragments creates massive performance overhead due to intermediate string and regex allocations. Using an early-exit `indexOf` check to avoid the string splitting step altogether if there are no angle brackets, combined with a single-pass string iteration (`charCodeAt`) for the replacement logic, dramatically speeds up sanitization (often ~40-50% faster) and prevents UI blocking on large code snippets.
 **Action:** When performing HTML escaping or replacements within high-frequency loops, favor early-exit checks and single-pass iteration loops over chained `.replace()` regexes to minimize string allocations and overhead.
+
+## 2025-01-20 - HTML Rendering Array Allocation Overhead
+**Learning:** Using chained `.map().join('')` for generating large HTML strings (such as in `Odin.DiffChecker._renderDiff`) is significantly slow due to intermediate array allocations and closure overhead per item.
+**Action:** Always favor a traditional `for` loop with string concatenation (`+=`) when rendering large lists of UI elements or HTML strings dynamically to avoid intermediate allocations and speed up render time.
