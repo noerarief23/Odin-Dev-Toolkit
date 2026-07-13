@@ -901,14 +901,18 @@ Odin.DiffChecker = {
   },
 
   _renderDiff(diff) {
-    return diff.lines
-      .map((row) => {
-        const cls = `diff-row diff-${row.type}`;
-        const left = Odin.Utils.escapeHtml(row.left ?? '');
-        const right = Odin.Utils.escapeHtml(row.right ?? '');
-        return `<div class="${cls}"><span class="diff-ln">${row.line}</span><span class="diff-left">${left}</span><span class="diff-right">${right}</span></div>`;
-      })
-      .join('');
+    // ⚡ Bolt: Use a traditional for loop instead of .map().join('')
+    // to avoid intermediate array allocations and closure overhead, heavily improving diff render speed.
+    let html = '';
+    const lines = diff.lines;
+    for (let i = 0; i < lines.length; i++) {
+      const row = lines[i];
+      const cls = `diff-row diff-${row.type}`;
+      const left = Odin.Utils.escapeHtml(row.left ?? '');
+      const right = Odin.Utils.escapeHtml(row.right ?? '');
+      html += `<div class="${cls}"><span class="diff-ln">${row.line}</span><span class="diff-left">${left}</span><span class="diff-right">${right}</span></div>`;
+    }
+    return html;
   }
 };
 
