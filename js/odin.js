@@ -1796,7 +1796,7 @@ Odin.JWT = {
       for (let i = 0; i < raw.length; i++) {
         bytes[i] = raw.charCodeAt(i);
       }
-      return new TextDecoder().decode(bytes);
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     } catch (_) {
       return binary;
     }

@@ -63,3 +63,6 @@
 ## 2024-05-18 - Render Diff HTML String Builder
 **Learning:** In Javascript, using `Array.prototype.map().join('')` to generate HTML strings creates unnecessary intermediate array allocations, closures, and takes more execution time. Using a traditional `for` loop and string concatenation is much faster.
 **Action:** When rendering large lists of UI elements or strings, favor traditional `for` loops with string concatenation (`+=`) over array `.map().join('')` for improved performance.
+## 2025-01-20 - HTML Rendering Array Allocation Overhead
+**Learning:** Using chained `.map().join('')` for generating large HTML strings (such as in `Odin.DiffChecker._renderDiff`) is significantly slow due to intermediate array allocations and closure overhead per item.
+**Action:** Always favor a traditional `for` loop with string concatenation (`+=`) when rendering large lists of UI elements or HTML strings dynamically to avoid intermediate allocations and speed up render time.
