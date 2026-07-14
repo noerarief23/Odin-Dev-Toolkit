@@ -1908,19 +1908,45 @@ Odin.CaseConverter = {
   toCamelCase(text) {
     const words = this._splitWords(text);
     if (!words.length) return '';
-    return words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+    // ⚡ Bolt: Use a traditional for loop and string concatenation rather than .slice().map().join('')
+    // to avoid intermediate array allocations and closure overhead, drastically improving execution speed.
+    let res = words[0].toLowerCase();
+    for (let i = 1; i < words.length; i++) {
+      const w = words[i];
+      res += w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }
+    return res;
   },
 
   toPascalCase(text) {
-    return this._splitWords(text).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+    const words = this._splitWords(text);
+    if (!words.length) return '';
+    let res = '';
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      res += w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }
+    return res;
   },
 
   toSnakeCase(text) {
-    return this._splitWords(text).map(w => w.toLowerCase()).join('_');
+    const words = this._splitWords(text);
+    if (!words.length) return '';
+    let res = words[0].toLowerCase();
+    for (let i = 1; i < words.length; i++) {
+      res += '_' + words[i].toLowerCase();
+    }
+    return res;
   },
 
   toKebabCase(text) {
-    return this._splitWords(text).map(w => w.toLowerCase()).join('-');
+    const words = this._splitWords(text);
+    if (!words.length) return '';
+    let res = words[0].toLowerCase();
+    for (let i = 1; i < words.length; i++) {
+      res += '-' + words[i].toLowerCase();
+    }
+    return res;
   },
 
   toTitleCase(text) {
