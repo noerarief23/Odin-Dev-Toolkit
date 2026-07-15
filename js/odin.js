@@ -2184,7 +2184,11 @@ Odin.YAML = {
   },
 
   _getIndent(line) {
-    return line.length - line.trimStart().length;
+    // ⚡ Bolt: Use a simple while loop to count spaces instead of .length - .trimStart().length
+    // to avoid intermediate string allocation for every line, significantly speeding up YAML parsing.
+    let i = 0;
+    while (i < line.length && line.charCodeAt(i) === 32) i++; // 32 is space
+    return i;
   },
 
   _stringifyYAML(obj, indent = 0) {
