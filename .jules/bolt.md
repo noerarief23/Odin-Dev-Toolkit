@@ -74,3 +74,7 @@
 ## 2025-01-20 - Regex Match Reconstruction Array Allocation Overhead
 **Learning:** In Javascript, using `Array.prototype.map()` combined with the array spread operator (`[m.fullMatch, ...m.groups]`) to rebuild thousands of simulated regex matches (e.g., from Web Worker messages) creates massive intermediate array and closure allocations, severely blocking the main thread.
 **Action:** Replace array `.map()` and spread syntax with pre-allocated arrays (`new Array(length)`) and nested traditional `for` loops to manually copy items. This avoids dynamic array resizing and closure allocation overhead, resulting in a ~15x performance speedup in high-frequency iterations.
+
+## 2024-05-25 - Avoid Chained Map and Spread Math.max
+**Learning:** When dynamically formatting arrays or properties into code strings (e.g., in code generators), avoid chained `.map()` and `Math.max(...array.map())` calls. They create severe memory pressure and main-thread blocking by dynamically allocating intermediate arrays.
+**Action:** Favor pre-allocated arrays and traditional `for` loops to process the data and compute maximum values concurrently without intermediate array allocations or spread operator overhead.
