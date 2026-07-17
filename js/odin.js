@@ -1905,6 +1905,11 @@ Odin.ImageShrink = {
    ================================================================ */
 Odin.CaseConverter = {
   _splitWords(text) {
+    // 🛡️ Sentinel: Limit string length before complex regex to prevent ReDoS/DoS via massive arrays
+    if (typeof text === 'string' && text.length > 50000) {
+      throw new Error("Input string is too large. Maximum length is 50,000 characters.");
+    }
+
     // ⚡ Bolt: Extract words using a single .match regex to avoid intermediate string allocations.
     // This avoids chained replacements and reduces execution time significantly (~75% reduction).
     return text.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) || [];
@@ -3267,8 +3272,12 @@ function odinApp() {
     },
 
     runDiffCheck() {
-      const result = Odin.DiffChecker.compare(this.diffLeftInput, this.diffRightInput, this.diffMode);
-      this.diffResult = result;
+      try {
+        const result = Odin.DiffChecker.compare(this.diffLeftInput, this.diffRightInput, this.diffMode);
+        this.diffResult = result;
+      } catch (e) {
+        this.diffResult = { equal: false, error: e.message, html: '', stats: { added: 0, removed: 0, changed: 0 } };
+      }
       Odin.Storage.set('diff_mode', this.diffMode);
       Odin.Storage.set('diff_left_input', this.diffLeftInput);
       Odin.Storage.set('diff_right_input', this.diffRightInput);
@@ -3513,7 +3522,15 @@ function odinApp() {
 
     // ---- Case Converter Methods ----
     convertCase() {
-      this.caseOutput = this.caseInput ? Odin.CaseConverter.convert(this.caseInput, this.caseMode) : '';
+      if (!this.caseInput) {
+        this.caseOutput = '';
+        return;
+      }
+      try {
+        this.caseOutput = Odin.CaseConverter.convert(this.caseInput, this.caseMode);
+      } catch (e) {
+        this.caseOutput = e.message;
+      }
     },
 
     setCaseMode(mode) {
