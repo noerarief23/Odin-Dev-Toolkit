@@ -74,3 +74,7 @@
 ## 2025-01-20 - Regex Match Reconstruction Array Allocation Overhead
 **Learning:** In Javascript, using `Array.prototype.map()` combined with the array spread operator (`[m.fullMatch, ...m.groups]`) to rebuild thousands of simulated regex matches (e.g., from Web Worker messages) creates massive intermediate array and closure allocations, severely blocking the main thread.
 **Action:** Replace array `.map()` and spread syntax with pre-allocated arrays (`new Array(length)`) and nested traditional `for` loops to manually copy items. This avoids dynamic array resizing and closure allocation overhead, resulting in a ~15x performance speedup in high-frequency iterations.
+
+## 2026-07-18 - Array map with Math.max spread Allocation
+**Learning:** Using `Math.max(...array.map())` on a dynamically sized array not only incurs intermediate array allocations and closure execution overhead, but it can also hit stack size limits for extremely large arrays, and evaluate to `-Infinity` if the array happens to be empty. This pattern in code generators (like `Odin.ModelGen`) causes severe garbage collection and execution pauses.
+**Action:** Avoid `.map()` and the spread operator for sizing calculations. Instead, use a pre-allocated array (e.g. `new Array(numProps)`) with a traditional `for` loop and track max values manually (e.g., `if (val > max) max = val`).
