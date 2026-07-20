@@ -1327,7 +1327,8 @@ Odin.ModelGen = {
         if (goType.length > maxTypeLen) maxTypeLen = goType.length;
       }
 
-      for (const f of fields) {
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
         const name = f.fieldName.padEnd(maxNameLen);
         const type = f.goType.padEnd(maxTypeLen);
         lines.push(`\t${name} ${type} \`json:"${f.jsonTag}"\``);
@@ -1435,8 +1436,11 @@ Odin.ModelGen = {
       lines.push('{');
       lines.push('    public function __construct(');
 
-      const params = cls.properties.map((prop, idx) => {
-        const { schema, originalKey } = prop;
+      // ⚡ Bolt: Use a traditional for loop instead of .map() to prevent intermediate arrays
+      const props = cls.properties;
+      const propsLen = props.length;
+      for (let i = 0; i < propsLen; i++) {
+        const { schema, originalKey } = props[i];
         const paramName = this.toCamelCase(originalKey);
         let phpType;
 
@@ -1454,12 +1458,11 @@ Odin.ModelGen = {
         const isNullable = schema.type === 'nullable';
         const typePrefix = isNullable ? '?' : '';
         const defaultVal = isNullable ? ' = null' : (schema.isArray ? ' = []' : '');
-        const comma = idx < cls.properties.length - 1 ? ',' : '';
+        const comma = i < propsLen - 1 ? ',' : '';
 
-        return `        public ${typePrefix}${phpType} $${paramName}${defaultVal}${comma}`;
-      });
+        lines.push(`        public ${typePrefix}${phpType} $${paramName}${defaultVal}${comma}`);
+      }
 
-      lines.push(...params);
       lines.push('    ) {}');
       lines.push('}');
       lines.push('');
@@ -1909,6 +1912,11 @@ Odin.ImageShrink = {
    ================================================================ */
 Odin.CaseConverter = {
   _splitWords(text) {
+    // 🛡️ Sentinel: Limit string length before complex regex to prevent ReDoS/DoS via massive arrays
+    if (typeof text === 'string' && text.length > 50000) {
+      throw new Error("Input string is too large. Maximum length is 50,000 characters.");
+    }
+
     // ⚡ Bolt: Extract words using a single .match regex to avoid intermediate string allocations.
     // This avoids chained replacements and reduces execution time significantly (~75% reduction).
     return text.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) || [];
@@ -3271,8 +3279,12 @@ function odinApp() {
     },
 
     runDiffCheck() {
-      const result = Odin.DiffChecker.compare(this.diffLeftInput, this.diffRightInput, this.diffMode);
-      this.diffResult = result;
+      try {
+        const result = Odin.DiffChecker.compare(this.diffLeftInput, this.diffRightInput, this.diffMode);
+        this.diffResult = result;
+      } catch (e) {
+        this.diffResult = { equal: false, error: e.message, html: '', stats: { added: 0, removed: 0, changed: 0 } };
+      }
       Odin.Storage.set('diff_mode', this.diffMode);
       Odin.Storage.set('diff_left_input', this.diffLeftInput);
       Odin.Storage.set('diff_right_input', this.diffRightInput);
@@ -3517,7 +3529,15 @@ function odinApp() {
 
     // ---- Case Converter Methods ----
     convertCase() {
-      this.caseOutput = this.caseInput ? Odin.CaseConverter.convert(this.caseInput, this.caseMode) : '';
+      if (!this.caseInput) {
+        this.caseOutput = '';
+        return;
+      }
+      try {
+        this.caseOutput = Odin.CaseConverter.convert(this.caseInput, this.caseMode);
+      } catch (e) {
+        this.caseOutput = e.message;
+      }
     },
 
     setCaseMode(mode) {
