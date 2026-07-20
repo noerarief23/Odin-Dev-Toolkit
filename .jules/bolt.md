@@ -75,6 +75,9 @@
 **Learning:** In Javascript, using `Array.prototype.map()` combined with the array spread operator (`[m.fullMatch, ...m.groups]`) to rebuild thousands of simulated regex matches (e.g., from Web Worker messages) creates massive intermediate array and closure allocations, severely blocking the main thread.
 **Action:** Replace array `.map()` and spread syntax with pre-allocated arrays (`new Array(length)`) and nested traditional `for` loops to manually copy items. This avoids dynamic array resizing and closure allocation overhead, resulting in a ~15x performance speedup in high-frequency iterations.
 
+## 2026-07-18 - Array map with Math.max spread Allocation
+**Learning:** Using `Math.max(...array.map())` on a dynamically sized array not only incurs intermediate array allocations and closure execution overhead, but it can also hit stack size limits for extremely large arrays, and evaluate to `-Infinity` if the array happens to be empty. This pattern in code generators (like `Odin.ModelGen`) causes severe garbage collection and execution pauses.
+**Action:** Avoid `.map()` and the spread operator for sizing calculations. Instead, use a pre-allocated array (e.g. `new Array(numProps)`) with a traditional `for` loop and track max values manually (e.g., `if (val > max) max = val`).
 ## 2024-05-25 - Avoid Chained Map and Spread Math.max
 **Learning:** When dynamically formatting arrays or properties into code strings (e.g., in code generators), avoid chained `.map()` and `Math.max(...array.map())` calls. They create severe memory pressure and main-thread blocking by dynamically allocating intermediate arrays.
 **Action:** Favor pre-allocated arrays and traditional `for` loops to process the data and compute maximum values concurrently without intermediate array allocations or spread operator overhead.
