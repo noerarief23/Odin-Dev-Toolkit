@@ -69,3 +69,12 @@
 **Vulnerability:** Silent substitution of invalid UTF-8 sequences in JWT payload decoding due to missing `{ fatal: true }` option in `TextDecoder`.
 **Learning:** By default, `TextDecoder` silently replaces invalid UTF-8 byte sequences with the replacement character (`\uFFFD`). This swallows encoding errors and allows malformed UTF-8 payloads to be processed without throwing an exception, potentially masking manipulation or leading to unexpected application states downstream.
 **Prevention:** Always pass `{ fatal: true }` as the second argument when using `new TextDecoder('utf-8', ...)` to decode untrusted data, ensuring that invalid byte sequences explicitly throw errors and are handled correctly by `catch` blocks.
+## 2026-07-08 - Algorithmic DoS via Unbounded Inputs in LCS Algorithm
+**Vulnerability:** Client-Side Algorithmic Denial of Service (DoS) due to unbounded input length in the `Odin.DiffChecker` Myers LCS implementation.
+**Learning:** The Myers Longest Common Subsequence (LCS) algorithm has an $O(ND)$ time and space complexity, where $N$ is the length of the strings and $D$ is the number of differences. If unbounded string inputs (e.g., 5MB of text) are passed to `Odin.DiffChecker`, the algorithm will allocate massive arrays and perform intensive computations, freezing the main browser thread indefinitely and leading to a client-side DoS.
+**Prevention:** Always explicitly bound the length of input strings before passing them to algorithms with non-linear time or space complexity (e.g., limit inputs to 250,000 characters for diff checks).
+
+## 2026-07-08 - ReDoS/DoS via Unbounded RegExp on Single Strings
+**Vulnerability:** Regular Expression Denial of Service (ReDoS) and massive array allocation DoS due to an unbounded `text.match(...)` operation in `Odin.CaseConverter`.
+**Learning:** While regex timeout loops exist in other parts of the application, single-pass native regex operations (like `String.prototype.match`) on unbounded untrusted input can still hang the main thread via catastrophic backtracking or exhaust memory by allocating a massive array of matches (e.g., an array of 5,000,000 single-character tokens).
+**Prevention:** Explicitly bound the length of strings before running complex or global regular expressions (e.g., `if (text.length > 50000) throw new Error(...)`). Instead of silently truncating the input (which causes functional data-loss regressions), throw a clear error that the caller can catch and gracefully handle.
