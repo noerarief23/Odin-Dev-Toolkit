@@ -1296,16 +1296,13 @@ Odin.ModelGen = {
     for (const cls of classes) {
       lines.push(`type ${cls.name} struct {`);
 
-      // Find longest field name for alignment
-      // ⚡ Bolt: Prevent intermediate array allocations, closures, and Math.max spread issues by using a traditional loop
-      const numProps = cls.properties.length;
-      const fields = new Array(numProps);
+      // ⚡ Bolt: Use a pre-allocated array and traditional for loop instead of chained .map() and spread operator to avoid allocations and potential -Infinity errors
+      const fields = new Array(cls.properties.length);
       let maxNameLen = 0;
       let maxTypeLen = 0;
 
-      for (let i = 0; i < numProps; i++) {
-        const prop = cls.properties[i];
-        const { schema, originalKey } = prop;
+      for (let i = 0; i < cls.properties.length; i++) {
+        const { schema, originalKey } = cls.properties[i];
         const fieldName = this.toPascalCase(originalKey);
         let goType;
 
@@ -1324,11 +1321,10 @@ Odin.ModelGen = {
         }
 
         const jsonTag = useOmitEmpty ? `${originalKey},omitempty` : originalKey;
+        fields[i] = { fieldName, goType, jsonTag };
 
         if (fieldName.length > maxNameLen) maxNameLen = fieldName.length;
         if (goType.length > maxTypeLen) maxTypeLen = goType.length;
-
-        fields[i] = { fieldName, goType, jsonTag };
       }
 
       for (let i = 0; i < fields.length; i++) {
