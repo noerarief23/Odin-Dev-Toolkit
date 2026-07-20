@@ -1297,8 +1297,14 @@ Odin.ModelGen = {
       lines.push(`type ${cls.name} struct {`);
 
       // Find longest field name for alignment
-      const fields = cls.properties.map(prop => {
-        const { schema, originalKey } = prop;
+      // ⚡ Bolt: Use a pre-allocated array and traditional for loop instead of .map() and Math.max() with spread
+      const propsLen = cls.properties.length;
+      const fields = new Array(propsLen);
+      let maxNameLen = 0;
+      let maxTypeLen = 0;
+
+      for (let i = 0; i < propsLen; i++) {
+        const { schema, originalKey } = cls.properties[i];
         const fieldName = this.toPascalCase(originalKey);
         let goType;
 
@@ -1317,11 +1323,12 @@ Odin.ModelGen = {
         }
 
         const jsonTag = useOmitEmpty ? `${originalKey},omitempty` : originalKey;
-        return { fieldName, goType, jsonTag };
-      });
 
-      const maxNameLen = Math.max(...fields.map(f => f.fieldName.length));
-      const maxTypeLen = Math.max(...fields.map(f => f.goType.length));
+        if (fieldName.length > maxNameLen) maxNameLen = fieldName.length;
+        if (goType.length > maxTypeLen) maxTypeLen = goType.length;
+
+        fields[i] = { fieldName, goType, jsonTag };
+      }
 
       for (const f of fields) {
         const name = f.fieldName.padEnd(maxNameLen);
@@ -1431,8 +1438,11 @@ Odin.ModelGen = {
       lines.push('{');
       lines.push('    public function __construct(');
 
-      const params = cls.properties.map((prop, idx) => {
-        const { schema, originalKey } = prop;
+      // ⚡ Bolt: Use a traditional for loop instead of .map() to prevent intermediate arrays
+      const props = cls.properties;
+      const propsLen = props.length;
+      for (let i = 0; i < propsLen; i++) {
+        const { schema, originalKey } = props[i];
         const paramName = this.toCamelCase(originalKey);
         let phpType;
 
@@ -1450,12 +1460,11 @@ Odin.ModelGen = {
         const isNullable = schema.type === 'nullable';
         const typePrefix = isNullable ? '?' : '';
         const defaultVal = isNullable ? ' = null' : (schema.isArray ? ' = []' : '');
-        const comma = idx < cls.properties.length - 1 ? ',' : '';
+        const comma = i < propsLen - 1 ? ',' : '';
 
-        return `        public ${typePrefix}${phpType} $${paramName}${defaultVal}${comma}`;
-      });
+        lines.push(`        public ${typePrefix}${phpType} $${paramName}${defaultVal}${comma}`);
+      }
 
-      lines.push(...params);
       lines.push('    ) {}');
       lines.push('}');
       lines.push('');
