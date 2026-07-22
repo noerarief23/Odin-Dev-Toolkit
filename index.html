@@ -2068,7 +2068,7 @@ Example:
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <div class="block text-xs text-slate-500 uppercase tracking-wider" x-text="b64Mode === 'encode' ? 'Base64 Output' : 'Decoded Text'"></div>
+              <label for="b64-output" class="block text-xs text-slate-500 uppercase tracking-wider" x-text="b64Mode === 'encode' ? 'Base64 Output' : 'Decoded Text'"></label>
               <button
                 @click="b64CopyOutput()"
                 x-show="b64Output"
@@ -2078,6 +2078,7 @@ Example:
               </button>
             </div>
             <textarea
+              id="b64-output"
               x-model="b64Output"
               readonly
               class="textarea-valhalla w-full h-36 font-mono text-sm bg-slate-100 dark:bg-slate-900/50"
