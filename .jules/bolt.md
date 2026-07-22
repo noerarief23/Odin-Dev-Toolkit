@@ -87,3 +87,7 @@
 ## 2025-01-20 - String Array Mapping Allocation in Generator Loops
 **Learning:** Using chained `.map()` and `Math.max(...array.map())` calls inside generator logic (such as in `Odin.ModelGen._genGo` and `_genPhp`) creates severe memory pressure and main-thread blocking due to multiple intermediate arrays being created and immediately garbage collected, taking over ~20% more execution time for large JSON objects.
 **Action:** When dynamically formatting arrays or properties into code strings, favor pre-allocated arrays (`new Array(length)`) combined with traditional `for` loops rather than using `.map()` or spread operators, preserving high performance during serialization.
+
+## 2026-07-20 - Optimize Array Processing in Markdown Generation
+**Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
+**Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.

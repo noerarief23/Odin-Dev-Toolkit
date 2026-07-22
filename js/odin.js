@@ -1776,18 +1776,26 @@ Odin.Pomodoro = {
     md += '|---|-------|--------|------|----------|-------------|--------|\n';
 
     const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
-    entries.forEach((e, i) => {
+
+    // ⚡ Bolt: Combine .forEach, .filter, and .reduce into a single-pass traditional for loop
+    // to avoid intermediate array allocations and closure overhead per iteration.
+    let totalFocusSec = 0;
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
       const start = fmt(e.startedAt);
       const finish = fmt(e.completedAt);
       const dur = this.formatTime(e.duration);
       const mode = this.MODES[e.mode] ? this.MODES[e.mode].label : e.mode;
       md += '| ' + (i + 1) + ' | ' + start + ' | ' + finish + ' | ' + mode + ' | ' + dur + ' | ' + (e.todo || '-') + ' | ' + (e.actual || '-') + ' |\n';
-    });
+
+      if (e.mode === 'focus') {
+        totalFocusSec += (e.duration || 0);
+      }
+    }
 
     md += '\n---\n';
     md += 'Total sessions: ' + entries.length + '  \n';
-    const focusEntries = entries.filter(e => e.mode === 'focus');
-    const totalFocusMin = focusEntries.reduce((s, e) => s + (e.duration || 0), 0) / 60;
+    const totalFocusMin = totalFocusSec / 60;
     md += 'Total focus time: ' + Math.round(totalFocusMin) + ' minutes\n';
 
     return md;
