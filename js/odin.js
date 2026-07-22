@@ -1777,8 +1777,8 @@ Odin.Pomodoro = {
 
     const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
 
-    // ⚡ Bolt: Use a single-pass traditional for loop instead of chained .forEach(), .filter(), and .reduce()
-    // to avoid multiple array traversals, intermediate array allocations, and closure overhead.
+    // ⚡ Bolt: Combine .forEach, .filter, and .reduce into a single-pass traditional for loop
+    // to avoid intermediate array allocations and closure overhead per iteration.
     let totalFocusSec = 0;
     for (let i = 0; i < entries.length; i++) {
       const e = entries[i];
