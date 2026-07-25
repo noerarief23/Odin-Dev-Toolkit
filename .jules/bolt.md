@@ -94,3 +94,7 @@
 ## 2026-07-20 - Optimize Array Processing in Markdown Generation
 **Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
 **Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.
+
+## 2025-01-20 - Storage JSON Cache Allocation Overhead
+**Learning:** In client-side JavaScript applications, synchronous `localStorage.getItem` and `JSON.parse` operations block the main thread. Accessing these within high-frequency loops (e.g. `setInterval`, or reactive getters like Alpine.js) creates severe overhead. Caching the parsed result in memory dramatically improves render performance.
+**Action:** When a stored value is accessed frequently, cache the parsed object in a property and explicitly invalidate the cache only on settings updates rather than reading from `localStorage` continuously.

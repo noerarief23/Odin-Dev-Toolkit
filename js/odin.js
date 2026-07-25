@@ -1526,24 +1526,32 @@ Odin.Pomodoro = {
   /** Min/Max constraints (minutes) */
   LIMITS: { min: 1, max: 120 },
 
+  _cachedDurations: null,
+
   /** Load user-customised durations from localStorage, or fall back to defaults */
   loadCustomDurations() {
+    // ⚡ Bolt: Cache parsed custom durations to prevent main-thread blocking
+    // from synchronous localStorage.getItem and JSON.parse in high-frequency loops (e.g. getters).
+    if (this._cachedDurations) return this._cachedDurations;
     try {
       const raw = localStorage.getItem('odin_pomo_durations');
       if (raw) {
         const parsed = JSON.parse(raw);
-        return {
+        this._cachedDurations = {
           focus: Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.focus ?? this.DEFAULTS.focus)),
           short: Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.short ?? this.DEFAULTS.short)),
           long:  Math.max(this.LIMITS.min * 60, Math.min(this.LIMITS.max * 60, parsed.long  ?? this.DEFAULTS.long))
         };
+        return this._cachedDurations;
       }
     } catch (_) { /* ignore */ }
-    return { ...this.DEFAULTS };
+    this._cachedDurations = { ...this.DEFAULTS };
+    return this._cachedDurations;
   },
 
   /** Persist custom durations */
   saveCustomDurations(durations) {
+    this._cachedDurations = null; // Invalidate cache
     try {
       localStorage.setItem('odin_pomo_durations', JSON.stringify(durations));
     } catch (_) { /* ignore */ }
