@@ -94,3 +94,7 @@
 ## 2026-07-20 - Optimize Array Processing in Markdown Generation
 **Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
 **Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.
+
+## 2026-07-26 - Cache LocalStorage Reads During App Init
+**Learning:** Calling methods that read from `localStorage` and perform `JSON.parse` multiple times during the reactive app initialization (e.g., in `odinApp()` data function) causes unnecessary synchronous blocking on the main thread.
+**Action:** Extract the results of expensive synchronous reads (like `Odin.Pomodoro.loadCustomDurations()` and `Odin.Pomodoro.getTodayLog()`) into local variables at the top of the initialization function, and reference the variables when constructing the state object.
