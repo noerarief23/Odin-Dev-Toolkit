@@ -261,7 +261,7 @@ Odin.Regex = {
   TIMEOUT_MS: 3000,
 
   test(pattern, flags, testString) {
-    if (testString && testString.length > 50000) testString = testString.substring(0, 50000);
+    if (testString && testString.length > 50000) return { html: Odin.Utils.escapeHtml(testString.substring(0, 50000) || ''), matches: [], error: "Test string exceeds maximum length of 50,000 characters", matchCount: 0 };
     if (pattern && pattern.length > 500) return { html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: "Pattern exceeds maximum length of 500 characters", matchCount: 0 };
     if (!pattern || !testString) {
       return { html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: null, matchCount: 0 };
@@ -315,7 +315,7 @@ Odin.Regex = {
    * Falls back to sync test() if Workers are unavailable.
    */
   testAsync(pattern, flags, testString, timeoutMs) {
-    if (testString && testString.length > 50000) testString = testString.substring(0, 50000);
+    if (testString && testString.length > 50000) return Promise.resolve({ html: Odin.Utils.escapeHtml(testString.substring(0, 50000) || ''), matches: [], error: "Test string exceeds maximum length of 50,000 characters", matchCount: 0 });
     if (pattern && pattern.length > 500) return Promise.resolve({ html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: "Pattern exceeds maximum length of 500 characters", matchCount: 0 });
     const timeout = timeoutMs || this.TIMEOUT_MS;
 
@@ -674,6 +674,16 @@ Odin.XmlFormatter = {
    ================================================================ */
 Odin.DiffChecker = {
   compare(leftInput, rightInput, mode) {
+    // 🛡️ Sentinel: Enforce safe bounding limits on string inputs to prevent algorithmic DoS
+    if (leftInput.length > 250000 || rightInput.length > 250000) {
+      return {
+        equal: false,
+        error: 'Input exceeds maximum length of 250,000 characters',
+        html: '',
+        stats: { added: 0, removed: 0, changed: 0 }
+      };
+    }
+
     if (!leftInput.trim() || !rightInput.trim()) {
       return {
         equal: false,
