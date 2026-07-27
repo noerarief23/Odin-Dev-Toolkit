@@ -98,3 +98,6 @@
 ## 2025-01-20 - Storage JSON Cache Allocation Overhead
 **Learning:** In client-side JavaScript applications, synchronous `localStorage.getItem` and `JSON.parse` operations block the main thread. Accessing these within high-frequency loops (e.g. `setInterval`, or reactive getters like Alpine.js) creates severe overhead. Caching the parsed result in memory dramatically improves render performance.
 **Action:** When a stored value is accessed frequently, cache the parsed object in a property and explicitly invalidate the cache only on settings updates rather than reading from `localStorage` continuously.
+## 2024-07-31 - Pomodoro Active Timer I/O Overhead
+**Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
+**Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
