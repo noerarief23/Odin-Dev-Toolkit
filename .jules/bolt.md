@@ -94,3 +94,7 @@
 ## 2026-07-20 - Optimize Array Processing in Markdown Generation
 **Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
 **Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.
+
+## 2026-07-27 - App Initialization Performance
+**Learning:** In client-side JavaScript applications, avoid synchronous `localStorage.getItem` and `JSON.parse` operations inside high-frequency loops or app startup functions like Alpine.js reactive state initialization, as they cause severe main-thread blocking. Caching the parsed object in a local variable prevents redundant synchronous blocking.
+**Action:** When initializing a reactive app state (e.g., an Alpine.js data object), cache the results of expensive synchronous operations like `localStorage.getItem` and `JSON.parse` into local variables if they are used multiple times.
