@@ -674,11 +674,11 @@ Odin.XmlFormatter = {
    ================================================================ */
 Odin.DiffChecker = {
   compare(leftInput, rightInput, mode) {
-    // 🛡️ Sentinel: Enforce safe bounding limits on string inputs to prevent algorithmic DoS
+    // 🛡️ Sentinel: Bound input length to prevent Algorithmic DoS via massive arrays in LCS algorithm
     if (leftInput.length > 250000 || rightInput.length > 250000) {
       return {
         equal: false,
-        error: 'Input exceeds maximum length of 250,000 characters',
+        error: 'Input exceeds maximum length of 250,000 characters (DoS protection).',
         html: '',
         stats: { added: 0, removed: 0, changed: 0 }
       };
