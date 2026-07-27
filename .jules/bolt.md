@@ -94,3 +94,7 @@
 ## 2026-07-20 - Optimize Array Processing in Markdown Generation
 **Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
 **Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.
+
+## 2024-07-31 - Pomodoro Active Timer I/O Overhead
+**Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
+**Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
