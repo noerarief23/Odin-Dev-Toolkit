@@ -1126,7 +1126,8 @@ code[class*="language-"] {
 }
 
 .img-dropzone:hover,
-.img-dropzone-active {
+.img-dropzone-active,
+.img-dropzone:focus-visible {
   border-color: var(--gold-500);
   background: rgba(234, 179, 8, 0.04);
 }
