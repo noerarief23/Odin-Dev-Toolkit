@@ -1652,6 +1652,11 @@ Example:
           @dragleave.prevent="imgDragover = false"
           @drop.prevent="imgHandleDrop($event)"
           @click="$refs.imgFileInput.click()"
+          @keydown.enter.prevent="$refs.imgFileInput.click()"
+          @keydown.space.prevent="$refs.imgFileInput.click()"
+          tabindex="0"
+          role="button"
+          aria-label="Upload image"
           :class="imgDragover ? 'img-dropzone-active' : ''"
           class="img-dropzone cursor-pointer"
         >
