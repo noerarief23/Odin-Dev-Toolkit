@@ -98,3 +98,7 @@
 ## 2024-07-31 - Pomodoro Active Timer I/O Overhead
 **Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
 **Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
+
+## 2026-07-22 - Myers LCS Diff Memory Optimization
+**Learning:** In dynamic programming algorithms like the O(ND) Myers Diff algorithm, caching the entire state array `v.slice()` at every iteration of `d` allocates O(MAX) memory per step. This results in an overall O(MAX^2) space complexity that severely degrades performance and causes massive garbage collection pauses for large files.
+**Action:** When saving state in dynamic programming algorithms, slice and store only the actively modified or accessed boundaries (e.g., `[offset - d - 1, offset + d + 2]`) to reduce space complexity from O(MAX^2) to O(d^2) and prevent severe GC overhead.
