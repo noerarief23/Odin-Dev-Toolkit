@@ -1,0 +1,3 @@
+## 2024-08-02 - Accessible Hidden File Inputs
+**Learning:** Native `<input type="file">` elements that are hidden (via `display: none` or Tailwind's `.hidden`) lose all focusability and keyboard interactivity, preventing keyboard-only users from triggering file selection dialogs.
+**Action:** When creating custom file dropzones or upload buttons that wrap hidden inputs, always explicitly restore accessibility on the wrapper element by adding `tabindex="0"`, `role="button"`, an appropriate `aria-label`, and explicit keyboard event handlers (like `@keydown.enter.prevent` and `@keydown.space.prevent`) to programmatically click the hidden input.
