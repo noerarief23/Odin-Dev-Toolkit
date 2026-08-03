@@ -98,3 +98,6 @@
 ## 2024-07-31 - Pomodoro Active Timer I/O Overhead
 **Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
 **Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
+## 2025-01-20 - Myers Diff Array Cloning Memory Leak
+**Learning:** In the O(ND) Myers diff algorithm, cloning the entire state array `v` at every step (`v.slice()`) creates massive memory space complexity of O(MAX^2). For large files, this leads to heavy garbage collection pauses. Furthermore, negative start indices passed to `slice()` will wrap around from the end of the array, causing silent bugs instead of errors.
+**Action:** Always slice only the actively used boundaries of the array (e.g. `[-d-1, d+1]`) to reduce space complexity to O(d^2), and explicitly clamp the start index to `0` (e.g., `Math.max(0, start)`) to prevent negative wraparound.
