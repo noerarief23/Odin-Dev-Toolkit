@@ -1,0 +1,3 @@
+## 2024-03-24 - Accessibility Improvements for Image Dropzone
+**Learning:** Found that custom file dropzones implemented by hiding the native `<input type="file">` (using `class="hidden"`) lose all keyboard accessibility. They cannot be focused with Tab, and Enter/Space keys do not trigger the file dialog for screen reader and keyboard-only users.
+**Action:** Always ensure the custom dropzone wrapper is focusable (`tabindex="0"`), has an appropriate ARIA role (`role="button"`), an `aria-label`, and explicit keyboard event listeners (`@keydown.enter.prevent` and `@keydown.space.prevent`) to programmatically trigger the hidden input, along with `:focus-visible` styling for visual feedback.

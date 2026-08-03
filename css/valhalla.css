@@ -1187,3 +1187,7 @@ input[type="checkbox"]:focus-visible ~ .toggle-track {
   outline: 2px solid var(--gold-500);
   outline-offset: 2px;
 }
+.img-dropzone:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
