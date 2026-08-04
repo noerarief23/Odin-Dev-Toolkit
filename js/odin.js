@@ -860,7 +860,11 @@ Odin.DiffChecker = {
 
     outer:
     for (let d = 0; d <= MAX; d++) {
-      trace.push(v.slice());
+      // ⚡ Bolt: Slice only the actively used boundaries to reduce memory space complexity
+      // from O(MAX^2) to O(d^2) and prevent massive garbage collection overhead.
+      const start = Math.max(0, offset - d - 1);
+      const end = offset + d + 2;
+      trace.push(v.slice(start, end));
 
       for (let k = -d; k <= d; k += 2) {
         let x;
@@ -891,16 +895,17 @@ Odin.DiffChecker = {
 
     for (let d = trace.length - 1; d >= 0; d--) {
       const vPrev = trace[d];
+      const start = Math.max(0, offset - d - 1);
       const k = x - y;
 
       let prevK;
-      if (k === -d || (k !== d && vPrev[offset + k - 1] < vPrev[offset + k + 1])) {
+      if (k === -d || (k !== d && vPrev[offset + k - 1 - start] < vPrev[offset + k + 1 - start])) {
         prevK = k + 1;
       } else {
         prevK = k - 1;
       }
 
-      const prevX = vPrev[offset + prevK];
+      const prevX = vPrev[offset + prevK - start];
       const prevY = prevX - prevK;
 
       // Diagonal moves are matches
