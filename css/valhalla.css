@@ -1131,6 +1131,11 @@ code[class*="language-"] {
   background: rgba(234, 179, 8, 0.04);
 }
 
+.img-dropzone:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
 .img-preview {
   max-width: 100%;
   max-height: 16rem;
