@@ -2487,6 +2487,10 @@ Odin.Timestamp = {
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
+  // ⚡ Bolt: Cache redundant local storage reads to prevent multiple JSON.parse calls during initialization
+  const initialCustomDurations = Odin.Pomodoro.loadCustomDurations();
+  const initialTodayLog = Odin.Pomodoro.getTodayLog();
+
   return {
     // ---- Theme ----
     darkMode: Odin.Theme.load(),
@@ -2500,14 +2504,14 @@ function odinApp() {
 
     // ---- Productive Timer ----
     pomoMode: 'focus',
-    pomoCustomDurations: Odin.Pomodoro.loadCustomDurations(),
-    pomoTimeLeft: Odin.Pomodoro.loadCustomDurations().focus,
-    pomoTotalTime: Odin.Pomodoro.loadCustomDurations().focus,
+    pomoCustomDurations: initialCustomDurations,
+    pomoTimeLeft: initialCustomDurations.focus,
+    pomoTotalTime: initialCustomDurations.focus,
     pomoRunning: false,
     pomoPaused: false,
     pomoInterval: null,
     pomoEndTimestamp: null,
-    pomoDailySessions: Odin.Pomodoro.getTodayLog().filter(e => e.mode === 'focus').length,
+    pomoDailySessions: initialTodayLog.filter(e => e.mode === 'focus').length,
     pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
     pomoShowSettings: false,       // show settings modal
     pomoSettingFocus: 25,          // editable: minutes
@@ -2518,7 +2522,7 @@ function odinApp() {
     pomoTodoText: '',              // planned task before starting
     pomoActualText: '',            // actual result after completing
     pomoShowActualPrompt: false,   // show actual-input modal after focus session ends
-    pomoSessionLog: Odin.Pomodoro.getTodayLog(),  // today's logged sessions
+    pomoSessionLog: initialTodayLog,  // today's logged sessions
     pomoSessionStartedAt: null,    // ISO timestamp when session started
     pomoShowSwitchWarning: false,  // show warning modal when switching modes
     pomoPendingMode: null,         // target mode if user confirms switch
