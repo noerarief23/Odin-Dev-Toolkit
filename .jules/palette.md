@@ -1,3 +1,6 @@
+## 2026-08-01 - Accessible Custom Dropzones
+**Learning:** When using visually hidden file inputs (`display: none`) for custom drag-and-drop zones, keyboard accessibility is completely lost, leaving keyboard-only users unable to upload files.
+**Action:** Always add `tabindex="0"`, `role="button"`, an `aria-label`, and explicit keyboard event handlers (like enter and space) to the visible dropzone wrapper to programmatically click the hidden input.
 ## 2026-07-30 - [Keyboard Accessibility for Visually Hidden File Inputs]
 **Learning:** When using visually hidden `<input type="file">`, keyboard users (using Tab) cannot naturally focus and activate the input if its wrapper lacks focusability and keyboard event handlers.
 **Action:** Add `tabindex="0"`, `role="button"`, an `aria-label`, and explicit keyboard event handlers (like `@keydown.enter.prevent` and `@keydown.space.prevent`) to the visible wrapper element, and ensure it has a `:focus-visible` outline state.
