@@ -1656,9 +1656,9 @@ Example:
           @keydown.space.prevent="$refs.imgFileInput.click()"
           tabindex="0"
           role="button"
-          aria-label="Upload an image"
+          aria-label="Upload image file"
           :class="imgDragover ? 'img-dropzone-active' : ''"
-          class="img-dropzone cursor-pointer"
+          class="img-dropzone cursor-pointer focus-visible:ring-2 focus-visible:outline-none"
         >
           <i data-lucide="upload-cloud" class="w-12 h-12 text-slate-500 dark:text-slate-600 mb-3"></i>
           <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Drop an image here or click to browse</p>
