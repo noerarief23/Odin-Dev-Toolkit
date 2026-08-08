@@ -1126,9 +1126,15 @@ code[class*="language-"] {
 }
 
 .img-dropzone:hover,
-.img-dropzone-active {
+.img-dropzone-active,
+.img-dropzone:focus-visible {
   border-color: var(--gold-500);
   background: rgba(234, 179, 8, 0.04);
+}
+
+.img-dropzone:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
 }
 
 .img-preview {
@@ -1184,6 +1190,10 @@ code[class*="language-"] {
 }
 
 input[type="checkbox"]:focus-visible ~ .toggle-track {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+.img-dropzone:focus-visible {
   outline: 2px solid var(--gold-500);
   outline-offset: 2px;
 }
