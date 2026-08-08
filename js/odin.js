@@ -2487,9 +2487,10 @@ Odin.Timestamp = {
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
-  // ⚡ Bolt: Cache redundant local storage reads to prevent multiple JSON.parse calls during initialization
-  const initialCustomDurations = Odin.Pomodoro.loadCustomDurations();
-  const initialTodayLog = Odin.Pomodoro.getTodayLog();
+  // ⚡ Bolt: Cache results of expensive synchronous operations (localStorage/JSON.parse)
+  // to avoid redundant main-thread blocking during reactive app state initialization.
+  const pomoDurations = Odin.Pomodoro.loadCustomDurations();
+  const todayLog = Odin.Pomodoro.getTodayLog();
 
   return {
     // ---- Theme ----
@@ -2504,14 +2505,14 @@ function odinApp() {
 
     // ---- Productive Timer ----
     pomoMode: 'focus',
-    pomoCustomDurations: initialCustomDurations,
-    pomoTimeLeft: initialCustomDurations.focus,
-    pomoTotalTime: initialCustomDurations.focus,
+    pomoCustomDurations: pomoDurations,
+    pomoTimeLeft: pomoDurations.focus,
+    pomoTotalTime: pomoDurations.focus,
     pomoRunning: false,
     pomoPaused: false,
     pomoInterval: null,
     pomoEndTimestamp: null,
-    pomoDailySessions: initialTodayLog.filter(e => e.mode === 'focus').length,
+    pomoDailySessions: todayLog.filter(e => e.mode === 'focus').length,
     pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
     pomoShowSettings: false,       // show settings modal
     pomoSettingFocus: 25,          // editable: minutes
@@ -2522,7 +2523,7 @@ function odinApp() {
     pomoTodoText: '',              // planned task before starting
     pomoActualText: '',            // actual result after completing
     pomoShowActualPrompt: false,   // show actual-input modal after focus session ends
-    pomoSessionLog: initialTodayLog,  // today's logged sessions
+    pomoSessionLog: todayLog,  // today's logged sessions
     pomoSessionStartedAt: null,    // ISO timestamp when session started
     pomoShowSwitchWarning: false,  // show warning modal when switching modes
     pomoPendingMode: null,         // target mode if user confirms switch
