@@ -674,11 +674,11 @@ Odin.XmlFormatter = {
    ================================================================ */
 Odin.DiffChecker = {
   compare(leftInput, rightInput, mode) {
-    // 🛡️ Sentinel: Enforce safe bounding limits on string inputs to prevent algorithmic DoS
+    // 🛡️ Sentinel: Bound input length to prevent Algorithmic DoS via massive arrays in LCS algorithm
     if (leftInput.length > 250000 || rightInput.length > 250000) {
       return {
         equal: false,
-        error: 'Input exceeds maximum length of 250,000 characters',
+        error: 'Input exceeds maximum length of 250,000 characters (DoS protection).',
         html: '',
         stats: { added: 0, removed: 0, changed: 0 }
       };
@@ -860,7 +860,11 @@ Odin.DiffChecker = {
 
     outer:
     for (let d = 0; d <= MAX; d++) {
-      trace.push(v.slice());
+      // ⚡ Bolt: Slice only the actively used boundaries to reduce memory space complexity
+      // from O(MAX^2) to O(d^2) and prevent massive garbage collection overhead.
+      const start = Math.max(0, offset - d - 1);
+      const end = offset + d + 2;
+      trace.push(v.slice(start, end));
 
       for (let k = -d; k <= d; k += 2) {
         let x;
@@ -891,16 +895,19 @@ Odin.DiffChecker = {
 
     for (let d = trace.length - 1; d >= 0; d--) {
       const vPrev = trace[d];
+      const start = Math.max(0, offset - d - 1);
       const k = x - y;
 
+      const startIdx = Math.max(0, offset - d - 1);
+
       let prevK;
-      if (k === -d || (k !== d && vPrev[offset + k - 1] < vPrev[offset + k + 1])) {
+      if (k === -d || (k !== d && vPrev[offset + k - 1 - start] < vPrev[offset + k + 1 - start])) {
         prevK = k + 1;
       } else {
         prevK = k - 1;
       }
 
-      const prevX = vPrev[offset + prevK];
+      const prevX = vPrev[offset + prevK - start];
       const prevY = prevX - prevK;
 
       // Diagonal moves are matches
@@ -2495,6 +2502,11 @@ Odin.Timestamp = {
    Alpine.js Application — odinApp()
    ================================================================ */
 function odinApp() {
+  // ⚡ Bolt: Cache results of expensive synchronous operations (localStorage/JSON.parse)
+  // to avoid redundant main-thread blocking during reactive app state initialization.
+  const pomoDurations = Odin.Pomodoro.loadCustomDurations();
+  const todayLog = Odin.Pomodoro.getTodayLog();
+
   return {
     // ---- Theme ----
     darkMode: Odin.Theme.load(),
@@ -2508,14 +2520,14 @@ function odinApp() {
 
     // ---- Productive Timer ----
     pomoMode: 'focus',
-    pomoCustomDurations: Odin.Pomodoro.loadCustomDurations(),
-    pomoTimeLeft: Odin.Pomodoro.loadCustomDurations().focus,
-    pomoTotalTime: Odin.Pomodoro.loadCustomDurations().focus,
+    pomoCustomDurations: pomoDurations,
+    pomoTimeLeft: pomoDurations.focus,
+    pomoTotalTime: pomoDurations.focus,
     pomoRunning: false,
     pomoPaused: false,
     pomoInterval: null,
     pomoEndTimestamp: null,
-    pomoDailySessions: Odin.Pomodoro.getTodayLog().filter(e => e.mode === 'focus').length,
+    pomoDailySessions: todayLog.filter(e => e.mode === 'focus').length,
     pomoNotifGranted: ('Notification' in window) && Notification.permission === 'granted',
     pomoShowSettings: false,       // show settings modal
     pomoSettingFocus: 25,          // editable: minutes
@@ -2526,7 +2538,7 @@ function odinApp() {
     pomoTodoText: '',              // planned task before starting
     pomoActualText: '',            // actual result after completing
     pomoShowActualPrompt: false,   // show actual-input modal after focus session ends
-    pomoSessionLog: Odin.Pomodoro.getTodayLog(),  // today's logged sessions
+    pomoSessionLog: todayLog,  // today's logged sessions
     pomoSessionStartedAt: null,    // ISO timestamp when session started
     pomoShowSwitchWarning: false,  // show warning modal when switching modes
     pomoPendingMode: null,         // target mode if user confirms switch
