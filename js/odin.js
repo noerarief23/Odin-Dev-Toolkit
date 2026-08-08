@@ -860,18 +860,13 @@ Odin.DiffChecker = {
 
     outer:
     for (let d = 0; d <= MAX; d++) {
-      // ⚡ Bolt: Slice only the actively used portion of the Int32Array `v` [-d-1, d+1]
-      // instead of copying the entire array (size 2*MAX+1) on every iteration.
-      // For large diffs, this heavily reduces memory allocation from O(MAX^2) to O(d^2),
-      // preventing massive GC pauses and drastically speeding up the Myers LCS algorithm.
-      // Math.max bounds prevent invalid negative indices when d = MAX.
-      // (End bounds are automatically clamped by TypedArray.prototype.slice)
-      const start = Math.max(0, offset - d - 1);
-      const end = offset + d + 2;
-      trace.push({
-        v: v.slice(start, end),
-        start
-      });
+      // ⚡ Bolt: Slice only the actively used boundaries of the DP state array
+      // instead of cloning the entire array. This reduces space complexity from
+      // O(MAX^2) to O(d^2) and prevents massive GC overhead. Clamp lower bound
+      // to 0 to prevent negative indices wrapping to the end.
+      const startIdx = Math.max(0, offset - d - 1);
+      const endIdx = offset + d + 2;
+      trace.push(v.slice(startIdx, endIdx));
 
       for (let k = -d; k <= d; k += 2) {
         let x;
@@ -906,14 +901,16 @@ Odin.DiffChecker = {
       const start = traceObj.start;
       const k = x - y;
 
+      const startIdx = Math.max(0, offset - d - 1);
+
       let prevK;
-      if (k === -d || (k !== d && vPrev[offset + k - 1 - start] < vPrev[offset + k + 1 - start])) {
+      if (k === -d || (k !== d && vPrev[offset + k - 1 - startIdx] < vPrev[offset + k + 1 - startIdx])) {
         prevK = k + 1;
       } else {
         prevK = k - 1;
       }
 
-      const prevX = vPrev[offset + prevK - start];
+      const prevX = vPrev[offset + prevK - startIdx];
       const prevY = prevX - prevK;
 
       // Diagonal moves are matches
