@@ -860,13 +860,12 @@ Odin.DiffChecker = {
 
     outer:
     for (let d = 0; d <= MAX; d++) {
-      // ⚡ Bolt: Slice only the actively used boundaries to reduce memory space complexity
-      // from O(MAX^2) to O(d^2) and prevent massive garbage collection overhead.
-      const start = Math.max(0, offset - d - 1);
-      trace.push({
-        startOffset: start,
-        vPrev: v.slice(start, offset + d + 2)
-      });
+      // ⚡ Bolt: Slice only the actively used boundaries of the state array
+      // instead of cloning the entire array at each step. This reduces memory
+      // space complexity from O(MAX^2) to O(d^2) and prevents massive GC overhead.
+      const startIndex = Math.max(0, offset - d - 1);
+      const endIndex = offset + d + 2;
+      trace.push(v.slice(startIndex, endIndex));
 
       for (let k = -d; k <= d; k += 2) {
         let x;
@@ -896,19 +895,20 @@ Odin.DiffChecker = {
     let y = M;
 
     for (let d = trace.length - 1; d >= 0; d--) {
-      const { startOffset, vPrev } = trace[d];
+      const vPrev = trace[d];
+      const startIndex = Math.max(0, offset - d - 1);
       const k = x - y;
 
       const startIdx = Math.max(0, offset - d - 1);
 
       let prevK;
-      if (k === -d || (k !== d && vPrev[offset + k - 1 - startOffset] < vPrev[offset + k + 1 - startOffset])) {
+      if (k === -d || (k !== d && vPrev[offset + k - 1 - startIndex] < vPrev[offset + k + 1 - startIndex])) {
         prevK = k + 1;
       } else {
         prevK = k - 1;
       }
 
-      const prevX = vPrev[offset + prevK - startOffset];
+      const prevX = vPrev[offset + prevK - startIndex];
       const prevY = prevX - prevK;
 
       // Diagonal moves are matches
