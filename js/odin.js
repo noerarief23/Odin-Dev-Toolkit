@@ -261,7 +261,7 @@ Odin.Regex = {
   TIMEOUT_MS: 3000,
 
   test(pattern, flags, testString) {
-    if (testString && testString.length > 50000) testString = testString.substring(0, 50000);
+    if (testString && testString.length > 50000) return { html: Odin.Utils.escapeHtml(testString.substring(0, 50000) || ''), matches: [], error: "Test string exceeds maximum length of 50,000 characters", matchCount: 0 };
     if (pattern && pattern.length > 500) return { html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: "Pattern exceeds maximum length of 500 characters", matchCount: 0 };
     if (!pattern || !testString) {
       return { html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: null, matchCount: 0 };
@@ -315,7 +315,7 @@ Odin.Regex = {
    * Falls back to sync test() if Workers are unavailable.
    */
   testAsync(pattern, flags, testString, timeoutMs) {
-    if (testString && testString.length > 50000) testString = testString.substring(0, 50000);
+    if (testString && testString.length > 50000) return Promise.resolve({ html: Odin.Utils.escapeHtml(testString.substring(0, 50000) || ''), matches: [], error: "Test string exceeds maximum length of 50,000 characters", matchCount: 0 });
     if (pattern && pattern.length > 500) return Promise.resolve({ html: Odin.Utils.escapeHtml(testString || ''), matches: [], error: "Pattern exceeds maximum length of 500 characters", matchCount: 0 });
     const timeout = timeoutMs || this.TIMEOUT_MS;
 
@@ -674,6 +674,16 @@ Odin.XmlFormatter = {
    ================================================================ */
 Odin.DiffChecker = {
   compare(leftInput, rightInput, mode) {
+    // 🛡️ Sentinel: Bound input length to prevent Algorithmic DoS via massive arrays in LCS algorithm
+    if (leftInput.length > 250000 || rightInput.length > 250000) {
+      return {
+        equal: false,
+        error: 'Input exceeds maximum length of 250,000 characters (DoS protection).',
+        html: '',
+        stats: { added: 0, removed: 0, changed: 0 }
+      };
+    }
+
     if (!leftInput.trim() || !rightInput.trim()) {
       return {
         equal: false,
@@ -1546,17 +1556,34 @@ Odin.Pomodoro = {
   saveCustomDurations(durations) {
     try {
       localStorage.setItem('odin_pomo_durations', JSON.stringify(durations));
+      this._cachedModes = null; // Invalidate cache on settings update
     } catch (_) { /* ignore */ }
   },
 
+  /** Cached MODES */
+  _cachedModes: null,
+
   /** Build MODES dynamically from durations */
   getModes(durations) {
-    const d = durations || this.loadCustomDurations();
-    return {
-      focus: { duration: d.focus, label: 'Focus',       color: 'focus' },
-      short: { duration: d.short, label: 'Short Break',  color: 'short' },
-      long:  { duration: d.long,  label: 'Long Break',   color: 'long'  }
-    };
+    if (durations) {
+      return {
+        focus: { duration: durations.focus, label: 'Focus',       color: 'focus' },
+        short: { duration: durations.short, label: 'Short Break',  color: 'short' },
+        long:  { duration: durations.long,  label: 'Long Break',   color: 'long'  }
+      };
+    }
+
+    // ⚡ Bolt: Cache the default modes to avoid frequent synchronous localStorage access
+    // via loadCustomDurations() which causes I/O overhead 4 times a second during active timers.
+    if (!this._cachedModes) {
+      const d = this.loadCustomDurations();
+      this._cachedModes = {
+        focus: { duration: d.focus, label: 'Focus',       color: 'focus' },
+        short: { duration: d.short, label: 'Short Break',  color: 'short' },
+        long:  { duration: d.long,  label: 'Long Break',   color: 'long'  }
+      };
+    }
+    return this._cachedModes;
   },
 
   get MODES() {

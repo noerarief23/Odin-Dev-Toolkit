@@ -98,3 +98,9 @@
 ## 2026-07-27 - App Initialization Performance
 **Learning:** In client-side JavaScript applications, avoid synchronous `localStorage.getItem` and `JSON.parse` operations inside high-frequency loops or app startup functions like Alpine.js reactive state initialization, as they cause severe main-thread blocking. Caching the parsed object in a local variable prevents redundant synchronous blocking.
 **Action:** When initializing a reactive app state (e.g., an Alpine.js data object), cache the results of expensive synchronous operations like `localStorage.getItem` and `JSON.parse` into local variables if they are used multiple times.
+## 2026-07-26 - Cache LocalStorage Reads During App Init
+**Learning:** Calling methods that read from `localStorage` and perform `JSON.parse` multiple times during the reactive app initialization (e.g., in `odinApp()` data function) causes unnecessary synchronous blocking on the main thread.
+**Action:** Extract the results of expensive synchronous reads (like `Odin.Pomodoro.loadCustomDurations()` and `Odin.Pomodoro.getTodayLog()`) into local variables at the top of the initialization function, and reference the variables when constructing the state object.
+## 2024-07-31 - Pomodoro Active Timer I/O Overhead
+**Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
+**Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
