@@ -95,9 +95,35 @@
 **Learning:** Using chained `.forEach`, `.filter`, and `.reduce` on arrays of objects causes unnecessary multiple passes, intermediate array allocations, and closure overhead.
 **Action:** Combine these operations into a single-pass traditional `for` loop to significantly reduce overhead and speed up execution.
 
+## 2026-07-27 - App Initialization Performance
+**Learning:** In client-side JavaScript applications, avoid synchronous `localStorage.getItem` and `JSON.parse` operations inside high-frequency loops or app startup functions like Alpine.js reactive state initialization, as they cause severe main-thread blocking. Caching the parsed object in a local variable prevents redundant synchronous blocking.
+**Action:** When initializing a reactive app state (e.g., an Alpine.js data object), cache the results of expensive synchronous operations like `localStorage.getItem` and `JSON.parse` into local variables if they are used multiple times.
+## 2026-07-26 - Cache LocalStorage Reads During App Init
+**Learning:** Calling methods that read from `localStorage` and perform `JSON.parse` multiple times during the reactive app initialization (e.g., in `odinApp()` data function) causes unnecessary synchronous blocking on the main thread.
+**Action:** Extract the results of expensive synchronous reads (like `Odin.Pomodoro.loadCustomDurations()` and `Odin.Pomodoro.getTodayLog()`) into local variables at the top of the initialization function, and reference the variables when constructing the state object.
 ## 2024-07-31 - Pomodoro Active Timer I/O Overhead
 **Learning:** In Javascript, calling `localStorage.getItem` and `JSON.parse` synchronously in high-frequency loops like `setInterval` (e.g., every 250ms for a timer) causes unnecessary I/O overhead and main thread blocking, which can drop frames. When the Pomodoro timer UI polled for the active mode's label and color, it was dynamically rebuilding the modes object from localStorage on every tick.
 **Action:** When properties derived from `localStorage` are accessed frequently on a hot path, cache the parsed object in memory and manually invalidate the cache only when the settings are explicitly updated.
 ## 2026-07-22 - Myers LCS Trace Memory Complexity Optimization
 **Learning:** In the O(ND) Myers Diff Algorithm, cloning the entire state array `v` (size `2 * MAX + 1`) at every step `d` inside the main loop creates an `O(MAX^2)` memory space complexity, causing massive garbage collection overhead and blocking the main thread for large inputs.
 **Action:** When saving state history (the trace) for dynamic programming algorithms like Myers LCS, slice only the actively used boundaries of the state array (e.g., `[-d-1, d+1]`). This reduces memory complexity from `O(MAX^2)` to `O(d^2)` and dramatically speeds up execution.
+## 2025-01-20 - Myers Diff Array Cloning Memory Leak
+**Learning:** In the O(ND) Myers diff algorithm, cloning the entire state array `v` at every step (`v.slice()`) creates massive memory space complexity of O(MAX^2). For large files, this leads to heavy garbage collection pauses. Furthermore, negative start indices passed to `slice()` will wrap around from the end of the array, causing silent bugs instead of errors.
+**Action:** Always slice only the actively used boundaries of the array (e.g. `[-d-1, d+1]`) to reduce space complexity to O(d^2), and explicitly clamp the start index to `0` (e.g., `Math.max(0, start)`) to prevent negative wraparound.
+
+## 2025-01-20 - Optimize Myers Diff Array Cloning Overhead
+**Learning:** In dynamic programming algorithms like the O(ND) Myers diff, blindly cloning the entire state array at every step (e.g., `v.slice()`) leads to `O(MAX^2)` space complexity and massive garbage collection overhead. Since the algorithm only updates elements within the boundary of `[-d, d]` at each step `d`, only that specific boundary needs to be saved.
+**Action:** When implementing algorithms that store history per step, slice only the actively used boundaries of the state array (e.g., `v.slice(Math.max(0, offset - d - 1), offset + d + 2)`). This reduces memory space complexity from `O(MAX^2)` to `O(d^2)` and prevents main-thread blocking on large inputs.
+## 2026-07-22 - Myers LCS Diff Memory Optimization
+**Learning:** In dynamic programming algorithms like the O(ND) Myers Diff algorithm, caching the entire state array `v.slice()` at every iteration of `d` allocates O(MAX) memory per step. This results in an overall O(MAX^2) space complexity that severely degrades performance and causes massive garbage collection pauses for large files.
+**Action:** When saving state in dynamic programming algorithms, slice and store only the actively modified or accessed boundaries (e.g., `[offset - d - 1, offset + d + 2]`) to reduce space complexity from O(MAX^2) to O(d^2) and prevent severe GC overhead.
+## 2024-05-18 - Myers Diff Space Complexity
+**Learning:** When implementing dynamic programming algorithms like the O(ND) Myers diff, cloning the entire state array at every step causes O(MAX^2) space complexity, massive garbage collection overhead, and possible OOM errors. Additionally, dynamically slicing TypedArrays with negative indices causes them to extract from the end of the array.
+**Action:** Slice only the actively used boundaries (e.g., `[-d-1, d+1]`) to reduce space complexity to O(d^2), and always explicitly clamp the lower bound to 0 (e.g., `Math.max(0, startIndex)`) to prevent negative indices.
+## 2026-08-01 - Myers Diff State Array Space Complexity
+**Learning:** In the O(ND) Myers diff algorithm implementation, cloning the entire dynamic programming state array (`v.slice()`) inside the main trace loop causes massive memory allocation and garbage collection overhead, leading to O(MAX^2) space complexity where MAX = N + M. This severely bottlenecks performance for large strings.
+**Action:** When implementing or optimizing DP trace arrays like Myers Diff, slice only the actively used boundaries of the array (e.g., `[-d-1, d+1]`). Crucially, clamp the lower bound to 0 (e.g., `Math.max(0, offset - d - 1)`) to prevent negative indices, which cause `slice` to mistakenly extract from the end of the array, returning corrupted state and increasing overhead. This reduces space complexity to O(d^2) and significantly improves performance.
+
+## 2026-07-22 - Myers Diff Algorithm Array Slicing
+**Learning:** In the O(ND) Myers diff algorithm, saving the state trace array `v` (of size `2*MAX+1`) at every step via `v.slice()` allocates memory equal to O(MAX^2). This creates significant memory pressure and garbage collection overhead, slowing down large text diffs.
+**Action:** Instead of copying the entire `v` array on each step, slice only the active boundaries of the DP array which corresponds to `[-d-1, d+1]` bounds using `v.slice(offset - d - 1, offset + d + 2)`. This reduces memory allocation space complexity to O(d^2) resulting in massive performance improvements without changing the core algorithmic logic.
