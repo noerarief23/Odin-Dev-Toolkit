@@ -1,3 +1,6 @@
+## 2026-07-29 - Make hidden file inputs accessible
+**Learning:** Custom file dropzones that hide the actual `<input type="file">` element break keyboard accessibility if the visible wrapper isn't made focusable and interactive.
+**Action:** When implementing custom file dropzones, add `tabindex="0"`, `role="button"`, an `aria-label`, and keyboard event handlers (like `@keydown.enter.prevent` and `@keydown.space.prevent`) to the visible wrapper element, and ensure it has a CSS `:focus-visible` state.
 ## 2026-07-28 - Keyboard Accessible Custom File Inputs
 **Learning:** Custom file inputs and dropzones implemented with a hidden `<input type="file">` inside a `<div>` or `<label>` are inaccessible to keyboard navigators, as `display: none` removes the input from the tab order.
 **Action:** Always add `tabindex="0"`, `role="button"`, `aria-label`, and keyboard handlers (`@keydown.enter`, `@keydown.space`) to the custom container or label to restore keyboard accessibility.
