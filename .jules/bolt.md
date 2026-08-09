@@ -130,3 +130,7 @@
 ## 2026-07-22 - Myers Diff Algorithm Array Slicing
 **Learning:** In the O(ND) Myers diff algorithm, saving the state trace array `v` (of size `2*MAX+1`) at every step via `v.slice()` allocates memory equal to O(MAX^2). This creates significant memory pressure and garbage collection overhead, slowing down large text diffs.
 **Action:** Instead of copying the entire `v` array on each step, slice only the active boundaries of the DP array which corresponds to `[-d-1, d+1]` bounds using `v.slice(offset - d - 1, offset + d + 2)`. This reduces memory allocation space complexity to O(d^2) resulting in massive performance improvements without changing the core algorithmic logic.
+
+## 2024-05-30 - TypedArray Subarray Allocation Overhead
+**Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
+**Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
