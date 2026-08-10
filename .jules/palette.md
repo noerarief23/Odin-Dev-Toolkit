@@ -25,3 +25,6 @@
 ## 2024-08-07 - Keyboard Accessibility for Hidden File Inputs
 **Learning:** When implementing custom file dropzones or file inputs in Alpine.js where the actual <input type="file"> is visually hidden (e.g., using class="hidden"), it completely removes keyboard accessibility for the input.
 **Action:** Restore keyboard accessibility by adding tabindex="0", role="button", an aria-label, and keyboard event handlers (@keydown.enter.prevent and @keydown.space.prevent) to the visible wrapper element so it programmatically clicks the hidden input, and ensure the wrapper has a CSS :focus-visible state.
+## 2024-08-10 - Dynamic Tooltips for Disabled Buttons
+**Learning:** Disabled buttons without explanation cause user frustration as users do not know how to enable them, reducing accessibility and clarity.
+**Action:** Always pair dynamically disabled buttons (e.g., those using Alpine.js :disabled bindings) with a descriptive tooltip (using the :title attribute) that explains the condition required to enable the button.
