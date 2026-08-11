@@ -543,6 +543,7 @@
                   placeholder="What will you work on this session?"
                   maxlength="200"
                   :disabled="pomoRunning"
+                  :title="pomoRunning ? 'Pause the timer to edit your plan' : ''"
                 >
               </div>
 
@@ -573,6 +574,7 @@
                   @click="pomoReset()"
                   class="pomo-ctrl-btn pomo-ctrl-reset"
                   :disabled="pomoTimeLeft === pomoTotalTime && !pomoRunning"
+                  :title="pomoTimeLeft === pomoTotalTime && !pomoRunning ? 'Timer is already reset' : 'Reset timer'"
                   :class="{ 'opacity-40 cursor-not-allowed': pomoTimeLeft === pomoTotalTime && !pomoRunning }"
                 >
                   <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -599,6 +601,7 @@
               <button
                 @click="pomoResetAllSessions()"
                 :disabled="pomoSessionLog.length === 0 && pomoDailySessions === 0"
+                :title="pomoSessionLog.length === 0 && pomoDailySessions === 0 ? 'No sessions to reset' : 'Reset all sessions'"
                 :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 && pomoDailySessions === 0 }"
                 class="mt-3 text-[11px] text-slate-500 dark:text-slate-600 hover:text-crimson-500 dark:hover:text-crimson-400 flex items-center gap-1 mx-auto transition-colors"
               >
@@ -612,6 +615,7 @@
               @click="pomoDownloadLog()"
               class="btn-outline text-xs py-2 px-3 flex items-center gap-1.5 w-full justify-center"
               :disabled="pomoSessionLog.length === 0"
+              :title="pomoSessionLog.length === 0 ? 'No sessions to download' : 'Download daily log'"
               :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 }"
             >
               <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -1747,6 +1751,7 @@ Example:
                 @click="imgProcess()"
                 class="btn-gold px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
                 :disabled="imgProcessing"
+                :title="imgProcessing ? 'Processing image...' : 'Shrink Image'"
               >
                 <i x-show="!imgProcessing" data-lucide="zap" class="w-4 h-4"></i>
                 <i x-show="imgProcessing" data-lucide="loader-2" class="w-4 h-4 animate-spin" style="display: none;"></i>
@@ -2160,6 +2165,7 @@ Example:
                 @click="b64DownloadDecoded()"
                 class="btn-gold px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
                 :disabled="!b64Input.trim()"
+                :title="!b64Input.trim() ? 'Enter a Base64 string to decode' : 'Decode & Download'"
               >
                 <i data-lucide="download" class="w-4 h-4"></i>
                 Decode &amp; Download
