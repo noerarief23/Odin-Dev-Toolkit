@@ -50,3 +50,6 @@
 ## 2026-07-15 - Keyboard Accessibility for Custom File Inputs
 **Learning:** Found that custom file upload areas (like `.img-dropzone` in Image Shrink) and stylized file upload buttons (like the one in Base64 Codec) fail keyboard accessibility when they use `class="hidden"` or `display: none` on the native `<input type="file">`. The native input becomes unreachable, making it impossible for keyboard users to activate the upload dialog.
 **Action:** When implementing custom file dropzones or file inputs where the actual `<input type="file">` is visually hidden, restore keyboard accessibility by adding `tabindex="0"`, `role="button"`, an `aria-label`, and keyboard event handlers (like `@keydown.enter.prevent` and `@keydown.space.prevent`) to the visible wrapper element so it programmatically clicks the hidden input. Additionally, ensure the wrapper has CSS `:focus-visible` states to display focus rings.
+## 2024-08-14 - Tooltips for Dynamically Disabled Buttons
+**Learning:** When buttons are dynamically disabled using Alpine.js bindings, users may lack context on why the interaction is unavailable, causing friction.
+**Action:** Always pair disabled buttons with a descriptive tooltip using the `:title` attribute that explains the condition required to enable the button.
