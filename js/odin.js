@@ -523,8 +523,9 @@ Odin.JsonFormatter = {
       return { valid: null, error: null };
     }
     try {
-      JSON.parse(input);
-      return { valid: true, error: null };
+      // ⚡ Bolt: Return the parsed object to prevent redundant JSON.parse calls by the caller
+      const parsed = JSON.parse(input);
+      return { valid: true, error: null, parsed };
     } catch (e) {
       return { valid: false, error: this._parseError(e, input) };
     }
@@ -3175,11 +3176,14 @@ function odinApp() {
 
     // ---- JSON Formatter Methods ----
     validateJson() {
-      this.jsonValidation = Odin.JsonFormatter.validate(this.jsonInput);
+      const { parsed, ...validation } = Odin.JsonFormatter.validate(this.jsonInput);
+      this.jsonValidation = validation;
       // Live preview: if valid, show highlighted output
       if (this.jsonValidation.valid && this.jsonInput.trim()) {
         try {
-          const formatted = JSON.stringify(JSON.parse(this.jsonInput), null, 2);
+          // ⚡ Bolt: Reuse the cached parsed object from validation
+          // to avoid calling JSON.parse twice on the same payload string.
+          const formatted = JSON.stringify(parsed, null, 2);
           this.jsonOutput = formatted;
           this.jsonOutputHtml = Odin.JsonFormatter.highlight(formatted);
         } catch (e) {
