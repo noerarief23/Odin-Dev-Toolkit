@@ -130,6 +130,10 @@
 ## 2026-07-22 - Myers Diff Algorithm Array Slicing
 **Learning:** In the O(ND) Myers diff algorithm, saving the state trace array `v` (of size `2*MAX+1`) at every step via `v.slice()` allocates memory equal to O(MAX^2). This creates significant memory pressure and garbage collection overhead, slowing down large text diffs.
 **Action:** Instead of copying the entire `v` array on each step, slice only the active boundaries of the DP array which corresponds to `[-d-1, d+1]` bounds using `v.slice(offset - d - 1, offset + d + 2)`. This reduces memory allocation space complexity to O(d^2) resulting in massive performance improvements without changing the core algorithmic logic.
+
+## 2024-05-18 - JSON Validation Redundant Parsing Optimization
+**Learning:** When validating JSON input, calling `JSON.parse` twice on the same string (e.g., once for validation and once for processing) causes unnecessary synchronous main-thread blocking, which can cause significant performance overhead for large payload strings.
+**Action:** Modify the validation function to return the successfully parsed object alongside the validation status, and reuse the parsed object in the caller to prevent redundant synchronous main-thread blocking.
 ## 2025-01-20 - Redundant JSON Parse in Validation Chains
 **Learning:** Calling `JSON.parse` twice on the same large user input string—once to validate it, and immediately again to process it (e.g., stringify it)—creates severe and unnecessary synchronous main-thread blocking.
 **Action:** When validating JSON input, have the validation function return the successfully parsed object on success. Reuse this cached object in subsequent processing steps instead of re-parsing the original raw string.
