@@ -2404,7 +2404,7 @@ Odin.Hash = {
       const len = bytes.length;
       const chunkSize = 0x8000; // 32KB chunks
       for (let i = 0; i < len; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.slice(i, i + chunkSize));
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
       }
       return btoa(binary);
     }

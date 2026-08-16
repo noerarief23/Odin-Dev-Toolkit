@@ -53,3 +53,6 @@
 ## 2024-08-14 - Tooltips for Dynamically Disabled Buttons
 **Learning:** When buttons are dynamically disabled using Alpine.js bindings, users may lack context on why the interaction is unavailable, causing friction.
 **Action:** Always pair disabled buttons with a descriptive tooltip using the `:title` attribute that explains the condition required to enable the button.
+## 2024-05-24 - Disabled State Clarity
+**Learning:** Users with screen readers or cognitive impairments often struggle to understand why a button is disabled, especially in reactive apps where the state changes dynamically based on hidden logic.
+**Action:** Always pair dynamically disabled elements (like Alpine.js `:disabled` bindings) with a dynamic `:title` attribute that explains the condition required to enable them, improving both micro-UX and accessibility.
