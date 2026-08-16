@@ -520,14 +520,14 @@ Odin.JsonFormatter = {
 
   validate(input) {
     if (!input || !input.trim()) {
-      return { valid: null, error: null };
+      return { valid: null, error: null, parsed: null };
     }
     try {
       // ⚡ Bolt: Return the parsed object to prevent redundant JSON.parse calls by the caller
       const parsed = JSON.parse(input);
       return { valid: true, error: null, parsed };
     } catch (e) {
-      return { valid: false, error: this._parseError(e, input) };
+      return { valid: false, error: this._parseError(e, input), parsed: null };
     }
   },
 
@@ -2405,7 +2405,7 @@ Odin.Hash = {
       const len = bytes.length;
       const chunkSize = 0x8000; // 32KB chunks
       for (let i = 0; i < len; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.slice(i, i + chunkSize));
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
       }
       return btoa(binary);
     }
