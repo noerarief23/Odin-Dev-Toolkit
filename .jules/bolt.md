@@ -134,3 +134,10 @@
 ## 2024-05-18 - JSON Validation Redundant Parsing Optimization
 **Learning:** When validating JSON input, calling `JSON.parse` twice on the same string (e.g., once for validation and once for processing) causes unnecessary synchronous main-thread blocking, which can cause significant performance overhead for large payload strings.
 **Action:** Modify the validation function to return the successfully parsed object alongside the validation status, and reuse the parsed object in the caller to prevent redundant synchronous main-thread blocking.
+## 2025-01-20 - Redundant JSON Parse in Validation Chains
+**Learning:** Calling `JSON.parse` twice on the same large user input string—once to validate it, and immediately again to process it (e.g., stringify it)—creates severe and unnecessary synchronous main-thread blocking.
+**Action:** When validating JSON input, have the validation function return the successfully parsed object on success. Reuse this cached object in subsequent processing steps instead of re-parsing the original raw string.
+
+## 2024-05-30 - TypedArray Subarray Allocation Overhead
+**Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
+**Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
