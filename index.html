@@ -543,6 +543,7 @@
                   placeholder="What will you work on this session?"
                   maxlength="200"
                   :disabled="pomoRunning"
+                  :title="pomoRunning ? 'Stop the timer to edit task' : 'Task name'"
                 >
               </div>
 
@@ -574,7 +575,7 @@
                   class="pomo-ctrl-btn pomo-ctrl-reset"
                   :disabled="pomoTimeLeft === pomoTotalTime && !pomoRunning"
                   :class="{ 'opacity-40 cursor-not-allowed': pomoTimeLeft === pomoTotalTime && !pomoRunning }"
-                  :title="pomoTimeLeft === pomoTotalTime && !pomoRunning ? 'Timer is already at the beginning' : 'Reset timer'"
+                  :title="(pomoTimeLeft === pomoTotalTime && !pomoRunning) ? 'Start the timer to enable reset' : 'Reset timer'"
                 >
                   <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                   Reset
@@ -601,7 +602,7 @@
                 @click="pomoResetAllSessions()"
                 :disabled="pomoSessionLog.length === 0 && pomoDailySessions === 0"
                 :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 && pomoDailySessions === 0 }"
-                :title="pomoSessionLog.length === 0 && pomoDailySessions === 0 ? 'No sessions to reset' : 'Reset all sessions'"
+                :title="(pomoSessionLog.length === 0 && pomoDailySessions === 0) ? 'Complete a session to enable reset' : 'Reset Sessions'"
                 class="mt-3 text-[11px] text-slate-500 dark:text-slate-600 hover:text-crimson-500 dark:hover:text-crimson-400 flex items-center gap-1 mx-auto transition-colors"
               >
                 <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
@@ -615,7 +616,7 @@
               class="btn-outline text-xs py-2 px-3 flex items-center gap-1.5 w-full justify-center"
               :disabled="pomoSessionLog.length === 0"
               :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 }"
-              :title="pomoSessionLog.length === 0 ? 'No sessions to download' : 'Download daily log'"
+              :title="pomoSessionLog.length === 0 ? 'Complete a session to download log' : 'Download Daily Log'"
             >
               <i data-lucide="download" class="w-3.5 h-3.5"></i>
               Download Daily Log
@@ -2164,7 +2165,7 @@ Example:
                 @click="b64DownloadDecoded()"
                 class="btn-gold px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
                 :disabled="!b64Input.trim()"
-                :title="!b64Input.trim() ? 'Paste a Base64 string to decode' : 'Decode & Download'"
+                :title="!b64Input.trim() ? 'Enter Base64 text to enable download' : 'Decode & Download'"
               >
                 <i data-lucide="download" class="w-4 h-4"></i>
                 Decode &amp; Download
