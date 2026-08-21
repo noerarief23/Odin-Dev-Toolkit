@@ -574,9 +574,8 @@
                   @click="pomoReset()"
                   class="pomo-ctrl-btn pomo-ctrl-reset"
                   :disabled="pomoTimeLeft === pomoTotalTime && !pomoRunning"
-                  :title="pomoTimeLeft === pomoTotalTime && !pomoRunning ? 'Timer is already reset' : 'Reset timer'"
+                  :title="pomoTimeLeft === pomoTotalTime && !pomoRunning ? 'Timer must be running or completed to reset' : 'Reset timer'"
                   :class="{ 'opacity-40 cursor-not-allowed': pomoTimeLeft === pomoTotalTime && !pomoRunning }"
-                  :title="pomoTimeLeft === pomoTotalTime && !pomoRunning ? 'Timer must be running or completed to reset' : ''"
                 >
                   <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                   Reset
@@ -604,7 +603,6 @@
                 :disabled="pomoSessionLog.length === 0 && pomoDailySessions === 0"
                 :title="pomoSessionLog.length === 0 && pomoDailySessions === 0 ? 'No sessions to reset' : 'Reset all sessions'"
                 :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 && pomoDailySessions === 0 }"
-                :title="pomoSessionLog.length === 0 && pomoDailySessions === 0 ? 'No sessions to reset' : ''"
                 class="mt-3 text-[11px] text-slate-500 dark:text-slate-600 hover:text-crimson-500 dark:hover:text-crimson-400 flex items-center gap-1 mx-auto transition-colors"
               >
                 <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
@@ -619,7 +617,6 @@
               :disabled="pomoSessionLog.length === 0"
               :title="pomoSessionLog.length === 0 ? 'No sessions to download' : 'Download daily log'"
               :class="{ 'opacity-40 cursor-not-allowed': pomoSessionLog.length === 0 }"
-              :title="pomoSessionLog.length === 0 ? 'No sessions to download' : ''"
             >
               <i data-lucide="download" class="w-3.5 h-3.5"></i>
               Download Daily Log
