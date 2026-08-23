@@ -226,9 +226,13 @@ Odin.Utils = {
       return this._lineNumCache.get(count);
     }
 
-    const res = new Array(count);
-    for (let i = 0; i < count; i++) res[i] = i + 1;
-    const str = res.join('\n');
+    // ⚡ Bolt: Use a traditional for loop with string concatenation instead of
+    // allocating a large array, filling it, and calling .join('\n'). This avoids
+    // massive memory allocation and garbage collection overhead.
+    let str = count > 0 ? '1' : '';
+    for (let i = 2; i <= count; i++) {
+      str += '\n' + i;
+    }
 
     // Keep cache bounded
     if (this._lineNumCache.size > 50) this._lineNumCache.clear();

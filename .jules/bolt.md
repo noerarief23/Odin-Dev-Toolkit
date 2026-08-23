@@ -141,3 +141,7 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+
+## 2024-05-24 - String Concatenation Outperforms Array Join for Large Sequential Strings
+**Learning:** When generating large sequential strings like line numbers, allocating a large array, filling it, and calling `.join('\n')` causes massive memory allocation and garbage collection overhead.
+**Action:** Use a traditional `for` loop with string concatenation (`+=`) instead, ensuring to handle zero-length edge cases correctly (e.g., `count > 0 ? '1' : ''`).
