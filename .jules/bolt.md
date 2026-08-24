@@ -141,3 +141,6 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+## 2026-08-01 - Redundant XML DOMParser Optimization
+**Learning:** Calling `new DOMParser().parseFromString()` multiple times on the same XML string—once to validate it, and again to format/beautify it—creates unnecessary synchronous main-thread blocking overhead. When hooked to an Alpine.js `@input.debounce` handler on a code editor, this severely degraded performance for large XML payloads.
+**Action:** When validating XML input, have the validation function return the successfully parsed `xmlDoc` document on success. Reuse this cached document in subsequent formatting steps instead of re-parsing the original raw string. Note: Ensure you do NOT leak the raw `DOMDocument` into reactive states (like Vue/Alpine) to prevent massive memory leaks.

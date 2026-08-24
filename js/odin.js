@@ -580,7 +580,7 @@ Odin.XmlFormatter = {
       return { result: null, error: validation.error };
     }
     try {
-      return { result: this._formatXml(input, false), error: null };
+      return { result: this._formatXml(validation.parsed, false), error: null };
     } catch (e) {
       return { result: null, error: { message: e.message, line: null, col: null } };
     }
@@ -592,7 +592,7 @@ Odin.XmlFormatter = {
       return { result: null, error: validation.error };
     }
     try {
-      return { result: this._formatXml(input, true), error: null };
+      return { result: this._formatXml(validation.parsed, true), error: null };
     } catch (e) {
       return { result: null, error: { message: e.message, line: null, col: null } };
     }
@@ -600,7 +600,7 @@ Odin.XmlFormatter = {
 
   validate(input) {
     if (!input || !input.trim()) {
-      return { valid: null, error: null };
+      return { valid: null, error: null, parsed: null };
     }
 
     const parser = new DOMParser();
@@ -608,10 +608,11 @@ Odin.XmlFormatter = {
     const parserError = xmlDoc.querySelector('parsererror');
 
     if (!parserError) {
-      return { valid: true, error: null };
+      // ⚡ Bolt: Return the parsed object to prevent redundant DOMParser calls by the caller
+      return { valid: true, error: null, parsed: xmlDoc };
     }
 
-    return { valid: false, error: this._parseError(parserError.textContent || 'Invalid XML') };
+    return { valid: false, error: this._parseError(parserError.textContent || 'Invalid XML'), parsed: null };
   },
 
   highlight(code) {
@@ -627,9 +628,7 @@ Odin.XmlFormatter = {
     return Odin.Utils.escapeHtml(code);
   },
 
-  _formatXml(input, minify = false) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(input, 'application/xml');
+  _formatXml(xmlDoc, minify = false) {
     const serializer = new XMLSerializer();
     let xml = serializer.serializeToString(xmlDoc);
 
@@ -3259,13 +3258,19 @@ function odinApp() {
     },
 
     validateXml() {
-      this.xmlValidation = Odin.XmlFormatter.validate(this.xmlInput);
+      const { parsed, ...validation } = Odin.XmlFormatter.validate(this.xmlInput);
+      this.xmlValidation = validation;
 
       if (this.xmlValidation.valid && this.xmlInput.trim()) {
-        const pretty = Odin.XmlFormatter.beautify(this.xmlInput);
-        if (pretty.result !== null) {
-          this.xmlOutput = pretty.result;
-          this.xmlOutputHtml = Odin.XmlFormatter.highlight(pretty.result);
+        try {
+          // ⚡ Bolt: Reuse the cached parsed document from validation
+          // to avoid parsing the XML DOM twice on the same payload string.
+          const formatted = Odin.XmlFormatter._formatXml(parsed, false);
+          this.xmlOutput = formatted;
+          this.xmlOutputHtml = Odin.XmlFormatter.highlight(formatted);
+        } catch(e) {
+           this.xmlOutput = this.xmlInput;
+           this.xmlOutputHtml = Odin.XmlFormatter.highlight(this.xmlInput);
         }
       } else if (!this.xmlInput.trim()) {
         this.xmlOutput = '';
