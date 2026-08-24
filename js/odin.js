@@ -180,27 +180,7 @@ Odin.Utils = {
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 0) {
         // ⚡ Bolt: Fast-path with indexOf and single-pass loop instead of chained .replace() allocations
-        const str = parts[i];
-        if (str.indexOf('<') === -1 && str.indexOf('>') === -1) {
-          result += str;
-        } else {
-          let out = '';
-          let lastIndex = 0;
-          for (let j = 0; j < str.length; j++) {
-            const char = str.charCodeAt(j);
-            if (char === 60) { // '<'
-              out += str.substring(lastIndex, j) + '&lt;';
-              lastIndex = j + 1;
-            } else if (char === 62) { // '>'
-              out += str.substring(lastIndex, j) + '&gt;';
-              lastIndex = j + 1;
-            }
-          }
-          if (lastIndex !== str.length) {
-            out += str.substring(lastIndex);
-          }
-          result += out;
-        }
+        result += Odin.Utils.escapeHtml(parts[i]);
       } else {
         result += parts[i];
       }

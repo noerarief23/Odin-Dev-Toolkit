@@ -78,3 +78,8 @@
 **Vulnerability:** Regular Expression Denial of Service (ReDoS) and massive array allocation DoS due to an unbounded `text.match(...)` operation in `Odin.CaseConverter`.
 **Learning:** While regex timeout loops exist in other parts of the application, single-pass native regex operations (like `String.prototype.match`) on unbounded untrusted input can still hang the main thread via catastrophic backtracking or exhaust memory by allocating a massive array of matches (e.g., an array of 5,000,000 single-character tokens).
 **Prevention:** Explicitly bound the length of strings before running complex or global regular expressions (e.g., `if (text.length > 50000) throw new Error(...)`). Instead of silently truncating the input (which causes functional data-loss regressions), throw a clear error that the caller can catch and gracefully handle.
+
+## 2026-07-08 - Incomplete Custom HTML Sanitization in PrismJS Output
+**Vulnerability:** XSS via incomplete sanitization logic in `sanitizePrismHtml` that only escaped `<` and `>`.
+**Learning:** Custom sanitization loops that only target basic tag characters (`<` and `>`) leave applications vulnerable to attribute-based XSS or entity injection because characters like `&`, `"`, and `'` are not escaped. In `sanitizePrismHtml`, untokenized input containing these characters bypassed sanitization and was rendered directly in the DOM.
+**Prevention:** Avoid writing custom, partial HTML escaping logic. Always delegate escaping of untrusted input to a comprehensive utility function (e.g., `Odin.Utils.escapeHtml`) that correctly handles all critical control characters (`&`, `<`, `>`, `"`, `'`).
