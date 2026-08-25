@@ -141,3 +141,7 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+
+## 2024-05-24 - Line Number Generation String Concatenation Optimization
+**Learning:** When generating large sequential strings (e.g., line numbers) in JavaScript, using a traditional `for` loop with string concatenation (`+=`) significantly outperforms allocating a large array, filling it, and calling `.join('\n')`. This avoids massive memory allocation and garbage collection overhead.
+**Action:** When refactoring `Array(count).join()` logic into a string concatenation loop, ensure you explicitly handle the zero-length edge case (e.g., `count > 0 ? '1' : ''`) to prevent regressions where the initial string variable is incorrectly returned instead of an empty result.
