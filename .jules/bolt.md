@@ -141,3 +141,9 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+## 2024-05-17 - Avoid manual string concatenation loops for `.join()`
+**Learning:** Replacing `Array.prototype.join()` with manual string concatenation in a `for` loop (e.g., `html += ...`) is a debated micro-optimization. In modern JavaScript engines like V8, `.join()` is heavily optimized. Manual loops can actually degrade performance or increase garbage collection pressure due to intermediate string allocations.
+**Action:** Never replace `Array.prototype.join()` with manual string concatenation loops under the guise of optimization unless explicitly proven necessary by profiling a specific bottleneck.
+## 2024-05-17 - Prevent Redundant Updates in High-Frequency Intervals
+**Learning:** High-frequency intervals (like a 250ms Pomodoro timer) that unconditionally assign to reactive state or modify DOM properties (like `document.title`) cause massive redundant UI churn if the computed value hasn't actually changed.
+**Action:** Always wrap reactive state assignments and DOM manipulations inside high-frequency loops with a simple equality check (e.g., `if (this.state !== newValue)`) to strictly limit updates to true state changes.

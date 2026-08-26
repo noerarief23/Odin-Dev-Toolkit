@@ -2922,11 +2922,14 @@ function odinApp() {
           return;
         }
 
-        this.pomoTimeLeft = remaining;
+        if (this.pomoTimeLeft !== remaining) {
+          this.pomoTimeLeft = remaining;
 
-        // Update browser tab title
-        const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
-        document.title = Odin.Pomodoro.formatTime(remaining) + ' — ' + modeLabel;
+          // ⚡ Bolt: Prevent redundant DOM manipulations and reactive updates by only updating when the second changes
+          // Update browser tab title
+          const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
+          document.title = Odin.Pomodoro.formatTime(remaining) + ' — ' + modeLabel;
+        }
       }, 250);
     },
 
