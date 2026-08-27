@@ -141,3 +141,7 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+
+## 2024-05-31 - ImageShrink Base64 Memory Allocation
+**Learning:** Using `FileReader.readAsDataURL` to read large image files directly into memory creates massive Base64 strings. This allocates huge amounts of memory and synchronously blocks the main thread, causing severe UI freezes.
+**Action:** When loading local files for image preview or processing (like drawing to a Canvas), always use `URL.createObjectURL(file)`. This creates a lightweight, memory-efficient blob reference that decodes asynchronously without blocking the main thread. Remember to clean up using `URL.revokeObjectURL(url)`.
