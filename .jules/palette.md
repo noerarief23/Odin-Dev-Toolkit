@@ -34,3 +34,6 @@
 ## 2024-08-08 - Explain Disabled States
 **Learning:** When buttons are dynamically disabled (e.g., via Alpine.js `:disabled` binding) without explanation, users can be confused as to why the action is unavailable.
 **Action:** Always pair dynamically disabled buttons with a descriptive tooltip (e.g., using `:title`) explaining the condition required to enable the button.
+## 2024-10-24 - Duplicate Alpine.js Bindings Hide Tooltips
+**Learning:** When using Alpine.js bindings (like `:title`), ensure there are no duplicate bindings of the same attribute on a single element. The latter binding will silently override the former, which can unintentionally hide essential accessibility or UX features, such as tooltips meant to explain disabled states.
+**Action:** Always verify that elements do not have duplicate Alpine.js bindings when adding dynamic tooltips to explain disabled states.
