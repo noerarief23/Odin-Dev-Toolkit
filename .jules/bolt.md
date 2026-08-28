@@ -141,3 +141,7 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+
+## 2024-08-28 - Optimize High-Frequency Intervals
+**Learning:** High-frequency intervals (e.g., `setInterval` running every 250ms) that blindly assign reactive states and update DOM elements like `document.title` cause severe redundant re-renders and repaints, especially in frameworks like Alpine.js, when the visible value changes less frequently (e.g., every 1 second).
+**Action:** Always wrap reactive state assignments and DOM updates inside high-frequency loops in an equality check (`if (oldValue !== newValue)`) to prevent unnecessary work.

@@ -2922,11 +2922,13 @@ function odinApp() {
           return;
         }
 
-        this.pomoTimeLeft = remaining;
+        if (this.pomoTimeLeft !== remaining) {
+          this.pomoTimeLeft = remaining;
 
-        // Update browser tab title
-        const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
-        document.title = Odin.Pomodoro.formatTime(remaining) + ' — ' + modeLabel;
+          // Update browser tab title
+          const modeLabel = Odin.Pomodoro.MODES[this.pomoMode].label;
+          document.title = Odin.Pomodoro.formatTime(remaining) + ' — ' + modeLabel;
+        }
       }, 250);
     },
 
