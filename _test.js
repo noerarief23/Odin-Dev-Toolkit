@@ -177,6 +177,201 @@ describe('Odin.Regex', () => {
   });
 });
 
+describe('Odin.JsonTree', () => {
+  const T = Odin.JsonTree;
+  const sample = () => ({
+    storeId: 'x1',
+    icons: ['a', 'b'],
+    owner: { name: 'Budi', contact: { email: 'b@x.com', phones: ['081', '021'] } },
+    products: [{ id: 1, name: 'A', tags: ['t'] }, { id: 2, name: 'B', stock: 5 }],
+    active: true,
+    note: null
+  });
+
+  it('typeOf distinguishes JSON types', () => {
+    assertEqual(T.typeOf(null), 'null');
+    assertEqual(T.typeOf([]), 'array');
+    assertEqual(T.typeOf({}), 'object');
+    assertEqual(T.typeOf('s'), 'string');
+    assertEqual(T.typeOf(1), 'number');
+    assertEqual(T.typeOf(false), 'boolean');
+  });
+
+  it('childCount counts own keys / items', () => {
+    assertEqual(T.childCount({ a: 1, b: 2 }), 2);
+    assertEqual(T.childCount([1, 2, 3]), 3);
+    assertEqual(T.childCount('str'), 0);
+    assertEqual(T.childCount(null), 0);
+  });
+
+  it('getAt reads nested paths and returns undefined when missing', () => {
+    const d = sample();
+    assertEqual(T.getAt(d, ['owner', 'contact', 'phones', 1]), '021');
+    assertEqual(T.getAt(d, []), d);
+    assertEqual(T.getAt(d, ['nope']), undefined);
+    assertEqual(T.getAt(d, ['icons', 9]), undefined);
+    assertEqual(T.getAt(d, ['icons', 'length']), undefined);
+    assertEqual(T.getAt(d, ['storeId', 'x']), undefined);
+  });
+
+  it('setAt replaces existing values only', () => {
+    const d = sample();
+    T.setAt(d, ['owner', 'name'], 'Siti');
+    assertEqual(d.owner.name, 'Siti');
+    T.setAt(d, ['icons', 0], 'z');
+    assertEqual(d.icons[0], 'z');
+    T.setAt(d, ['missing'], 1);
+    assert(!('missing' in d));
+    assertEqual(T.setAt(d, [], 5), 5);
+  });
+
+  it('deleteAt removes keys and splices array items', () => {
+    const d = sample();
+    T.deleteAt(d, ['owner', 'name']);
+    assert(!('name' in d.owner));
+    T.deleteAt(d, ['icons', 0]);
+    assertDeepEqual(d.icons, ['b']);
+    assertEqual(T.deleteAt(d, []), d);
+  });
+
+  it('addKey makes keys unique and blocks __proto__', () => {
+    const o = { a: 1 };
+    assertEqual(T.addKey(o, 'a', 2), 'a_2');
+    assertEqual(T.addKey(o, '', 3), 'newKey');
+    assertEqual(T.addKey(o, '__proto__', 4), 'proto');
+    assertEqual(Object.getPrototypeOf(o), Object.prototype);
+  });
+
+  it('addItem appends and returns the index', () => {
+    const a = [1];
+    assertEqual(T.addItem(a, 2), 1);
+    assertDeepEqual(a, [1, 2]);
+  });
+
+  it('pathToString renders dot / index / quoted segments', () => {
+    assertEqual(T.pathToString([]), 'root');
+    assertEqual(T.pathToString(['owner', 'phones', 0]), 'root.owner.phones[0]');
+    assertEqual(T.pathToString(['a b', 'c']), 'root["a b"].c');
+  });
+
+  it('flatten lists every node with depth and type', () => {
+    const rows = T.flatten(sample(), {}, '');
+    assertEqual(rows[0].label, 'root');
+    assertEqual(rows[0].count, 6);
+    const phones = rows.filter(r => r.label === 'phones')[0];
+    assertEqual(phones.depth, 3);
+    assertEqual(phones.type, 'array');
+    assertEqual(phones.count, 2);
+    assert(rows.some(r => r.label === '[1]' && r.depth === 4));
+  });
+
+  it('flatten hides children of collapsed nodes', () => {
+    const d = sample();
+    const collapsed = {};
+    collapsed[T.pathKey(['owner'])] = true;
+    const rows = T.flatten(d, collapsed, '');
+    assert(rows.some(r => r.label === 'owner' && r.expanded === false));
+    assert(!rows.some(r => r.label === 'contact'));
+  });
+
+  it('flatten filter keeps matches and their ancestors', () => {
+    const rows = T.flatten(sample(), {}, 'phones');
+    const labels = rows.map(r => r.label);
+    assertDeepEqual(labels.slice(0, 4), ['root', 'owner', 'contact', 'phones']);
+    assert(!labels.includes('storeId'));
+  });
+
+  it('flatten caps the number of rows', () => {
+    const big = [];
+    for (let i = 0; i < T.MAX_ROWS + 50; i++) big.push(i);
+    const rows = T.flatten(big, {}, '');
+    assertEqual(rows.length, T.MAX_ROWS);
+    assertEqual(rows.truncated, true);
+  });
+
+  it('containerKeys lists non-root containers with children', () => {
+    const keys = T.containerKeys(sample());
+    assert(keys[T.pathKey(['owner'])]);
+    assert(keys[T.pathKey(['owner', 'contact', 'phones'])]);
+    assert(!keys['[]']);
+    assert(!keys[T.pathKey(['storeId'])]);
+  });
+
+  it('fields classifies value / boolean / chips / container', () => {
+    const f = T.fields(sample(), 0, 0, true);
+    const by = {};
+    for (let i = 0; i < f.length; i++) by[f[i].key] = f[i];
+    assertEqual(by.storeId.kind, 'value');
+    assertEqual(by.active.kind, 'boolean');
+    assertEqual(by.note.kind, 'value');
+    assertEqual(by.note.text, 'null');
+    assertEqual(by.icons.kind, 'chips');
+    assertEqual(by.icons.items.length, 2);
+    assertEqual(by.owner.kind, 'container');
+    assertEqual(by.owner.children.length, 2);
+    assertEqual(by.products.kind, 'container');
+    assertEqual(by.products.children, null);
+  });
+
+  it('fields paginates', () => {
+    const arr = [];
+    for (let i = 0; i < 120; i++) arr.push(i);
+    const page = T.fields(arr, 100, 50, false);
+    assertEqual(page.length, 20);
+    assertEqual(page[0].key, 100);
+    assertEqual(T.fields({ a: 1, b: 2, c: 3 }, 1, 1, false)[0].key, 'b');
+  });
+
+  it('tableModel builds columns from an array of objects', () => {
+    const t = T.tableModel(sample().products, 0, 50);
+    assertEqual(t.kind, 'objects');
+    assertDeepEqual(t.columns, ['id', 'name', 'tags', 'stock']);
+    assertEqual(t.rows.length, 2);
+    assertEqual(t.rows[0].cells[2].kind, 'chips');
+    assertEqual(t.rows[0].cells[3].kind, 'missing');
+    assertEqual(t.rows[1].cells[3].text, '5');
+  });
+
+  it('tableModel falls back to key/value for objects and mixed arrays', () => {
+    const t = T.tableModel({ a: 1, b: { c: 2 } }, 0, 50);
+    assertEqual(t.kind, 'keyvalue');
+    assertEqual(t.rows[1].cell.kind, 'container');
+    assertEqual(T.tableModel([1, { a: 1 }], 0, 50).kind, 'keyvalue');
+    assertEqual(T.tableModel([], 0, 50).kind, 'empty');
+    assertEqual(T.tableModel('x', 0, 50).kind, 'empty');
+  });
+
+  it('templateRow copies keys with default values', () => {
+    assertDeepEqual(T.templateRow(sample().products), { id: 0, name: '', tags: [] });
+    assertDeepEqual(T.templateRow([]), {});
+  });
+
+  it('coerce parses text per type without throwing', () => {
+    assertDeepEqual(T.coerce('12.5', 'number'), { ok: true, value: 12.5 });
+    assertEqual(T.coerce('abc', 'number').ok, false);
+    assertEqual(T.coerce('', 'number').ok, false);
+    assertEqual(T.coerce('Infinity', 'number').ok, false);
+    assertDeepEqual(T.coerce('TRUE', 'boolean'), { ok: true, value: true });
+    assertEqual(T.coerce('yes', 'boolean').ok, false);
+    assertDeepEqual(T.coerce('null', 'null'), { ok: true, value: null });
+    assertDeepEqual(T.coerce('hi', 'null'), { ok: true, value: 'hi' });
+    assertDeepEqual(T.coerce(' keep ', 'string'), { ok: true, value: ' keep ' });
+  });
+
+  it('convertType converts between types', () => {
+    assertEqual(T.convertType('42', 'number'), 42);
+    assertEqual(T.convertType('abc', 'number'), 0);
+    assertEqual(T.convertType(3, 'string'), '3');
+    assertEqual(T.convertType(null, 'string'), '');
+    assertEqual(T.convertType('true', 'boolean'), true);
+    assertEqual(T.convertType(0, 'boolean'), false);
+    assertEqual(T.convertType('x', 'null'), null);
+    assertDeepEqual(T.convertType('x', 'object'), {});
+    assertDeepEqual(T.convertType(1, 'array'), []);
+    assertEqual(T.convertType({ a: 1 }, 'string'), '{"a":1}');
+  });
+});
+
 describe('Odin.JsonFormatter', () => {
   it('beautify formats valid JSON', () => {
     const r = Odin.JsonFormatter.beautify('{"a":1,"b":2}');

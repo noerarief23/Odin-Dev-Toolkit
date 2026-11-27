@@ -956,15 +956,16 @@
         x-transition:enter-start="opacity-0 translate-y-2"
         x-transition:enter-end="opacity-100 translate-y-0"
         class="tool-panel"
+        :class="jsonMode !== 'text' ? 'tool-panel-wide' : ''"
       >
-        <div class="mb-6">
+        <div class="mb-4">
           <div class="flex items-start justify-between flex-wrap gap-3">
             <div>
               <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <i data-lucide="braces" class="w-6 h-6 text-gold-500"></i>
                 JSON Formatter
               </h2>
-              <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Beautify, minify, and validate JSON with instant feedback</p>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Beautify, minify, validate — or edit JSON as a form or table</p>
             </div>
 
             <!-- Validation Badge -->
@@ -985,64 +986,420 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-2 mb-4">
-          <button @click="beautifyJson()" class="btn-gold flex items-center gap-1.5 text-sm">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            Beautify
-          </button>
-          <button @click="minifyJson()" class="btn-outline flex items-center gap-1.5 text-sm">
-            <i data-lucide="minimize-2" class="w-4 h-4"></i>
-            Minify
-          </button>
-          <button @click="copyJson()" class="btn-outline flex items-center gap-1.5 text-sm">
-            <i data-lucide="copy" class="w-4 h-4"></i>
-            Copy
-          </button>
-          <button @click="jsonInput = ''; jsonOutput = ''; jsonOutputHtml = ''; jsonValidation = { valid: null, error: null }; $nextTick(() => { syncJsonLineNumbers(); syncJsonOutputLineNumbers(); })" class="btn-outline flex items-center gap-1.5 text-sm">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-            Clear
-          </button>
+        <!-- View Mode Tabs -->
+        <div class="flex items-center flex-wrap gap-1 border-b border-slate-800 mb-4" role="tablist" aria-label="JSON view mode">
+          <button type="button" role="tab" :aria-selected="jsonMode === 'text'" @click="setJsonMode('text')" :class="jsonMode === 'text' ? 'active' : ''" class="tab-btn">Text</button>
+          <button type="button" role="tab" :aria-selected="jsonMode === 'form'" @click="setJsonMode('form')" :class="jsonMode === 'form' ? 'active' : ''" class="tab-btn">Form View</button>
+          <button type="button" role="tab" :aria-selected="jsonMode === 'table'" @click="setJsonMode('table')" :class="jsonMode === 'table' ? 'active' : ''" class="tab-btn">Table View</button>
+          <button
+            type="button"
+            x-show="jsonMode !== 'text'"
+            @click="jsonCollapseAll()"
+            :disabled="jsonValidation.valid !== true"
+            :title="jsonValidation.valid !== true ? 'Requires valid JSON' : ''"
+            class="ml-auto mb-1 btn-outline text-xs py-1 px-2.5 disabled:opacity-40"
+            x-text="jsonAllCollapsed() ? 'Expand All' : 'Collapse All'"
+          ></button>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <!-- Input -->
-          <div>
-            <label for="json-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
-            <div class="json-editor h-[28rem]">
-              <pre x-ref="jsonGutter" class="json-gutter" x-text="getJsonLineNumbers()"></pre>
-              <textarea
-                id="json-input"
-                x-ref="jsonInput"
-                x-model="jsonInput"
-                @input="syncJsonLineNumbers()"
-                @input.debounce.300ms="validateJson()"
-                @scroll="syncJsonLineNumbers()"
-                class="textarea-valhalla code-input json-input h-[28rem]"
-                placeholder='{"key": "value"}'
-                spellcheck="false"
-              ></textarea>
+        <!-- ===== TEXT MODE ===== -->
+        <div x-show="jsonMode === 'text'">
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button @click="beautifyJson()" class="btn-gold flex items-center gap-1.5 text-sm">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              Beautify
+            </button>
+            <button @click="minifyJson()" class="btn-outline flex items-center gap-1.5 text-sm">
+              <i data-lucide="minimize-2" class="w-4 h-4"></i>
+              Minify
+            </button>
+            <button @click="copyJson()" class="btn-outline flex items-center gap-1.5 text-sm">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              Copy
+            </button>
+            <button @click="clearJson()" class="btn-outline flex items-center gap-1.5 text-sm">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              Clear
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <!-- Input -->
+            <div>
+              <label for="json-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Input</label>
+              <div class="json-editor h-[28rem]">
+                <pre x-ref="jsonGutter" class="json-gutter" x-text="getJsonLineNumbers()"></pre>
+                <textarea
+                  id="json-input"
+                  x-ref="jsonInput"
+                  x-model="jsonInput"
+                  @input="syncJsonLineNumbers()"
+                  @input.debounce.300ms="validateJson()"
+                  @scroll="syncJsonLineNumbers()"
+                  class="textarea-valhalla code-input json-input h-[28rem]"
+                  placeholder='{"key": "value"}'
+                  spellcheck="false"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Output -->
+            <div>
+              <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
+              <div class="json-editor h-[28rem]">
+                <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
+                <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
+                  <template x-if="!jsonOutputHtml">
+                    <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
+                      <i data-lucide="braces" class="w-10 h-10 mb-2 opacity-20"></i>
+                      <p class="text-sm">Output appears after Beautify or Minify...</p>
+                    </div>
+                  </template>
+                  <template x-if="jsonOutputHtml">
+                    <pre class="m-0 bg-transparent"><code class="language-json" x-html="jsonOutputHtml"></code></pre>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== FORM / TABLE MODE ===== -->
+        <div x-show="jsonMode !== 'text'" class="jf-layout">
+
+          <!-- JSON Structure (tree) -->
+          <aside class="jf-sidebar jf-panel glass" aria-label="JSON structure">
+            <div class="jf-sidebar-title">JSON Structure</div>
+            <input
+              type="search"
+              x-model="jsonSearch"
+              @input.debounce.200ms="jsonRefresh()"
+              class="input-valhalla jf-input"
+              placeholder="Search node..."
+              aria-label="Search node"
+              autocomplete="off"
+            >
+            <div class="jf-tree" role="tree">
+              <template x-for="r in jsonTreeRows" :key="r.pathKey">
+                <div
+                  class="jf-node"
+                  :class="r.pathKey === jsonFocusKey() ? 'active' : ''"
+                  :style="'padding-left:' + (r.depth * 14) + 'px'"
+                  role="treeitem"
+                  :aria-expanded="r.hasChildren ? String(r.expanded) : null"
+                >
+                  <button
+                    type="button"
+                    class="jf-chev"
+                    :class="r.hasChildren ? '' : 'invisible'"
+                    :tabindex="r.hasChildren ? 0 : -1"
+                    :aria-label="(r.expanded ? 'Collapse ' : 'Expand ') + r.label"
+                    @click.stop="jsonToggleNode(r.pathKey)"
+                    x-text="r.expanded ? '▾' : '▸'"
+                  ></button>
+                  <button type="button" class="jf-node-label" @click="jsonSelectRow(r)">
+                    <span class="jf-badge" :class="'jf-t-' + r.type" x-text="jsonBadge(r.type)"></span>
+                    <span x-text="r.label"></span>
+                  </button>
+                  <span class="jf-count" x-text="r.hasChildren ? r.count : r.type"></span>
+                </div>
+              </template>
+              <p x-show="jsonTreeTruncated" class="jf-muted mt-2">Showing the first 5000 nodes. Use search to narrow down.</p>
+              <p x-show="jsonValidation.valid === true && jsonSearch && jsonTreeRows.length <= 1" class="jf-muted mt-2">No matching node.</p>
+            </div>
+          </aside>
+
+          <!-- Main editor -->
+          <div class="min-w-0">
+
+            <!-- Empty -->
+            <div x-show="jsonValidation.valid === null" class="jf-panel glass text-center py-10">
+              <i data-lucide="braces" class="w-10 h-10 mx-auto mb-3 opacity-30"></i>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">No JSON yet. Paste some in the Text view, or start a new document.</p>
+              <div class="flex justify-center gap-2 flex-wrap">
+                <button type="button" @click="jsonStartDocument('object')" class="btn-gold text-sm">New object {}</button>
+                <button type="button" @click="jsonStartDocument('array')" class="btn-outline text-sm">New array []</button>
+                <button type="button" @click="setJsonMode('text')" class="btn-outline text-sm">Open Text view</button>
+              </div>
+            </div>
+
+            <!-- Invalid -->
+            <div x-show="jsonValidation.valid === false" class="jf-panel glass py-8 text-center">
+              <div class="error-badge inline-flex items-center gap-1.5 mb-3">
+                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                <span x-text="jsonValidation.error ? (jsonValidation.error.line ? 'Error at line ' + jsonValidation.error.line + ': ' : '') + jsonValidation.error.message : 'Invalid JSON'"></span>
+              </div>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Form and Table views need valid JSON. Fix the error in the Text view first.</p>
+              <button type="button" @click="setJsonMode('text')" class="btn-gold text-sm">Fix in Text view</button>
+            </div>
+
+            <!-- Valid document -->
+            <div x-show="jsonValidation.valid === true" class="jf-panel glass">
+              <!-- Breadcrumb -->
+              <nav class="jf-crumbs mb-4" aria-label="JSON path">
+                <template x-for="(c, i) in jsonCrumbs" :key="i + ':' + c.label">
+                  <span class="inline-flex items-center">
+                    <span x-show="i > 0" class="jf-sep" aria-hidden="true">›</span>
+                    <button type="button" class="jf-crumb" :class="i === jsonCrumbs.length - 1 ? 'active' : ''" @click="jsonFocus(c.path)" x-text="c.label"></button>
+                  </span>
+                </template>
+              </nav>
+
+              <!-- Node header -->
+              <div class="flex items-center gap-3 mb-4">
+                <span class="jf-badge jf-badge-lg" :class="'jf-t-' + jsonFocusType" x-text="jsonBadge(jsonFocusType)"></span>
+                <div>
+                  <div class="font-semibold" x-text="jsonCrumbs[jsonCrumbs.length - 1].label"></div>
+                  <div class="jf-muted" x-text="jsonFocusType === 'array' ? jsonFocusCount + ' items' : (jsonFocusType === 'object' ? jsonFocusCount + ' fields' : jsonFocusType)"></div>
+                </div>
+              </div>
+
+              <!-- ---- FORM VIEW ---- -->
+              <div x-show="jsonMode === 'form'">
+                <p x-show="jsonFocusType !== 'object' && jsonFocusType !== 'array'" class="text-sm text-slate-600 dark:text-slate-400">The root is a single <span x-text="jsonFocusType"></span> value. Switch to Text view to edit it.</p>
+                <p x-show="(jsonFocusType === 'object' || jsonFocusType === 'array') && jsonFocusCount === 0" class="text-sm text-slate-600 dark:text-slate-400">Empty. Add a <span x-text="jsonFocusType === 'array' ? 'item' : 'field'"></span> below.</p>
+
+                <div class="jf-grid">
+                  <template x-for="f in jsonFields" :key="f.key">
+                    <div class="jf-field" :class="(f.kind === 'chips' || f.kind === 'container' || f.multiline) ? 'jf-wide' : ''">
+                      <div class="jf-field-head">
+                        <span class="jf-label" :title="String(f.key)" x-text="typeof f.key === 'number' ? '[' + f.key + ']' : f.key"></span>
+                        <select
+                          class="jf-type"
+                          :aria-label="'Type of ' + f.key"
+                          @change="jsonConvertType(jsonChildPath([f.key]), $event.target.value)"
+                        >
+                          <template x-for="t in jsonTypes" :key="t">
+                            <option :value="t" :selected="t === f.type" x-text="t"></option>
+                          </template>
+                        </select>
+                        <button type="button" class="jf-icon-btn" :aria-label="'Remove ' + f.key" title="Remove" @click="jsonRemove(jsonChildPath([f.key]))">×</button>
+                      </div>
+
+                      <!-- string / number / null -->
+                      <template x-if="f.kind === 'value' && !f.multiline">
+                        <input
+                          type="text"
+                          class="input-valhalla jf-input"
+                          :value="f.text"
+                          :inputmode="f.type === 'number' ? 'decimal' : null"
+                          :aria-label="String(f.key)"
+                          @change="jsonEditValue(jsonChildPath([f.key]), $event.target, f.type)"
+                        >
+                      </template>
+                      <template x-if="f.kind === 'value' && f.multiline">
+                        <textarea
+                          class="textarea-valhalla jf-input"
+                          rows="3"
+                          :value="f.text"
+                          :aria-label="String(f.key)"
+                          @change="jsonEditValue(jsonChildPath([f.key]), $event.target, f.type)"
+                        ></textarea>
+                      </template>
+
+                      <!-- boolean -->
+                      <template x-if="f.kind === 'boolean'">
+                        <label class="jf-bool">
+                          <input type="checkbox" :checked="f.text === 'true'" @change="jsonSetBool(jsonChildPath([f.key]), $event.target.checked)">
+                          <span x-text="f.text"></span>
+                        </label>
+                      </template>
+
+                      <!-- array of primitives: chip editor -->
+                      <template x-if="f.kind === 'chips'">
+                        <div class="jf-chips">
+                          <template x-for="it in f.items" :key="it.i">
+                            <span class="jf-chip">
+                              <span class="jf-chip-text" :title="it.text" x-text="it.text"></span>
+                              <button type="button" class="jf-chip-x" :aria-label="'Remove item ' + it.i" @click="jsonRemove(jsonChildPath([f.key, it.i]))">×</button>
+                            </span>
+                          </template>
+                          <span class="jf-chip-add">
+                            <input type="text" class="jf-chip-input" placeholder="New item..." aria-label="New item" @keydown.enter.prevent="jsonChipAdd(jsonChildPath([f.key]), $event.target)">
+                            <button type="button" class="btn-outline text-xs py-1 px-2" @click="jsonChipAdd(jsonChildPath([f.key]), $el.previousElementSibling)">+ Add</button>
+                          </span>
+                        </div>
+                      </template>
+
+                      <!-- object / array of objects -->
+                      <template x-if="f.kind === 'container'">
+                        <div class="jf-sub">
+                          <div class="jf-sub-grid" x-show="f.children && f.children.length">
+                            <template x-for="c in (f.children || [])" :key="c.key">
+                              <div>
+                                <div class="jf-label-sm" x-text="c.key"></div>
+                                <template x-if="c.kind === 'value'">
+                                  <input
+                                    type="text"
+                                    class="input-valhalla jf-input"
+                                    :value="c.text"
+                                    :aria-label="f.key + ' ' + c.key"
+                                    @change="jsonEditValue(jsonChildPath([f.key, c.key]), $event.target, c.type)"
+                                  >
+                                </template>
+                                <template x-if="c.kind === 'boolean'">
+                                  <label class="jf-bool">
+                                    <input type="checkbox" :checked="c.text === 'true'" @change="jsonSetBool(jsonChildPath([f.key, c.key]), $event.target.checked)">
+                                    <span x-text="c.text"></span>
+                                  </label>
+                                </template>
+                                <template x-if="c.kind === 'chips' || c.kind === 'container'">
+                                  <button type="button" class="jf-drill" @click="jsonFocus(jsonChildPath([f.key, c.key]))">
+                                    <span x-text="c.count + (c.type === 'array' ? ' items' : ' fields')"></span><span aria-hidden="true">→</span>
+                                  </button>
+                                </template>
+                              </div>
+                            </template>
+                          </div>
+                          <button type="button" class="jf-drill" @click="jsonFocus(jsonChildPath([f.key]))">
+                            <span x-text="'Open ' + f.key + ' · ' + f.count + (f.type === 'array' ? ' items' : ' fields')"></span><span aria-hidden="true">→</span>
+                          </button>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- ---- TABLE VIEW ---- -->
+              <div x-show="jsonMode === 'table'">
+                <p x-show="jsonTable.kind === 'empty'" class="text-sm text-slate-600 dark:text-slate-400">Nothing to show here yet. Add a <span x-text="jsonFocusType === 'array' ? 'row' : 'field'"></span> below, or pick another node.</p>
+                <p x-show="jsonTable.columnsTruncated" class="jf-muted mb-2">Showing the first 30 columns only.</p>
+
+                <!-- Array of objects -->
+                <template x-if="jsonTable.kind === 'objects'">
+                  <div class="jf-table-wrap">
+                  <table class="jf-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <template x-for="col in jsonTable.columns" :key="col">
+                          <th scope="col" x-text="col"></th>
+                        </template>
+                        <th scope="col"><span class="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="row in jsonTable.rows" :key="row.index">
+                        <tr>
+                          <td class="jf-idx" x-text="row.index"></td>
+                          <template x-for="cell in row.cells" :key="cell.key">
+                            <td>
+                              <template x-if="cell.kind === 'value'">
+                                <input type="text" class="jf-cell" :value="cell.text" :aria-label="cell.key + ' of row ' + row.index" @change="jsonEditValue(jsonChildPath([row.index, cell.key]), $event.target, cell.type)">
+                              </template>
+                              <template x-if="cell.kind === 'boolean'">
+                                <input type="checkbox" class="mx-2" :checked="cell.text === 'true'" :aria-label="cell.key + ' of row ' + row.index" @change="jsonSetBool(jsonChildPath([row.index, cell.key]), $event.target.checked)">
+                              </template>
+                              <template x-if="cell.kind === 'chips' || cell.kind === 'container'">
+                                <button type="button" class="jf-drill" @click="jsonFocus(jsonChildPath([row.index, cell.key]))">
+                                  <span x-text="cell.count + (cell.type === 'array' ? ' items' : ' fields')"></span><span aria-hidden="true">→</span>
+                                </button>
+                              </template>
+                              <template x-if="cell.kind === 'missing'">
+                                <span class="jf-muted px-2">—</span>
+                              </template>
+                            </td>
+                          </template>
+                          <td><button type="button" class="jf-icon-btn" :aria-label="'Remove row ' + row.index" title="Remove row" @click="jsonRemove(jsonChildPath([row.index]))">×</button></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+                </template>
+
+                <!-- Key / value list -->
+                <template x-if="jsonTable.kind === 'keyvalue'">
+                  <div class="jf-table-wrap">
+                  <table class="jf-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Key</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Value</th>
+                        <th scope="col"><span class="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="row in jsonTable.rows" :key="row.key">
+                        <tr>
+                          <td class="font-mono text-xs whitespace-nowrap px-2" x-text="typeof row.key === 'number' ? '[' + row.key + ']' : row.key"></td>
+                          <td><span class="jf-badge" :class="'jf-t-' + row.cell.type" x-text="jsonBadge(row.cell.type)"></span></td>
+                          <td>
+                            <template x-if="row.cell.kind === 'value'">
+                              <input type="text" class="jf-cell" :value="row.cell.text" :aria-label="String(row.key)" @change="jsonEditValue(jsonChildPath([row.key]), $event.target, row.cell.type)">
+                            </template>
+                            <template x-if="row.cell.kind === 'boolean'">
+                              <input type="checkbox" class="mx-2" :checked="row.cell.text === 'true'" :aria-label="String(row.key)" @change="jsonSetBool(jsonChildPath([row.key]), $event.target.checked)">
+                            </template>
+                            <template x-if="row.cell.kind === 'chips' || row.cell.kind === 'container'">
+                              <button type="button" class="jf-drill" @click="jsonFocus(jsonChildPath([row.key]))">
+                                <span x-text="row.cell.count + (row.cell.type === 'array' ? ' items' : ' fields')"></span><span aria-hidden="true">→</span>
+                              </button>
+                            </template>
+                          </td>
+                          <td><button type="button" class="jf-icon-btn" :aria-label="'Remove ' + row.key" title="Remove" @click="jsonRemove(jsonChildPath([row.key]))">×</button></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+                </template>
+              </div>
+
+              <!-- Pager -->
+              <div x-show="jsonPageCount() > 1" class="jf-pager">
+                <button type="button" class="btn-outline text-xs py-1 px-2.5" :disabled="jsonPage === 0" :title="jsonPage === 0 ? 'Already on the first page' : ''" @click="jsonGoPage(-1)">Prev</button>
+                <span x-text="'Page ' + (jsonPage + 1) + ' of ' + jsonPageCount()"></span>
+                <button type="button" class="btn-outline text-xs py-1 px-2.5" :disabled="jsonPage >= jsonPageCount() - 1" :title="jsonPage >= jsonPageCount() - 1 ? 'Already on the last page' : ''" @click="jsonGoPage(1)">Next</button>
+              </div>
+
+              <!-- Add field / item / row -->
+              <div x-show="jsonFocusType === 'object' || jsonFocusType === 'array'" class="jf-add">
+                <template x-if="jsonMode === 'table' && jsonTable.kind === 'objects'">
+                  <button type="button" class="btn-gold text-sm" @click="jsonAddRow()">Add row</button>
+                </template>
+                <template x-if="!(jsonMode === 'table' && jsonTable.kind === 'objects')">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <input
+                      type="text"
+                      x-show="jsonFocusType === 'object'"
+                      x-model="jsonNewKey"
+                      @keydown.enter.prevent="jsonAdd()"
+                      class="input-valhalla jf-input"
+                      placeholder="Field name"
+                      aria-label="New field name"
+                    >
+                    <select x-model="jsonNewType" class="jf-type" aria-label="Type of the new value">
+                      <template x-for="t in jsonTypes" :key="t"><option :value="t" x-text="t"></option></template>
+                    </select>
+                    <button type="button" class="btn-gold text-sm" @click="jsonAdd()" x-text="jsonFocusType === 'array' ? 'Add item' : 'Add field'"></button>
+                  </div>
+                </template>
+              </div>
             </div>
           </div>
 
-          <!-- Output -->
-          <div>
-            <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Formatted Output</div>
-            <div class="json-editor h-[28rem]">
-              <pre x-ref="jsonOutputGutter" class="json-gutter" x-text="getJsonOutputLineNumbers()"></pre>
-              <div x-ref="jsonOutputPane" @scroll="syncJsonOutputLineNumbers()" class="code-output json-output-pane h-[28rem] overflow-auto">
-                <template x-if="!jsonOutputHtml">
-                  <div class="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 min-h-[10rem]">
-                  <i data-lucide="braces" class="w-10 h-10 mb-2 opacity-20"></i>
-                  <p class="text-sm">Output appears after Beautify or Minify...</p>
-                </div>
-                </template>
+          <!-- JSON Preview -->
+          <aside class="jf-preview jf-panel glass" aria-label="JSON preview">
+            <div class="flex items-center justify-between mb-3">
+              <div class="jf-sidebar-title mb-0">JSON Preview</div>
+              <button type="button" @click="copyJson()" class="btn-outline text-xs py-1 px-2.5 flex items-center gap-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                Copy
+              </button>
+            </div>
+            <div class="json-editor h-[36rem]">
+              <pre x-ref="jsonPvGutter" class="json-gutter" x-text="getJsonPreviewLineNumbers()"></pre>
+              <div x-ref="jsonPvPane" @scroll="syncJsonPreviewLineNumbers()" class="code-output json-output-pane h-[36rem] overflow-auto">
                 <template x-if="jsonOutputHtml">
                   <pre class="m-0 bg-transparent"><code class="language-json" x-html="jsonOutputHtml"></code></pre>
                 </template>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       </section>
 
