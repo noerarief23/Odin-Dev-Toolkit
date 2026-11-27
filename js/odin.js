@@ -226,9 +226,12 @@ Odin.Utils = {
       return this._lineNumCache.get(count);
     }
 
-    const res = new Array(count);
-    for (let i = 0; i < count; i++) res[i] = i + 1;
-    const str = res.join('\n');
+    // ⚡ Bolt: Use a traditional for loop and string concatenation rather than allocating a large Array and joining it
+    // to avoid intermediate array allocations and closure overhead, improving execution speed and reducing memory pressure.
+    let str = count > 0 ? '1' : '';
+    for (let i = 2; i <= count; i++) {
+      str += '\n' + i;
+    }
 
     // Keep cache bounded
     if (this._lineNumCache.size > 50) this._lineNumCache.clear();
@@ -571,6 +574,410 @@ Odin.JsonFormatter = {
 };
 
 /* ================================================================
+   Odin.JsonTree — Pure helpers for the JSON Form / Table / Tree views.
+   Everything is path-based: a path is an array of keys / indexes,
+   e.g. ['owner', 'contact', 'phones', 0]. No DOM access, so it is
+   unit-testable in Node. The parsed document lives in `_doc`, outside
+   of Alpine's reactive state (large documents would be slow to proxy).
+   ================================================================ */
+Odin.JsonTree = {
+  MAX_ROWS: 5000,     // cap for sidebar rows
+  MAX_COLUMNS: 30,    // cap for table columns
+  MAX_SCAN: 2000,     // cap for column discovery
+  PAGE_SIZE: 50,
+  _doc: null,
+  _ready: false,
+
+  _hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  },
+
+  typeOf(v) {
+    if (v === null) return 'null';
+    if (Array.isArray(v)) return 'array';
+    return typeof v; // string | number | boolean | object
+  },
+
+  isContainer(v) {
+    return v !== null && typeof v === 'object';
+  },
+
+  childCount(v) {
+    if (Array.isArray(v)) return v.length;
+    if (v === null || typeof v !== 'object') return 0;
+    let n = 0;
+    for (const k in v) {
+      if (this._hasOwn(v, k)) n++;
+    }
+    return n;
+  },
+
+  badge(type) {
+    switch (type) {
+      case 'string': return 'T';
+      case 'number': return '#';
+      case 'boolean': return '?';
+      case 'null': return '0';
+      case 'object': return '{}';
+      case 'array': return '[]';
+      default: return '·';
+    }
+  },
+
+  _index(arr, k) {
+    const idx = typeof k === 'number' ? k : (typeof k === 'string' && k !== '' ? Number(k) : NaN);
+    return Number.isInteger(idx) && idx >= 0 && idx < arr.length ? idx : -1;
+  },
+
+  // ---- Path access ----
+  getAt(root, path) {
+    let cur = root;
+    for (let i = 0; i < path.length; i++) {
+      if (!this.isContainer(cur)) return undefined;
+      const k = path[i];
+      if (Array.isArray(cur)) {
+        const idx = this._index(cur, k);
+        if (idx === -1) return undefined;
+        cur = cur[idx];
+      } else {
+        if (!this._hasOwn(cur, k)) return undefined;
+        cur = cur[k];
+      }
+    }
+    return cur;
+  },
+
+  // Replace an existing value. Returns the (possibly new) root.
+  setAt(root, path, value) {
+    if (path.length === 0) return value;
+    const parent = this.getAt(root, path.slice(0, -1));
+    if (!this.isContainer(parent)) return root;
+    const k = path[path.length - 1];
+    if (Array.isArray(parent)) {
+      const idx = this._index(parent, k);
+      if (idx !== -1) parent[idx] = value;
+    } else if (this._hasOwn(parent, k)) {
+      parent[k] = value;
+    }
+    return root;
+  },
+
+  // Remove a value (the root itself cannot be removed).
+  deleteAt(root, path) {
+    if (path.length === 0) return root;
+    const parent = this.getAt(root, path.slice(0, -1));
+    if (!this.isContainer(parent)) return root;
+    const k = path[path.length - 1];
+    if (Array.isArray(parent)) {
+      const idx = this._index(parent, k);
+      if (idx !== -1) parent.splice(idx, 1);
+    } else if (this._hasOwn(parent, k)) {
+      delete parent[k];
+    }
+    return root;
+  },
+
+  addItem(arr, value) {
+    arr.push(value);
+    return arr.length - 1;
+  },
+
+  // Add a key to an object; returns the key actually used (made unique).
+  addKey(obj, key, value) {
+    let base = String(key == null ? '' : key).trim() || 'newKey';
+    if (base === '__proto__') base = 'proto';
+    let name = base;
+    let n = 2;
+    while (this._hasOwn(obj, name)) {
+      name = base + '_' + n;
+      n++;
+    }
+    obj[name] = value;
+    return name;
+  },
+
+  pathToString(path) {
+    let s = 'root';
+    for (let i = 0; i < path.length; i++) {
+      const k = path[i];
+      if (typeof k === 'number') {
+        s += '[' + k + ']';
+      } else if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k)) {
+        s += '.' + k;
+      } else {
+        s += '[' + JSON.stringify(k) + ']';
+      }
+    }
+    return s;
+  },
+
+  pathKey(path) {
+    return JSON.stringify(path);
+  },
+
+  // ---- Sidebar tree ----
+  // Flattens the document into rows. `collapsed` is a map {pathKey: true}.
+  // With a filter, rows that match (and their ancestors) are shown and
+  // collapse state is ignored. Returned array has a `truncated` flag.
+  flatten(root, collapsed, filter) {
+    const rows = [];
+    const q = (filter || '').trim().toLowerCase();
+    const self = this;
+    const max = this.MAX_ROWS;
+    let truncated = false;
+
+    function walk(value, path, label, depth) {
+      if (rows.length >= max) { truncated = true; return false; }
+      const startLen = rows.length;
+      const isC = self.isContainer(value);
+      const count = isC ? self.childCount(value) : 0;
+      const key = JSON.stringify(path);
+      const matchSelf = !q || String(label).toLowerCase().indexOf(q) !== -1;
+      const expanded = count > 0 && (q ? true : !(collapsed && collapsed[key]));
+      rows.push({
+        pathKey: key,
+        path: path,
+        label: label,
+        type: self.typeOf(value),
+        count: count,
+        depth: depth,
+        hasChildren: count > 0,
+        expanded: expanded
+      });
+
+      let childMatch = false;
+      if (expanded) {
+        if (Array.isArray(value)) {
+          for (let i = 0; i < value.length; i++) {
+            if (truncated) break;
+            if (walk(value[i], path.concat(i), '[' + i + ']', depth + 1)) childMatch = true;
+          }
+        } else {
+          for (const k in value) {
+            if (truncated) break;
+            if (self._hasOwn(value, k) && walk(value[k], path.concat(k), k, depth + 1)) childMatch = true;
+          }
+        }
+      }
+
+      if (q && depth > 0 && !matchSelf && !childMatch) {
+        rows.length = startLen;
+        return false;
+      }
+      return matchSelf || childMatch;
+    }
+
+    walk(root, [], 'root', 0);
+    rows.truncated = truncated;
+    return rows;
+  },
+
+  // PathKeys of every non-root container that has children (for "Collapse All").
+  containerKeys(root) {
+    const out = {};
+    const self = this;
+    let seen = 0;
+    function walk(value, path) {
+      if (!self.isContainer(value) || seen > 20000) return;
+      seen++;
+      if (path.length > 0 && self.childCount(value) > 0) out[JSON.stringify(path)] = true;
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) walk(value[i], path.concat(i));
+      } else {
+        for (const k in value) {
+          if (self._hasOwn(value, k)) walk(value[k], path.concat(k));
+        }
+      }
+    }
+    walk(root, []);
+    return out;
+  },
+
+  // ---- Form view ----
+  // Describes one entry of a container for rendering.
+  _field(key, v, withChildren) {
+    const type = this.typeOf(v);
+    const f = { key: key, type: type, kind: 'value', text: '', multiline: false, count: 0, items: null, children: null };
+    if (type === 'boolean') {
+      f.kind = 'boolean';
+      f.text = v ? 'true' : 'false';
+    } else if (type === 'array' || type === 'object') {
+      f.count = this.childCount(v);
+      f.kind = 'container';
+      if (type === 'array') {
+        let primitives = true;
+        for (let i = 0; i < v.length; i++) {
+          if (this.isContainer(v[i])) { primitives = false; break; }
+        }
+        if (primitives) {
+          f.kind = 'chips';
+          f.items = [];
+          for (let i = 0; i < v.length; i++) {
+            f.items.push({ i: i, text: v[i] === null ? 'null' : String(v[i]) });
+          }
+        }
+      } else if (withChildren) {
+        f.children = this.fields(v, 0, 4, false);
+      }
+    } else {
+      f.text = v === null ? 'null' : String(v);
+      f.multiline = type === 'string' && (v.indexOf('\n') !== -1 || v.length > 120);
+    }
+    return f;
+  },
+
+  // Entries [offset, offset + limit) of a container.
+  fields(node, offset, limit, withChildren) {
+    const out = [];
+    if (!this.isContainer(node)) return out;
+    const wc = withChildren !== false;
+    const start = offset || 0;
+    const end = limit ? start + limit : Infinity;
+    if (Array.isArray(node)) {
+      const stop = Math.min(end, node.length);
+      for (let i = start; i < stop; i++) out.push(this._field(i, node[i], wc));
+      return out;
+    }
+    let i = 0;
+    for (const k in node) {
+      if (!this._hasOwn(node, k)) continue;
+      if (i >= end) break;
+      if (i >= start) out.push(this._field(k, node[k], wc));
+      i++;
+    }
+    return out;
+  },
+
+  // ---- Table view ----
+  // 'objects'  : array of plain objects → one row per item, one column per key
+  // 'keyvalue' : any other container → one row per entry
+  // 'empty'    : primitive / empty
+  tableModel(node, offset, limit) {
+    const total = this.childCount(node);
+    if (!this.isContainer(node) || total === 0) {
+      return { kind: 'empty', columns: [], rows: [], total: total, columnsTruncated: false };
+    }
+    const start = offset || 0;
+    const end = limit ? Math.min(start + limit, total) : total;
+
+    let allObjects = Array.isArray(node);
+    if (allObjects) {
+      for (let i = 0; i < node.length; i++) {
+        const it = node[i];
+        if (it === null || typeof it !== 'object' || Array.isArray(it)) { allObjects = false; break; }
+      }
+    }
+
+    if (allObjects) {
+      const columns = [];
+      const seen = {};
+      let columnsTruncated = false;
+      const scan = Math.min(node.length, this.MAX_SCAN);
+      for (let i = 0; i < scan; i++) {
+        for (const k in node[i]) {
+          if (!this._hasOwn(node[i], k) || this._hasOwn(seen, k)) continue;
+          if (columns.length >= this.MAX_COLUMNS) { columnsTruncated = true; continue; }
+          seen[k] = true;
+          columns.push(k);
+        }
+      }
+      const rows = [];
+      for (let i = start; i < end; i++) {
+        const item = node[i];
+        const cells = [];
+        for (let c = 0; c < columns.length; c++) {
+          const col = columns[c];
+          cells.push(this._hasOwn(item, col) ? this._field(col, item[col], false) : { key: col, kind: 'missing', type: 'missing', text: '', count: 0 });
+        }
+        rows.push({ index: i, cells: cells });
+      }
+      return { kind: 'objects', columns: columns, rows: rows, total: total, columnsTruncated: columnsTruncated };
+    }
+
+    const entries = this.fields(node, start, end - start, false);
+    const rows = [];
+    for (let i = 0; i < entries.length; i++) rows.push({ key: entries[i].key, cell: entries[i] });
+    return { kind: 'keyvalue', columns: ['Key', 'Value'], rows: rows, total: total, columnsTruncated: false };
+  },
+
+  // A new row for an array of objects: same keys as the first item, default values.
+  templateRow(arr) {
+    const row = {};
+    if (Array.isArray(arr) && arr.length > 0 && this.isContainer(arr[0]) && !Array.isArray(arr[0])) {
+      for (const k in arr[0]) {
+        if (this._hasOwn(arr[0], k)) row[k] = this.defaultFor(this.typeOf(arr[0][k]));
+      }
+    }
+    return row;
+  },
+
+  // ---- Value conversion ----
+  defaultFor(type) {
+    switch (type) {
+      case 'number': return 0;
+      case 'boolean': return false;
+      case 'null': return null;
+      case 'object': return {};
+      case 'array': return [];
+      default: return '';
+    }
+  },
+
+  // Parse text typed into an input of the given type. Never throws.
+  coerce(text, type) {
+    const t = String(text == null ? '' : text);
+    switch (type) {
+      case 'string':
+        return { ok: true, value: t };
+      case 'number': {
+        const s = t.trim();
+        if (!/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(s)) return { ok: false, value: null };
+        const n = Number(s);
+        return isFinite(n) ? { ok: true, value: n } : { ok: false, value: null };
+      }
+      case 'boolean': {
+        const s = t.trim().toLowerCase();
+        if (s === 'true') return { ok: true, value: true };
+        if (s === 'false') return { ok: true, value: false };
+        return { ok: false, value: null };
+      }
+      case 'null': {
+        const s = t.trim();
+        // Typing anything into a null field turns it into a string.
+        return { ok: true, value: (s === '' || s === 'null') ? null : t };
+      }
+      default:
+        return { ok: false, value: null };
+    }
+  },
+
+  // Change the type of a value (best effort, never throws).
+  convertType(v, type) {
+    const cur = this.typeOf(v);
+    if (cur === type) return v;
+    switch (type) {
+      case 'string':
+        if (this.isContainer(v)) return JSON.stringify(v);
+        return v === null ? '' : String(v);
+      case 'number': {
+        if (cur === 'boolean') return v ? 1 : 0;
+        if (cur === 'string') {
+          const r = this.coerce(v, 'number');
+          return r.ok ? r.value : 0;
+        }
+        return 0;
+      }
+      case 'boolean':
+        if (cur === 'string') return v.trim().toLowerCase() === 'true';
+        if (cur === 'number') return v !== 0;
+        return false;
+      default:
+        return this.defaultFor(type);
+    }
+  }
+};
+
+/* ================================================================
    Odin.XmlFormatter — XML Beautify/Minify/Validate
    ================================================================ */
 Odin.XmlFormatter = {
@@ -580,7 +987,7 @@ Odin.XmlFormatter = {
       return { result: null, error: validation.error };
     }
     try {
-      return { result: this._formatXml(input, false), error: null };
+      return { result: this._formatXml(validation.parsed, false), error: null };
     } catch (e) {
       return { result: null, error: { message: e.message, line: null, col: null } };
     }
@@ -592,7 +999,7 @@ Odin.XmlFormatter = {
       return { result: null, error: validation.error };
     }
     try {
-      return { result: this._formatXml(input, true), error: null };
+      return { result: this._formatXml(validation.parsed, true), error: null };
     } catch (e) {
       return { result: null, error: { message: e.message, line: null, col: null } };
     }
@@ -600,7 +1007,7 @@ Odin.XmlFormatter = {
 
   validate(input) {
     if (!input || !input.trim()) {
-      return { valid: null, error: null };
+      return { valid: null, error: null, parsed: null };
     }
 
     const parser = new DOMParser();
@@ -608,10 +1015,11 @@ Odin.XmlFormatter = {
     const parserError = xmlDoc.querySelector('parsererror');
 
     if (!parserError) {
-      return { valid: true, error: null };
+      // ⚡ Bolt: Return the parsed object to prevent redundant DOMParser calls by the caller
+      return { valid: true, error: null, parsed: xmlDoc };
     }
 
-    return { valid: false, error: this._parseError(parserError.textContent || 'Invalid XML') };
+    return { valid: false, error: this._parseError(parserError.textContent || 'Invalid XML'), parsed: null };
   },
 
   highlight(code) {
@@ -627,9 +1035,7 @@ Odin.XmlFormatter = {
     return Odin.Utils.escapeHtml(code);
   },
 
-  _formatXml(input, minify = false) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(input, 'application/xml');
+  _formatXml(xmlDoc, minify = false) {
     const serializer = new XMLSerializer();
     let xml = serializer.serializeToString(xmlDoc);
 
@@ -1919,36 +2325,36 @@ Odin.ImageShrink = {
         let w = Math.round(img.naturalWidth * scale);
         let h = Math.round(img.naturalHeight * scale);
 
-          // 🛡️ Sentinel: Bound max dimensions to prevent Canvas memory allocation DoS
-          const MAX_DIMENSION = 16384;
-          if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-            const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
-            w = Math.round(w * ratio);
-            h = Math.round(h * ratio);
-          }
+        // 🛡️ Sentinel: Bound max dimensions to prevent Canvas memory allocation DoS
+        const MAX_DIMENSION = 16384;
+        if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+          const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
 
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, w, h);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
 
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) return reject(new Error('Canvas export failed'));
-              resolve({ blob, width: w, height: h, size: blob.size });
-            },
-            format,
-            format === 'image/png' ? undefined : quality
-          );
-        };
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-          reject(new Error('Failed to load image'));
-        };
-        img.src = url;
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error('Canvas export failed'));
+            resolve({ blob, width: w, height: h, size: blob.size });
+          },
+          format,
+          format === 'image/png' ? undefined : quality
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+      img.src = url;
     });
   },
 
@@ -2568,6 +2974,25 @@ function odinApp() {
     jsonOutput: '',
     jsonOutputHtml: '',
     jsonValidation: { valid: null, error: null },
+    // Form / Table / Tree views (see Odin.JsonTree)
+    jsonMode: (() => {
+      const m = Odin.Storage.get('json_mode', 'text');
+      return m === 'form' || m === 'table' ? m : 'text';
+    })(),
+    jsonPath: [],
+    jsonCollapsed: {},
+    jsonSearch: '',
+    jsonPage: 0,
+    jsonTreeRows: [],
+    jsonTreeTruncated: false,
+    jsonCrumbs: [{ label: 'root', path: [] }],
+    jsonFocusType: 'object',
+    jsonFocusCount: 0,
+    jsonFields: [],
+    jsonTable: { kind: 'empty', columns: [], rows: [], total: 0, columnsTruncated: false },
+    jsonNewKey: '',
+    jsonNewType: 'string',
+    jsonTypes: ['string', 'number', 'boolean', 'null', 'object', 'array'],
 
     // ---- XML Formatter Tool ----
     xmlInput: Odin.Storage.get('xml_input', ''),
@@ -3180,6 +3605,10 @@ function odinApp() {
     validateJson() {
       const { parsed, ...validation } = Odin.JsonFormatter.validate(this.jsonInput);
       this.jsonValidation = validation;
+      // Keep the Form/Table document in sync (held outside reactive state)
+      Odin.JsonTree._ready = validation.valid === true;
+      Odin.JsonTree._doc = validation.valid === true ? parsed : null;
+      if (this.jsonMode !== 'text') this.jsonRefresh();
       // Live preview: if valid, show highlighted output
       if (this.jsonValidation.valid && this.jsonInput.trim()) {
         try {
@@ -3260,14 +3689,276 @@ function odinApp() {
       Odin.Clipboard.copy(this.jsonOutput || this.jsonInput, this);
     },
 
+    // ---- JSON Form / Table / Tree Methods ----
+    setJsonMode(mode) {
+      if (mode !== 'text' && mode !== 'form' && mode !== 'table') return;
+      this.jsonMode = mode;
+      Odin.Storage.set('json_mode', mode);
+      if (mode !== 'text') {
+        this.validateJson(); // flush any pending debounced edit
+        this.jsonRefreshPreview();
+        this.jsonRefresh();
+      }
+      this.$nextTick(() => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        this.syncJsonPreviewLineNumbers();
+      });
+    },
+
+    // Rebuild the derived (reactive) data from the held document.
+    jsonRefresh() {
+      const T = Odin.JsonTree;
+      if (!T._ready) {
+        this.jsonTreeRows = [];
+        this.jsonFields = [];
+        this.jsonTable = { kind: 'empty', columns: [], rows: [], total: 0, columnsTruncated: false };
+        this.jsonCrumbs = [{ label: 'root', path: [] }];
+        return;
+      }
+      const doc = T._doc;
+      let node = T.getAt(doc, this.jsonPath);
+      if (node === undefined) {
+        this.jsonPath = [];
+        node = doc;
+      }
+      const rows = T.flatten(doc, this.jsonCollapsed, this.jsonSearch);
+      this.jsonTreeRows = rows;
+      this.jsonTreeTruncated = rows.truncated === true;
+
+      const crumbs = [{ label: 'root', path: [] }];
+      for (let i = 0; i < this.jsonPath.length; i++) {
+        const k = this.jsonPath[i];
+        crumbs.push({ label: typeof k === 'number' ? '[' + k + ']' : String(k), path: this.jsonPath.slice(0, i + 1) });
+      }
+      this.jsonCrumbs = crumbs;
+      this.jsonFocusType = T.typeOf(node);
+      this.jsonFocusCount = T.childCount(node);
+
+      const maxPage = Math.max(0, Math.ceil(this.jsonFocusCount / T.PAGE_SIZE) - 1);
+      if (this.jsonPage > maxPage) this.jsonPage = maxPage;
+      const offset = this.jsonPage * T.PAGE_SIZE;
+      if (this.jsonMode === 'form') {
+        this.jsonFields = T.fields(node, offset, T.PAGE_SIZE, true);
+      } else if (this.jsonMode === 'table') {
+        this.jsonTable = T.tableModel(node, offset, T.PAGE_SIZE);
+      }
+    },
+
+    // Preview pane always shows the pretty-printed document.
+    jsonRefreshPreview() {
+      const T = Odin.JsonTree;
+      if (!T._ready) return;
+      const text = JSON.stringify(T._doc, null, 2);
+      this.jsonOutput = text;
+      const apply = () => { this.jsonOutputHtml = Odin.JsonFormatter.highlight(text); };
+      clearTimeout(this._jsonHlTimer);
+      if (text.length > 100000) {
+        this._jsonHlTimer = setTimeout(apply, 250);
+      } else {
+        apply();
+      }
+    },
+
+    // Write the edited document back to the text input and refresh the views.
+    jsonCommit() {
+      const T = Odin.JsonTree;
+      const text = JSON.stringify(T._doc, null, 2);
+      this.jsonInput = text;
+      this.jsonValidation = { valid: true, error: null };
+      Odin.Storage.set('json_input', text);
+      this.jsonRefreshPreview();
+      this.jsonRefresh();
+      this.$nextTick(() => {
+        this.syncJsonLineNumbers();
+        this.syncJsonPreviewLineNumbers();
+      });
+    },
+
+    jsonFocus(path) {
+      this.jsonPath = path.slice();
+      this.jsonPage = 0;
+      this.jsonRefresh();
+      this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+    },
+
+    // Sidebar click: containers are focused, leaves focus their parent.
+    jsonSelectRow(row) {
+      const container = row.type === 'object' || row.type === 'array';
+      this.jsonFocus(container ? row.path : row.path.slice(0, -1));
+    },
+
+    jsonFocusKey() {
+      return Odin.JsonTree.pathKey(this.jsonPath);
+    },
+
+    jsonToggleNode(pathKey) {
+      const next = {};
+      for (const k in this.jsonCollapsed) {
+        if (Object.prototype.hasOwnProperty.call(this.jsonCollapsed, k)) next[k] = true;
+      }
+      if (next[pathKey]) delete next[pathKey]; else next[pathKey] = true;
+      this.jsonCollapsed = next;
+      this.jsonRefresh();
+    },
+
+    jsonAllCollapsed() {
+      for (const k in this.jsonCollapsed) {
+        if (Object.prototype.hasOwnProperty.call(this.jsonCollapsed, k)) return true;
+      }
+      return false;
+    },
+
+    jsonCollapseAll() {
+      if (!Odin.JsonTree._ready) return;
+      this.jsonCollapsed = this.jsonAllCollapsed() ? {} : Odin.JsonTree.containerKeys(Odin.JsonTree._doc);
+      this.jsonRefresh();
+    },
+
+    jsonBadge(type) {
+      return Odin.JsonTree.badge(type);
+    },
+
+    jsonChildPath(parts) {
+      return this.jsonPath.concat(parts);
+    },
+
+    // Commit text typed into an input; reverts the input if the text is invalid for the type.
+    jsonEditValue(path, el, type) {
+      const T = Odin.JsonTree;
+      const r = T.coerce(el.value, type);
+      if (!r.ok) {
+        const cur = T.getAt(T._doc, path);
+        el.value = cur === null ? 'null' : String(cur);
+        Odin.Toast.show(this, 'Invalid ' + type + ' value', 1800);
+        return;
+      }
+      if (T.getAt(T._doc, path) === r.value) return;
+      T._doc = T.setAt(T._doc, path, r.value);
+      this.jsonCommit();
+    },
+
+    jsonSetBool(path, checked) {
+      Odin.JsonTree._doc = Odin.JsonTree.setAt(Odin.JsonTree._doc, path, !!checked);
+      this.jsonCommit();
+    },
+
+    jsonConvertType(path, type) {
+      const T = Odin.JsonTree;
+      T._doc = T.setAt(T._doc, path, T.convertType(T.getAt(T._doc, path), type));
+      this.jsonCommit();
+    },
+
+    jsonRemove(path) {
+      const T = Odin.JsonTree;
+      if (path.length === 0) return;
+      T._doc = T.deleteAt(T._doc, path);
+      // If the focused node was removed (or sits inside it), move focus up
+      let inside = path.length <= this.jsonPath.length;
+      for (let i = 0; inside && i < path.length; i++) {
+        if (String(path[i]) !== String(this.jsonPath[i])) inside = false;
+      }
+      if (inside) this.jsonPath = path.slice(0, -1);
+      this.jsonCommit();
+    },
+
+    // Add a field (object) or an item (array) to the focused node.
+    jsonAdd() {
+      const T = Odin.JsonTree;
+      const node = T.getAt(T._doc, this.jsonPath);
+      if (!T.isContainer(node)) return;
+      const value = T.defaultFor(this.jsonNewType);
+      if (Array.isArray(node)) {
+        T.addItem(node, value);
+        this.jsonPage = Math.max(0, Math.ceil(node.length / T.PAGE_SIZE) - 1);
+      } else {
+        T.addKey(node, this.jsonNewKey, value);
+      }
+      this.jsonNewKey = '';
+      this.jsonCommit();
+    },
+
+    // Append a row to the focused array of objects (Table view).
+    jsonAddRow() {
+      const T = Odin.JsonTree;
+      const node = T.getAt(T._doc, this.jsonPath);
+      if (!Array.isArray(node)) return;
+      T.addItem(node, T.templateRow(node));
+      this.jsonPage = Math.max(0, Math.ceil(node.length / T.PAGE_SIZE) - 1);
+      this.jsonCommit();
+    },
+
+    // Chip editor (arrays of primitives)
+    jsonChipAdd(path, el) {
+      const T = Odin.JsonTree;
+      const text = el.value.trim();
+      if (!text) return;
+      const arr = T.getAt(T._doc, path);
+      if (!Array.isArray(arr)) return;
+      let allNumbers = arr.length > 0;
+      for (let i = 0; i < arr.length; i++) {
+        if (typeof arr[i] !== 'number') { allNumbers = false; break; }
+      }
+      const num = allNumbers ? T.coerce(text, 'number') : { ok: false };
+      T.addItem(arr, num.ok ? num.value : text);
+      el.value = '';
+      this.jsonCommit();
+    },
+
+    jsonStartDocument(kind) {
+      this.jsonInput = kind === 'array' ? '[]' : '{}';
+      this.validateJson(); // rebuilds the document, preview and views
+    },
+
+    clearJson() {
+      this.jsonInput = '';
+      this.jsonOutput = '';
+      this.jsonOutputHtml = '';
+      this.jsonValidation = { valid: null, error: null };
+      Odin.JsonTree._ready = false;
+      Odin.JsonTree._doc = null;
+      this.jsonPath = [];
+      this.jsonPage = 0;
+      Odin.Storage.set('json_input', '');
+      this.jsonRefresh();
+      this.$nextTick(() => {
+        this.syncJsonLineNumbers();
+        this.syncJsonOutputLineNumbers();
+      });
+    },
+
+    jsonPageCount() {
+      return Math.max(1, Math.ceil(this.jsonFocusCount / Odin.JsonTree.PAGE_SIZE));
+    },
+
+    jsonGoPage(delta) {
+      const maxPage = Math.max(0, Math.ceil(this.jsonFocusCount / Odin.JsonTree.PAGE_SIZE) - 1);
+      this.jsonPage = Math.min(maxPage, Math.max(0, this.jsonPage + delta));
+      this.jsonRefresh();
+    },
+
+    getJsonPreviewLineNumbers() {
+      return Odin.Utils.generateLineNumbers(this.jsonOutput || '');
+    },
+
+    syncJsonPreviewLineNumbers() {
+      if (!this.$refs || !this.$refs.jsonPvPane || !this.$refs.jsonPvGutter) return;
+      this.$refs.jsonPvGutter.scrollTop = this.$refs.jsonPvPane.scrollTop;
+    },
+
     validateXml() {
-      this.xmlValidation = Odin.XmlFormatter.validate(this.xmlInput);
+      const { parsed, ...validation } = Odin.XmlFormatter.validate(this.xmlInput);
+      this.xmlValidation = validation;
 
       if (this.xmlValidation.valid && this.xmlInput.trim()) {
-        const pretty = Odin.XmlFormatter.beautify(this.xmlInput);
-        if (pretty.result !== null) {
-          this.xmlOutput = pretty.result;
-          this.xmlOutputHtml = Odin.XmlFormatter.highlight(pretty.result);
+        try {
+          // ⚡ Bolt: Reuse the cached parsed document from validation
+          // to avoid parsing the XML DOM twice on the same payload string.
+          const formatted = Odin.XmlFormatter._formatXml(parsed, false);
+          this.xmlOutput = formatted;
+          this.xmlOutputHtml = Odin.XmlFormatter.highlight(formatted);
+        } catch(e) {
+           this.xmlOutput = this.xmlInput;
+           this.xmlOutputHtml = Odin.XmlFormatter.highlight(this.xmlInput);
         }
       } else if (!this.xmlInput.trim()) {
         this.xmlOutput = '';
