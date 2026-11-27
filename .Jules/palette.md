@@ -56,3 +56,6 @@
 ## 2024-05-24 - Disabled State Clarity
 **Learning:** Users with screen readers or cognitive impairments often struggle to understand why a button is disabled, especially in reactive apps where the state changes dynamically based on hidden logic.
 **Action:** Always pair dynamically disabled elements (like Alpine.js `:disabled` bindings) with a dynamic `:title` attribute that explains the condition required to enable them, improving both micro-UX and accessibility.
+## 2024-08-21 - Duplicate Attribute Bindings Hide UX Improvements
+**Learning:** Found multiple instances where buttons had duplicate Alpine.js `:title` bindings. The latter binding (often set to an empty string on enable) overrode the former binding that contained the tooltip explaining the disabled state, rendering the disabled state context invisible to users.
+**Action:** When adding or verifying disabled state tooltips with Alpine.js (`:title`), always check the element to ensure there isn't already an existing `:title` or `title` attribute that will cause a conflict or overwrite the intended UX enhancement.
