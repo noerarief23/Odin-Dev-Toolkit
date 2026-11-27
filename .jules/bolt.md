@@ -141,3 +141,19 @@
 ## 2024-05-30 - TypedArray Subarray Allocation Overhead
 **Learning:** When chunking or splitting `Uint8Array` or other TypedArrays, using `.slice()` creates a new array and copies the underlying memory, causing unnecessary allocations and garbage collection overhead.
 **Action:** Use `.subarray()` instead of `.slice()` when working with TypedArrays to return a lightweight view of the same underlying memory buffer, significantly improving performance and reducing memory pressure when processing large buffers.
+## 2024-05-30 - String Concatenation vs Array Join
+**Learning:** When generating large strings sequentially (like line numbers), traditional `for` loops with string concatenation (`+=`) outperform intermediate array allocations combined with `.join('')`. It significantly reduces memory allocation and is almost 2x faster for large blocks of text, avoiding garbage collection overhead.
+**Action:** When generating large HTML strings or rendering lists of UI elements dynamically in JavaScript, favor using a traditional `for` loop with string concatenation (`+=`) instead of chaining `Array.prototype.map().join('')`.
+
+## 2026-08-01 - Redundant XML DOMParser Optimization
+**Learning:** Calling `new DOMParser().parseFromString()` multiple times on the same XML string—once to validate it, and again to format/beautify it—creates unnecessary synchronous main-thread blocking overhead. When hooked to an Alpine.js `@input.debounce` handler on a code editor, this severely degraded performance for large XML payloads.
+**Action:** When validating XML input, have the validation function return the successfully parsed `xmlDoc` document on success. Reuse this cached document in subsequent formatting steps instead of re-parsing the original raw string. Note: Ensure you do NOT leak the raw `DOMDocument` into reactive states (like Vue/Alpine) to prevent massive memory leaks.
+
+## 2024-05-31 - ImageShrink Base64 Memory Allocation
+**Learning:** Using `FileReader.readAsDataURL` to read large image files directly into memory creates massive Base64 strings. This allocates huge amounts of memory and synchronously blocks the main thread, causing severe UI freezes.
+**Action:** When loading local files for image preview or processing (like drawing to a Canvas), always use `URL.createObjectURL(file)`. This creates a lightweight, memory-efficient blob reference that decodes asynchronously without blocking the main thread. Remember to clean up using `URL.revokeObjectURL(url)`.
+
+
+## 2024-08-28 - Optimize High-Frequency Intervals
+**Learning:** High-frequency intervals (e.g., `setInterval` running every 250ms) that blindly assign reactive states and update DOM elements like `document.title` cause severe redundant re-renders and repaints, especially in frameworks like Alpine.js, when the visible value changes less frequently (e.g., every 1 second).
+**Action:** Always wrap reactive state assignments and DOM updates inside high-frequency loops in an equality check (`if (oldValue !== newValue)`) to prevent unnecessary work.

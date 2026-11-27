@@ -15,7 +15,7 @@
 | 1 | **Productive Timer** | Focus timer with session planning (todo/actual), daily session log & Markdown export |
 | 2 | **Regex Tester** | Real-time matching, color-coded groups, common patterns cheatsheet |
 | 3 | **QR Code Engine** | Generate QR codes with size control, download as PNG |
-| 4 | **JSON Formatter** | Beautify/Minify with instant validation & error line indicator |
+| 4 | **JSON Formatter** | Beautify/Minify with instant validation & error line indicator, plus Form View, Table View, a JSON Structure tree (search, collapse, breadcrumb) and a live JSON Preview — edit JSON as a form or table |
 | 5 | **XML Formatter** | Beautify/Minify with instant validation & line indicators |
 | 6 | **Diff Checker** | Compare two JSON/XML payloads and highlight added/removed/changed lines |
 | 7 | **Password Guard** | Secure generation with entropy meter (uses `crypto.getRandomValues`) |
