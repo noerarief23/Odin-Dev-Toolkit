@@ -170,22 +170,46 @@ Odin.Utils = {
    */
   sanitizePrismHtml(html) {
     if (typeof html !== 'string') return '';
-    // ⚡ Bolt: Early exit if no angle brackets to avoid split overhead
-    if (html.indexOf('<') === -1 && html.indexOf('>') === -1) return html;
 
-    // Prevent XSS bypasses: only allow Prism's specific <span class="..."> tags.
+    // Prevent XSS bypasses: only allow Prism's specific <span class="token ..."> tags.
     // Anything else, including <span onmouseover="...">, is treated as text and escaped.
     const parts = html.split(/(<span class="token [a-zA-Z0-9_ -]+">|<\/span>)/gi);
     let result = '';
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 0) {
-        // ⚡ Bolt: Fast-path with indexOf and single-pass loop instead of chained .replace() allocations
-        result += Odin.Utils.escapeHtml(parts[i]);
+        result += this._escapePrismText(parts[i]);
       } else {
         result += parts[i];
       }
     }
     return result;
+  },
+
+  /**
+   * Escapes the text between Prism tags: < > " '.
+   * `&` is deliberately left alone: Prism already entity-encodes `&` and `<`
+   * in its output, so escaping `&` again would double-escape (`&amp;amp;`).
+   * Do NOT replace this with escapeHtml().
+   */
+  _escapePrismText(str) {
+    if (str.indexOf('<') === -1 && str.indexOf('>') === -1 &&
+        str.indexOf('"') === -1 && str.indexOf("'") === -1) {
+      return str;
+    }
+    let out = '';
+    let lastIndex = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      let escape = '';
+      if (char === 60) escape = '&lt;';
+      else if (char === 62) escape = '&gt;';
+      else if (char === 34) escape = '&quot;';
+      else if (char === 39) escape = '&#39;';
+      else continue;
+      out += str.substring(lastIndex, i) + escape;
+      lastIndex = i + 1;
+    }
+    return lastIndex === str.length ? out : out + str.substring(lastIndex);
   },
 
   /**

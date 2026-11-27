@@ -372,6 +372,36 @@ describe('Odin.JsonTree', () => {
   });
 });
 
+describe('Odin.Utils.sanitizePrismHtml', () => {
+  const S = (h) => Odin.Utils.sanitizePrismHtml(h);
+
+  it('keeps Prism token spans', () => {
+    const h = '<span class="token punctuation">{</span>';
+    assertEqual(S(h), h);
+  });
+
+  it('escapes raw angle brackets and quotes in text', () => {
+    assertEqual(S('<script>alert("x")</script>'), '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
+    assertEqual(S("it's"), 'it&#39;s');
+  });
+
+  it('does not double-escape entities Prism already encoded', () => {
+    const h = '<span class="token string">"a&amp;b &lt;c&gt;"</span>';
+    assertEqual(S(h), '<span class="token string">&quot;a&amp;b &lt;c&gt;&quot;</span>');
+  });
+
+  it('rejects spans with extra attributes', () => {
+    const h = '<span class="token string" onmouseover="x()">t</span>';
+    assert(S(h).indexOf('<span class="token string" onmouseover') === -1);
+    assert(S(h).indexOf('&lt;span') !== -1);
+  });
+
+  it('returns empty string for non-strings', () => {
+    assertEqual(S(null), '');
+    assertEqual(S(42), '');
+  });
+});
+
 describe('Odin.JsonFormatter', () => {
   it('beautify formats valid JSON', () => {
     const r = Odin.JsonFormatter.beautify('{"a":1,"b":2}');
