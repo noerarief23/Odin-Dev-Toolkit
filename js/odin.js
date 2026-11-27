@@ -2315,44 +2315,46 @@ Odin.JWT = {
 Odin.ImageShrink = {
   processImage(file, scalePercent, format, quality) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const scale = scalePercent / 100;
-          let w = Math.round(img.naturalWidth * scale);
-          let h = Math.round(img.naturalHeight * scale);
+      // ⚡ Bolt: Replace FileReader.readAsDataURL with URL.createObjectURL to drastically reduce
+      // memory consumption and avoid blocking the main thread with large Base64 string allocations.
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = scalePercent / 100;
+        let w = Math.round(img.naturalWidth * scale);
+        let h = Math.round(img.naturalHeight * scale);
 
-          // 🛡️ Sentinel: Bound max dimensions to prevent Canvas memory allocation DoS
-          const MAX_DIMENSION = 16384;
-          if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-            const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
-            w = Math.round(w * ratio);
-            h = Math.round(h * ratio);
-          }
+        // 🛡️ Sentinel: Bound max dimensions to prevent Canvas memory allocation DoS
+        const MAX_DIMENSION = 16384;
+        if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+          const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
 
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, w, h);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
 
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) return reject(new Error('Canvas export failed'));
-              resolve({ blob, width: w, height: h, size: blob.size });
-            },
-            format,
-            format === 'image/png' ? undefined : quality
-          );
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = reader.result;
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error('Canvas export failed'));
+            resolve({ blob, width: w, height: h, size: blob.size });
+          },
+          format,
+          format === 'image/png' ? undefined : quality
+        );
       };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+      img.src = url;
     });
   },
 
@@ -4197,26 +4199,32 @@ function odinApp() {
         Odin.Toast.show(this, 'Please select an image file');
         return;
       }
+
+      // Cleanup previous preview URL to avoid memory leak
+      if (this.imgPreviewUrl && this.imgPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(this.imgPreviewUrl);
+      }
+
       this.imgFile = file;
       this.imgFileName = file.name;
       this.imgOriginalSize = file.size;
       this.imgResultUrl = '';
       this.imgResultSize = 0;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imgPreviewUrl = reader.result;
-        const img = new Image();
-        img.onload = () => {
-          this.imgWidth = img.naturalWidth;
-          this.imgHeight = img.naturalHeight;
-          // Validate and bound inputs to prevent client-side DoS risks
-          this.imgScale = Math.max(1, Math.min(100, this.imgScale));
-          this.imgNewWidth = Math.round(img.naturalWidth * this.imgScale / 100);
-          this.imgNewHeight = Math.round(img.naturalHeight * this.imgScale / 100);
-        };
-        img.src = reader.result;
+
+      // ⚡ Bolt: Replace FileReader.readAsDataURL with URL.createObjectURL to drastically reduce
+      // memory consumption and avoid blocking the main thread with large Base64 string allocations.
+      const url = URL.createObjectURL(file);
+      this.imgPreviewUrl = url;
+      const img = new Image();
+      img.onload = () => {
+        this.imgWidth = img.naturalWidth;
+        this.imgHeight = img.naturalHeight;
+        // Validate and bound inputs to prevent client-side DoS risks
+        this.imgScale = Math.max(1, Math.min(100, this.imgScale));
+        this.imgNewWidth = Math.round(img.naturalWidth * this.imgScale / 100);
+        this.imgNewHeight = Math.round(img.naturalHeight * this.imgScale / 100);
       };
-      reader.readAsDataURL(file);
+      img.src = url;
     },
 
     imgUpdateDimensions() {

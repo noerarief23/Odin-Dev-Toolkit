@@ -148,3 +148,7 @@
 ## 2026-08-01 - Redundant XML DOMParser Optimization
 **Learning:** Calling `new DOMParser().parseFromString()` multiple times on the same XML string—once to validate it, and again to format/beautify it—creates unnecessary synchronous main-thread blocking overhead. When hooked to an Alpine.js `@input.debounce` handler on a code editor, this severely degraded performance for large XML payloads.
 **Action:** When validating XML input, have the validation function return the successfully parsed `xmlDoc` document on success. Reuse this cached document in subsequent formatting steps instead of re-parsing the original raw string. Note: Ensure you do NOT leak the raw `DOMDocument` into reactive states (like Vue/Alpine) to prevent massive memory leaks.
+
+## 2024-05-31 - ImageShrink Base64 Memory Allocation
+**Learning:** Using `FileReader.readAsDataURL` to read large image files directly into memory creates massive Base64 strings. This allocates huge amounts of memory and synchronously blocks the main thread, causing severe UI freezes.
+**Action:** When loading local files for image preview or processing (like drawing to a Canvas), always use `URL.createObjectURL(file)`. This creates a lightweight, memory-efficient blob reference that decodes asynchronously without blocking the main thread. Remember to clean up using `URL.revokeObjectURL(url)`.
