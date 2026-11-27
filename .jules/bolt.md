@@ -144,3 +144,7 @@
 ## 2024-05-30 - String Concatenation vs Array Join
 **Learning:** When generating large strings sequentially (like line numbers), traditional `for` loops with string concatenation (`+=`) outperform intermediate array allocations combined with `.join('')`. It significantly reduces memory allocation and is almost 2x faster for large blocks of text, avoiding garbage collection overhead.
 **Action:** When generating large HTML strings or rendering lists of UI elements dynamically in JavaScript, favor using a traditional `for` loop with string concatenation (`+=`) instead of chaining `Array.prototype.map().join('')`.
+
+## 2026-08-01 - Redundant XML DOMParser Optimization
+**Learning:** Calling `new DOMParser().parseFromString()` multiple times on the same XML string—once to validate it, and again to format/beautify it—creates unnecessary synchronous main-thread blocking overhead. When hooked to an Alpine.js `@input.debounce` handler on a code editor, this severely degraded performance for large XML payloads.
+**Action:** When validating XML input, have the validation function return the successfully parsed `xmlDoc` document on success. Reuse this cached document in subsequent formatting steps instead of re-parsing the original raw string. Note: Ensure you do NOT leak the raw `DOMDocument` into reactive states (like Vue/Alpine) to prevent massive memory leaks.
